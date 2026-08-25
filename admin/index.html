@@ -39,9 +39,10 @@
     .admin-notice-content { flex-grow: 1; padding-right: 15px; font-size: 14px; line-height: 1.6; word-break: break-word; }
     .tag-pinned { color: var(--primary-dark); font-weight: bold; font-size: 12px; border: 1px solid var(--primary-dark); padding: 2px 6px; border-radius: 3px; display: inline-block; margin-bottom: 5px; }
     
-    /* ★追加・修正：固定ボタンと削除ボタンのCSS設定 */
-    .btn-toggle { width: auto !important; flex-shrink: 0; align-self: center; padding: 10px 15px; background: #fff; color: var(--primary-dark); border: 1px solid var(--primary-dark); border-radius: 4px; font-size: 13px; font-weight: bold; cursor: pointer; margin-right: 8px; }
-    .btn-toggle:disabled { color: #fff; border-color: #999; background: #999; cursor: not-allowed; }
+    /* 固定/解除ボタンのベーススタイル */
+    .btn-toggle { width: auto !important; flex-shrink: 0; align-self: center; padding: 10px 15px; border-radius: 4px; font-size: 13px; font-weight: bold; cursor: pointer; margin-right: 8px; transition: 0.2s; }
+    .btn-toggle:disabled { color: #fff !important; border-color: #999 !important; background: #999 !important; cursor: not-allowed; }
+    
     .btn-delete { width: auto !important; flex-shrink: 0; align-self: center; padding: 10px 15px; background: #fff; color: #d93025; border: 1px solid #d93025; border-radius: 4px; font-size: 13px; font-weight: bold; cursor: pointer; }
     .btn-delete:disabled { color: #fff; border-color: #999; background: #999; cursor: not-allowed; }
     
@@ -177,15 +178,19 @@
             let date = n.time.split(" ")[0].substring(5);
             let formattedText = n.text.replace(/\n/g, '<br>').replace(/\[\[(.*?)\]\]/g, '<span style="color: var(--primary-dark); font-weight: bold;">$1</span>');
             
-            // ★変更：固定/解除ボタンを追加
-            let toggleText = n.isPinned ? '固定解除' : '固定';
+            // ★変更：三項演算子で「固定」と「解除」のテキストとデザインを切り替え
+            let toggleText = n.isPinned ? '解除' : '固定';
+            let toggleStyle = n.isPinned 
+                ? 'background: #f0f4f8; color: #666; border: 1px solid #ccc;' // 解除ボタンは控えめなグレー
+                : 'background: #fff; color: var(--primary-dark); border: 1px solid var(--primary-dark);'; // 固定ボタンは水色
+            
             nl.innerHTML += `
               <div class="admin-notice-item">
                 <div class="admin-notice-content">
                   ${tag}<span style="color:#888; font-size:12px; margin-bottom: 4px; display: block;">${date}</span>${formattedText}
                 </div>
                 <div style="display:flex; flex-shrink:0;">
-                  <button class="btn-toggle" onclick="togglePin('${n.time}', this)">${toggleText}</button>
+                  <button class="btn-toggle" style="${toggleStyle}" onclick="togglePin('${n.time}', this)">${toggleText}</button>
                   <button class="btn-delete" onclick="delNotice('${n.time}', this)">削除</button>
                 </div>
               </div>`;
@@ -221,7 +226,7 @@
       btn.disabled = false; btn.innerText = "追加";
     }
 
-    // ★追加：固定状態を切り替える関数（連打防止機能付き）
+    // ★変更：ボタンの無効化（切替中...）処理
     async function togglePin(timeStr, btnElement) {
       const originalText = btnElement.innerText;
       btnElement.disabled = true;
