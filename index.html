@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal | Higo-Pella</title>
+  <link rel="icon" href="./src/icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="./src/icon.png">
+  <link rel="manifest" href="./manifest.json">
+  <style>
+    * { box-sizing: border-box; }
+    :root { --primary: #4fc3f7; --primary-dark: #0288d1; --bg: #f7fbff; --card: #ffffff; --text: #333; --border: #e1e8ed; }
+    body { font-family: Arial, sans-serif; font-size: 15px; background: var(--bg); color: var(--text); margin: 0; min-height: 100vh; overflow-x: hidden; }
+    
+    .auth-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+    .auth-box { width: 100%; max-width: 400px; background: var(--card); padding: 40px 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(79, 195, 247, 0.15); text-align: center; }
+    .auth-box input { width: 100%; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); border-radius: 6px; font-size: 16px; outline: none; }
+    .auth-box input:focus { border-color: var(--primary); }
+    .btn { width: 100%; padding: 15px; background: var(--primary); color: #fff; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
+    .msg { font-size: 14px; color: #d93025; margin-top: 15px; display: none; }
+
+    #portal-screen { display: none; }
+    
+    .header { background: var(--card); padding: 10px 20px; display: flex; align-items: center; justify-content: flex-start; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+    .menu-toggle { font-size: 26px; color: var(--primary-dark); cursor: pointer; background: none; border: none; padding: 0; margin-right: 15px; }
+    .header-logo { height: 30px; cursor: pointer; }
+    
+    .drawer { position: fixed; top: 0; left: -260px; width: 250px; height: 100vh; background: var(--card); border-right: 1px solid var(--border); z-index: 200; transition: left 0.3s; padding-top: 60px; display: flex; flex-direction: column; }
+    .drawer.open { left: 0; }
+    .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 150; display: none; opacity: 0; transition: opacity 0.3s; }
+    .drawer-overlay.open { display: block; opacity: 1; }
+    .drawer-item { display: block; padding: 18px 20px; color: var(--text); text-decoration: none; font-size: 16px; font-weight: bold; border-bottom: 1px solid #f0f4f8; }
+    .drawer-close { position: absolute; top: 15px; right: 20px; font-size: 28px; color: #999; cursor: pointer; background: none; border: none; }
+
+    .layout-grid { display: grid; gap: 20px; max-width: 1000px; margin: 20px auto; padding: 0 15px; }
+    .card { background: var(--card); padding: 25px; border-radius: 10px; border: 1px solid var(--border); display: flex; flex-direction: column; }
+    .card-title { font-size: 16px; font-weight: bold; color: var(--primary-dark); margin: 0 0 15px 0; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+
+    @media (min-width: 768px) {
+      .layout-grid { grid-template-columns: 1fr 2fr; height: calc(100vh - 80px); align-items: stretch; margin-top: 15px; margin-bottom: 15px; }
+      .card { height: 100%; overflow: hidden; }
+      #notice-list { flex-grow: 1; overflow-y: auto; }
+      #miniCalendar { flex-grow: 1; height: 100%; min-height: 0; }
+    }
+    @media (max-width: 767px) {
+      .layout-grid { grid-template-columns: 1fr; }
+      #miniCalendar { height: 450px; }
+    }
+    
+    .notice-item { font-size: 14px; line-height: 1.6; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px dashed var(--border); }
+    .notice-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .tag-pinned { color: var(--primary-dark); font-weight: bold; font-size: 12px; border: 1px solid var(--primary-dark); padding: 2px 6px; border-radius: 3px; margin-right: 6px; }
+    .notice-time { color: #888; font-size: 12px; display: block; margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+
+  <div class="auth-container" id="login-screen">
+    <div class="auth-box">
+      <img src="./src/home.png" alt="Logo" style="height:45px; margin-bottom: 20px;">
+      <input type="password" id="password" placeholder="Password">
+      <button class="btn" id="loginBtn" onclick="checkPassword()">ログイン</button>
+      <div id="msg-area" class="msg"></div>
+    </div>
+  </div>
+
+  <div id="portal-screen">
+    <div class="header">
+      <button class="menu-toggle" onclick="toggleDrawer()">☰</button>
+      <a href="./" style="display: flex; align-items: center;"><img src="./src/home.png" alt="Home" class="header-logo" onclick="window.scrollTo(0,0)"></a>
+    </div>
+
+    <div id="global-menu-container"></div>
+
+    <div class="layout-grid">
+      <div class="card">
+        <h3 class="card-title">お知らせ</h3>
+        <p style="font-size: 14px; margin-bottom: 15px; font-weight: bold;">次回の部会: <span id="next-meeting" style="color:var(--primary-dark);"></span></p>
+        <div id="notice-list"><p style="font-size:13px; color:#888;">読込中...</p></div>
+      </div>
+      
+      <div class="card">
+        <h3 class="card-title">スケジュール</h3>
+        <iframe id="miniCalendar" style="width: 100%; border: none; border-radius: 6px;" scrolling="no"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script src="./src/menu.js"></script>
+  <script>
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbySwjY5zm_XL2qQ84KcRin8nb1RW_74qD_yo_-i55iOzUdItzfNjodZ5gSFozDjpcToNA/exec";
+
+    window.onload = function() {
+      injectMenu('./');
+      if (localStorage.getItem("isLoggedIn") === "true") showPortal();
+    };
+
+    function showPortal() {
+      document.getElementById("login-screen").style.display = "none";
+      document.getElementById("portal-screen").style.display = "block";
+      calcMeeting(); loadCal(); fetchNotice();
+    }
+
+    async function checkPassword() {
+      const pwd = document.getElementById("password").value;
+      const btn = document.getElementById("loginBtn");
+      const msg = document.getElementById("msg-area");
+      if (!pwd) return;
+      btn.disabled = true; btn.innerText = "通信中..."; msg.style.display = "none";
+      try {
+        const res = await fetch(GAS_API_URL, { method: "POST", body: JSON.stringify({ action: "verifyPassword", data: { password: pwd } }) });
+        const data = await res.json();
+        if (data.success) { localStorage.setItem("isLoggedIn", "true"); showPortal(); } 
+        else { msg.innerText = data.error; msg.style.display = "block"; }
+      } catch (e) { msg.innerText = "通信エラー"; msg.style.display = "block"; }
+      btn.disabled = false; btn.innerText = "ログイン";
+    }
+
+    function calcMeeting() {
+      const today = new Date(); let y = today.getFullYear(), m = today.getMonth();
+      let d = getSecTue(y, m);
+      if (today.getDate() > d.getDate()) { m++; if (m > 11) { m = 0; y++; } d = getSecTue(y, m); }
+      document.getElementById('next-meeting').innerText = `${d.getMonth() + 1}/${d.getDate()}`;
+    }
+    function getSecTue(y, m) {
+      let d = new Date(y, m, 1); d.setDate(1 + ((2 - d.getDay() + 7) % 7) + 7); return d;
+    }
+
+    function loadCal() {
+      const src = `src=pellapella.calendar@gmail.com&color=%23D50000&src=a18eeaccc3fb519de5b4b3492df6b26232f7967ab4582a2cd4d314600aa03186@group.calendar.google.com&color=%23039BE5&src=aade55a25aef3abb1ab00c832c44b660df1336a113dc29c6fff776f046df3dd3@group.calendar.google.com&color=%23F6BF26&src=fdb34873e469d812b70c3e1f79978398d9a3c0a793287551c3a77ae84f7ed079@group.calendar.google.com&color=%2333B679`;
+      document.getElementById('miniCalendar').src = `https://calendar.google.com/calendar/embed?${src}&ctz=Asia%2FTokyo&mode=AGENDA&showTitle=0&showPrint=0&showTabs=0&showNav=0&showDate=0&showCalendars=0`;
+    }
+
+    async function fetchNotice() {
+      try {
+        const res = await fetch(GAS_API_URL, { method: "POST", body: JSON.stringify({ action: "getNotice" }) });
+        const data = await res.json();
+        const list = document.getElementById('notice-list');
+        list.innerHTML = "";
+        if(data.success && data.notices.length > 0) {
+          data.notices.forEach(n => {
+            let tag = n.isPinned ? `<span class="tag-pinned">[固定]</span>` : '';
+            let date = n.time.split(" ")[0].substring(5);
+            list.innerHTML += `<div class="notice-item"><span class="notice-time">${date}</span>${tag}${n.text.replace(/\n/g, '<br>')}</div>`;
+          });
+        } else { list.innerHTML = `<p style="font-size:13px; color:#888;">お知らせはありません</p>`; }
+      } catch (e) {}
+    }
+  </script>
+</body>
+</html>

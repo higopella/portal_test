@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forms | Higo-Pella</title>
+  <link rel="icon" href="../src/icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="../src/icon.png">
+  <link rel="manifest" href="../manifest.json">
+  <style>
+    * { box-sizing: border-box; }
+    :root { --primary: #4fc3f7; --primary-dark: #0288d1; --bg: #f7fbff; --card: #fff; --border: #e1e8ed; --text: #333; }
+    body { font-family: Arial, sans-serif; font-size: 15px; background: var(--bg); color: var(--text); margin: 0; }
+    
+    .header { background: var(--card); padding: 10px 20px; display: flex; align-items: center; justify-content: flex-start; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+    .menu-toggle { font-size: 26px; color: var(--primary-dark); cursor: pointer; background: none; border: none; padding: 0; margin-right: 15px; }
+    .header-logo { height: 30px; cursor: pointer; }
+    
+    .drawer { position: fixed; top: 0; left: -260px; width: 250px; height: 100vh; background: var(--card); border-right: 1px solid var(--border); z-index: 200; transition: left 0.3s; padding-top: 60px; display: flex; flex-direction: column; }
+    .drawer.open { left: 0; }
+    .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 150; display: none; opacity: 0; transition: opacity 0.3s; }
+    .drawer-overlay.open { display: block; opacity: 1; }
+    .drawer-item { display: block; padding: 18px 20px; color: var(--text); text-decoration: none; font-size: 16px; font-weight: bold; border-bottom: 1px solid #f0f4f8; }
+    .drawer-close { position: absolute; top: 15px; right: 20px; font-size: 28px; color: #999; cursor: pointer; background: none; border: none; }
+
+    .content { max-width: 800px; margin: 20px auto; padding: 0 15px; height: 1200px; }
+    .card { background: var(--card); border-radius: 8px; border: 1px solid var(--border); width: 100%; height: 100%; overflow: hidden; }
+    iframe { width: 100%; height: 100%; border: none; }
+    
+    .scroll-top { position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: #fff; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 20px; cursor: pointer; display: none; z-index: 99; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <button class="menu-toggle" onclick="toggleDrawer()">☰</button>
+    <a href="../" style="display: flex; align-items: center;"><img src="../src/home.png" alt="Home" class="header-logo"></a>
+  </div>
+
+  <div id="global-menu-container"></div>
+
+  <div class="content">
+    <div class="card">
+      <iframe src="https://docs.google.com/forms/d/1tJ5X0MenvsarbqCQoNNERSf8Srv1p4Ul4Xfl5qvlXqA/viewform?embedded=true"></iframe>
+    </div>
+  </div>
+
+  <button class="scroll-top" onclick="window.scrollTo({top:0, behavior:'smooth'})" id="scrollTopBtn">↑</button>
+
+  <script src="../src/menu.js"></script>
+  <script>
+    if (localStorage.getItem("isLoggedIn") !== "true") window.location.href = "../";
+    window.onload = function() { injectMenu('../'); };
+    window.onscroll = function() {
+      document.getElementById("scrollTopBtn").style.display = (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) ? "block" : "none";
+    };
+  </script>
+</body>
+</html>
