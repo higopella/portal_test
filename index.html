@@ -37,7 +37,6 @@
     .card { background: var(--card); padding: 25px; border-radius: 10px; border: 1px solid var(--border); display: flex; flex-direction: column; }
     .card-title { font-size: 16px; font-weight: bold; color: var(--primary-dark); margin: 0 0 15px 0; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
 
-    /* ★お知らせのスクロール領域設定 */
     .scrollable-list { max-height: 350px; overflow-y: auto; padding-right: 5px; }
 
     @media (min-width: 768px) {
@@ -79,7 +78,10 @@
     <div class="layout-grid">
       <div class="card">
         <h3 class="card-title">お知らせ</h3>
-        <p style="font-size: 14px; margin-bottom: 15px; font-weight: bold;">次回の部会: <span id="next-meeting" style="color:var(--primary-dark);"></span></p>
+        <!-- ★変更：日付部分のfont-sizeを22pxに拡大し、より目立たせる -->
+        <p style="font-size: 14px; margin-bottom: 15px; font-weight: bold; display: flex; align-items: baseline; gap: 8px;">
+          次回の部会: <span id="next-meeting" style="color:var(--primary-dark); font-size: 22px;"></span>
+        </p>
         <div id="notice-list" class="scrollable-list"><p style="font-size:13px; color:#888;">読込中...</p></div>
       </div>
       
@@ -96,7 +98,6 @@
 
     window.onload = function() {
       injectMenu('./');
-      // ★追加：アクセス数をチェック
       trackAccess(GAS_API_URL);
       if (localStorage.getItem("isLoggedIn") === "true") showPortal();
     };
@@ -129,8 +130,10 @@
       const today = new Date(); let y = today.getFullYear(), m = today.getMonth();
       let d = getSecTue(y, m);
       if (today.getDate() > d.getDate()) { m++; if (m > 11) { m = 0; y++; } d = getSecTue(y, m); }
+      // フォーマットして表示
       document.getElementById('next-meeting').innerText = `${d.getMonth() + 1}/${d.getDate()}`;
     }
+    
     function getSecTue(y, m) {
       let d = new Date(y, m, 1); d.setDate(1 + ((2 - d.getDay() + 7) % 7) + 7); return d;
     }
