@@ -78,9 +78,9 @@
     <div class="layout-grid">
       <div class="card">
         <h3 class="card-title">お知らせ</h3>
-        <!-- ★変更：日付部分のfont-sizeを22pxに拡大し、より目立たせる -->
+        <!-- ★変更：日付部分のfont-sizeを18pxに微調整しました -->
         <p style="font-size: 14px; margin-bottom: 15px; font-weight: bold; display: flex; align-items: baseline; gap: 8px;">
-          次回の部会: <span id="next-meeting" style="color:var(--primary-dark); font-size: 22px;"></span>
+          次回の部会: <span id="next-meeting" style="color:var(--primary-dark); font-size: 18px;"></span>
         </p>
         <div id="notice-list" class="scrollable-list"><p style="font-size:13px; color:#888;">読込中...</p></div>
       </div>
@@ -130,7 +130,6 @@
       const today = new Date(); let y = today.getFullYear(), m = today.getMonth();
       let d = getSecTue(y, m);
       if (today.getDate() > d.getDate()) { m++; if (m > 11) { m = 0; y++; } d = getSecTue(y, m); }
-      // フォーマットして表示
       document.getElementById('next-meeting').innerText = `${d.getMonth() + 1}/${d.getDate()}`;
     }
     
