@@ -4,11 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ホーム - Higo-Pella Portal</title>
+  <link rel="icon" type="image/png" href="src/icon.png">
+  <link rel="apple-touch-icon" href="src/icon.png">
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="src/common.css">
   <style>
     .container {
-      max-width: 760px;
+      max-width: 800px;
       margin: 0 auto;
       padding: 16px;
       display: flex;
@@ -16,157 +18,81 @@
       gap: 16px;
       box-sizing: border-box;
     }
+    /* 次回部会インフォメーションバー */
+    .meeting-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background-color: var(--primary-light, #e1f5fe);
+      border: 1px solid var(--primary, #4fc3f7);
+      border-radius: var(--radius, 8px);
+      padding: 10px 16px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--primary-dark, #0288d1);
+    }
     .card {
       background-color: var(--card, #ffffff);
-      border-radius: var(--radius, 10px);
+      border-radius: var(--radius, 8px);
       border: 1px solid var(--border, #e2e8f0);
       padding: 18px;
       box-shadow: var(--shadow, 0 2px 8px rgba(0, 0, 0, 0.06));
     }
     .card-title {
       font-size: 1rem;
-      font-weight: 700;
-      color: var(--primary-dark, #0288d1);
+      font-weight: bold;
+      color: var(--text, #2c3e50);
       margin-bottom: 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
-
-    /* 次回の部会バナー */
-    .meeting-banner {
-      background: linear-gradient(135deg, var(--primary-light, #e1f5fe) 0%, #ffffff 100%);
-      border: 1px solid var(--primary, #4fc3f7);
-      border-radius: var(--radius, 10px);
-      padding: 16px;
-      text-align: center;
-    }
-    .meeting-label {
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: var(--primary-dark, #0288d1);
-      letter-spacing: 0.05em;
-      margin-bottom: 4px;
-    }
-    .meeting-date {
-      font-size: 1.15rem;
-      font-weight: 800;
-      color: var(--text, #2c3e50);
-    }
-
-    /* クイックアクセス グリッド */
-    .quick-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-    }
-    .quick-card {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 14px 8px;
-      background-color: var(--card, #ffffff);
-      border: 1px solid var(--border, #e2e8f0);
-      border-radius: var(--radius, 10px);
-      text-decoration: none;
-      color: var(--text, #2c3e50);
-      box-shadow: var(--shadow, 0 2px 8px rgba(0, 0, 0, 0.04));
-      transition: transform 0.15s ease, border-color 0.15s ease;
-    }
-    .quick-card:hover {
-      transform: translateY(-2px);
-      border-color: var(--primary, #4fc3f7);
-    }
-    .quick-card-title {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--primary-dark, #0288d1);
-      margin-bottom: 2px;
-    }
-    .quick-card-sub {
-      font-size: 0.75rem;
-      color: var(--text-sub, #64748b);
-    }
-
-    /* お知らせリスト */
     .notice-list {
-      max-height: 320px;
+      max-height: 420px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
       gap: 10px;
-      padding-right: 4px;
     }
     .notice-item {
-      padding: 12px 14px;
+      padding: 12px;
       background-color: var(--bg, #f8fafc);
-      border-radius: 8px;
+      border-radius: var(--radius, 8px);
       border-left: 4px solid var(--primary, #4fc3f7);
     }
     .notice-item.is-pinned {
       border-left-color: var(--primary-dark, #0288d1);
       background-color: var(--primary-light, #e1f5fe);
     }
-    .notice-meta {
-      font-size: 0.75rem;
+    .notice-header {
+      font-size: 0.8rem;
       color: var(--text-sub, #64748b);
       margin-bottom: 4px;
       display: flex;
-      align-items: center;
-      gap: 6px;
+      gap: 8px;
     }
-    .notice-pin-tag {
-      font-weight: 700;
-      color: var(--primary-dark, #0288d1);
-    }
-    .notice-body {
-      font-size: 0.9rem;
-      line-height: 1.5;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-    .notice-body .highlight {
-      color: var(--primary-dark, #0288d1);
-      font-weight: 700;
-    }
-
-    /* ログインカード */
+    .notice-pin-tag { font-weight: bold; color: var(--primary-dark, #0288d1); }
+    .notice-body { font-size: 0.95rem; white-space: pre-wrap; word-break: break-word; }
+    .notice-body .highlight { color: var(--primary-dark, #0288d1); font-weight: bold; }
     .login-box {
-      max-width: 340px;
+      max-width: 320px;
       margin: 40px auto;
       text-align: center;
-      padding: 24px;
     }
     .input-text {
       width: 100%;
-      padding: 10px 12px;
+      padding: 10px 14px;
       border: 1px solid var(--border, #e2e8f0);
-      border-radius: 8px;
+      border-radius: var(--radius, 8px);
       font-size: 1rem;
       box-sizing: border-box;
       margin-bottom: 12px;
-    }
-    .input-text:focus {
-      border-color: var(--primary, #4fc3f7);
       outline: none;
     }
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 10px 16px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      text-decoration: none;
-      touch-action: manipulation;
+    .input-text:focus {
+      border-color: var(--primary);
     }
-    .btn-primary { background-color: var(--primary, #4fc3f7); color: #ffffff; }
-    .btn-primary:hover { background-color: var(--primary-dark, #0288d1); }
-    .btn-danger { background-color: var(--danger, #ef5350); color: #ffffff; }
   </style>
 </head>
 <body>
@@ -174,8 +100,8 @@
   <!-- 未ログイン画面 -->
   <div id="login-section" class="container" style="display: none;">
     <div class="card login-box">
-      <h2 style="font-size: 1.2rem; color: var(--primary-dark, #0288d1); margin-bottom: 8px;">サークル員ログイン</h2>
-      <p style="font-size: 0.8rem; color: var(--text-sub, #64748b); margin-bottom: 16px;">パスワードを入力してください</p>
+      <h2 style="font-size: 1.1rem; color: var(--primary-dark); margin-bottom: 8px;">サークル員ログイン</h2>
+      <p style="font-size: 0.85rem; color: var(--text-sub); margin-bottom: 16px;">パスワードを入力してください</p>
       <form id="form-login" onsubmit="event.preventDefault(); handleLogin();">
         <input type="password" id="input-password" class="input-text" placeholder="パスワード" required>
         <button type="submit" id="btn-login" class="btn btn-primary" style="width: 100%;">ログイン</button>
@@ -185,41 +111,26 @@
 
   <!-- ログイン後メイン画面 -->
   <main id="main-section" class="container" style="display: none;">
-    <!-- 次回の部会 -->
-    <div class="meeting-banner">
-      <div class="meeting-label">次回の部会</div>
-      <div id="next-meeting-text" class="meeting-date">計算中...</div>
+    <!-- 次回の部会（年を省略した簡潔表示） -->
+    <div class="meeting-bar">
+      <span>次回部会:</span>
+      <span id="next-meeting-text">計算中...</span>
     </div>
 
-    <!-- クイックアクセス -->
-    <section class="quick-grid">
-      <a href="booking/index.html" class="quick-card">
-        <span class="quick-card-title">練習予約</span>
-        <span class="quick-card-sub">部屋予約・確認</span>
-      </a>
-      <a href="searchYT/index.html" class="quick-card">
-        <span class="quick-card-title">YouTube</span>
-        <span class="quick-card-sub">映像検索・Shorts</span>
-      </a>
-      <a href="forms/index.html" class="quick-card">
-        <span class="quick-card-title">申請</span>
-        <span class="quick-card-sub">部費・機材借用</span>
-      </a>
-    </section>
-
-    <!-- お知らせ -->
+    <!-- お知らせカード -->
     <section class="card">
       <div class="card-title">
         <span>お知らせ</span>
-        <button type="button" class="btn btn-primary" id="btn-refresh-notice" style="padding: 4px 10px; font-size: 0.8rem;">更新</button>
+        <button type="button" class="btn btn-primary" id="btn-refresh-notice" style="padding: 4px 10px; font-size: 0.8rem;" onclick="refreshNotices()">更新</button>
       </div>
       <div id="notice-container" class="notice-list">
         <div style="text-align: center; color: var(--text-sub); padding: 20px;">読み込み中...</div>
       </div>
     </section>
 
-    <div style="text-align: center; margin-top: 8px;">
-      <button type="button" class="btn btn-danger" style="padding: 6px 14px; font-size: 0.8rem;" onclick="handleLogout()">ログアウト</button>
+    <!-- ログアウトボタン -->
+    <div style="text-align: center; margin-top: 4px;">
+      <button type="button" class="btn btn-danger" style="padding: 6px 16px; font-size: 0.85rem;" onclick="handleLogout()">ログアウト</button>
     </div>
   </main>
 
@@ -249,15 +160,6 @@
     } else {
       renderHomeView();
     }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      const refreshBtn = document.getElementById('btn-refresh-notice');
-      if (refreshBtn) {
-        refreshBtn.addEventListener('click', () => {
-          withButtonLoading(refreshBtn, fetchNotices, '更新中');
-        });
-      }
-    });
 
     async function handleLogin() {
       const passInput = document.getElementById('input-password');
@@ -299,6 +201,7 @@
       }
     }
 
+    // 直近の第2火曜日を計算（年は省略）
     function calcNextMeeting() {
       const today = new Date();
       let targetDate = null;
@@ -325,9 +228,14 @@
       }
 
       if (targetDate) {
-        const str = `${targetDate.getFullYear()}年${targetDate.getMonth() + 1}月${targetDate.getDate()}日 (火) 18:30〜`;
+        const str = `${targetDate.getMonth() + 1}月${targetDate.getDate()}日(火) 18:30〜`;
         document.getElementById('next-meeting-text').textContent = str;
       }
+    }
+
+    async function refreshNotices() {
+      const btn = document.getElementById('btn-refresh-notice');
+      await withButtonLoading(btn, fetchNotices, '更新中');
     }
 
     async function fetchNotices() {
@@ -345,7 +253,7 @@
 
           return `
             <div class="notice-item ${item.isPinned ? 'is-pinned' : ''}">
-              <div class="notice-meta">
+              <div class="notice-header">
                 ${item.isPinned ? '<span class="notice-pin-tag">[固定]</span>' : ''}
                 <span>${escapeHtml(item.time)}</span>
               </div>
@@ -354,7 +262,7 @@
           `;
         }).join('');
       } catch (e) {
-        container.innerHTML = '<div style="text-align: center; color: var(--text-sub); padding: 20px;">お知らせの取得に失敗しました。GASのURL設定をご確認ください。</div>';
+        container.innerHTML = '<div style="text-align: center; color: var(--danger); padding: 20px;">お知らせの取得に失敗しました。GASのURLをご確認ください。</div>';
       }
     }
   </script>
