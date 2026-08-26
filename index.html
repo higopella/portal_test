@@ -1,305 +1,267 @@
-/**
- * Higo-Pella Portal 共通スクリプト (src/menu.js)
- * - 必須スタイルの自動注入（CSS未読み込み時の防壊処理）
- * - 共通ヘッダー・ドロワーメニューの自動生成
- * - 新旧互換ログイン状態管理
- * - API通信・二重送信防止・XSS対策
- */
-
-const CONFIG = {
-  // ★GASのウェブアプリURL（未設定時はクライアント側でパスワード照合を行います）
-  GAS_API_URL: "https://script.google.com/macros/s/AKfycbzL5n1Kz_g_YOUR_DEPLOYMENT_ID/exec",
-  STORAGE_KEYS: {
-    IS_LOGGED_IN: "higopella_is_logged_in",
-    OLD_IS_LOGGED_IN: "isLoggedIn",
-    IS_ADMIN: "higopella_is_admin",
-    OLD_IS_ADMIN: "isAdmin",
-    LAST_ACCESS_TIME: "higopella_last_access_time"
-  }
-};
-
-// ==========================================================================
-// 1. 必須CSSの自動注入（外部CSSが読み込めなくてもヘッダー・メニューを動作させる）
-// ==========================================================================
-function injectCoreStyles() {
-  if (document.getElementById("injected-core-styles")) return;
-  const style = document.createElement("style");
-  style.id = "injected-core-styles";
-  style.textContent = `
-    :root {
-      --bg: #f8fafc;
-      --card: #ffffff;
-      --text: #2c3e50;
-      --text-sub: #64748b;
-      --primary: #4fc3f7;
-      --primary-light: #e1f5fe;
-      --primary-dark: #0288d1;
-      --border: #e2e8f0;
-      --danger: #ef5350;
-      --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-      --radius: 8px;
-      --header-height: 56px;
-    }
-    body {
-      margin: 0;
-      padding-top: var(--header-height);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-    }
-    .site-header {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      height: var(--header-height);
-      background-color: var(--card);
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 16px;
-      z-index: 1000;
-      box-shadow: var(--shadow);
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ホーム - Higo-Pella Portal</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="src/common.css">
+  <style>
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
       box-sizing: border-box;
     }
-    .site-logo {
-      font-size: 1.1rem; font-weight: 700; color: var(--primary-dark);
-      text-decoration: none; display: flex; align-items: center; gap: 8px;
+    .card {
+      background-color: var(--card, #ffffff);
+      border-radius: var(--radius, 8px);
+      border: 1px solid var(--border, #e2e8f0);
+      padding: 20px;
+      box-shadow: var(--shadow, 0 2px 8px rgba(0, 0, 0, 0.06));
     }
-    .site-logo img { width: 28px; height: 28px; border-radius: 4px; }
-    .btn-menu {
-      background: none; border: none; font-size: 1.5rem; color: var(--text);
-      cursor: pointer; padding: 8px; line-height: 1; touch-action: manipulation;
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: var(--primary-dark, #0288d1);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
-    .drawer-overlay {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background-color: rgba(0, 0, 0, 0.4);
-      z-index: 1010; opacity: 0; visibility: hidden; pointer-events: none;
-      transition: opacity 0.25s ease, visibility 0.25s ease;
+    .meeting-date {
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--primary-dark, #0288d1);
+      background-color: var(--primary-light, #e1f5fe);
+      padding: 12px;
+      border-radius: var(--radius, 8px);
+      text-align: center;
     }
-    .drawer-overlay.active { opacity: 1; visibility: visible; pointer-events: auto; }
-    .drawer-menu {
-      position: fixed; top: 0; right: -280px; width: 260px; height: 100%;
-      background-color: var(--card); box-shadow: -2px 0 12px rgba(0, 0, 0, 0.15);
-      z-index: 1020; transition: right 0.25s ease;
-      display: flex; flex-direction: column; padding: 20px 16px; box-sizing: border-box;
+    .notice-list {
+      max-height: 350px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
-    .drawer-menu.active { right: 0; }
-    .drawer-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+    .notice-item {
+      padding: 12px;
+      background-color: var(--bg, #f8fafc);
+      border-radius: var(--radius, 8px);
+      border-left: 4px solid var(--primary, #4fc3f7);
     }
-    .drawer-title { font-weight: bold; font-size: 1rem; color: var(--text); }
-    .btn-close {
-      background: none; border: none; font-size: 1.4rem; color: var(--text-sub);
-      cursor: pointer; padding: 4px 8px;
+    .notice-item.is-pinned {
+      border-left-color: var(--primary-dark, #0288d1);
+      background-color: var(--primary-light, #e1f5fe);
     }
-    .drawer-nav { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
-    .drawer-nav a {
-      display: block; padding: 10px 14px; color: var(--text); text-decoration: none;
-      border-radius: var(--radius); font-weight: 500;
+    .notice-header {
+      font-size: 0.8rem;
+      color: var(--text-sub, #64748b);
+      margin-bottom: 4px;
+      display: flex;
+      gap: 8px;
     }
-    .drawer-nav a:hover, .drawer-nav a.current {
-      background-color: var(--primary-light); color: var(--primary-dark);
+    .notice-pin-tag { font-weight: bold; color: var(--primary-dark, #0288d1); }
+    .notice-body { font-size: 0.95rem; white-space: pre-wrap; word-break: break-word; }
+    .notice-body .highlight { color: var(--primary-dark, #0288d1); font-weight: bold; }
+    .login-box {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 320px;
+      margin: 40px auto;
+      text-align: center;
     }
-    .btn-scroll-top {
-      position: fixed; bottom: 24px; right: 20px; width: 44px; height: 44px;
-      background-color: var(--card); border: 1px solid var(--border); border-radius: 50%;
-      box-shadow: var(--shadow); color: var(--text-sub); font-size: 1.2rem;
-      display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 900;
+    .input-text {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border, #e2e8f0);
+      border-radius: var(--radius, 8px);
+      font-size: 1rem;
+      box-sizing: border-box;
     }
-    .btn-scroll-top.visible { display: flex; }
-    .toast-container {
-      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-      z-index: 2000; display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+    .quick-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
     }
-    .toast {
-      background-color: #333333; color: #ffffff; padding: 10px 20px;
-      border-radius: 20px; font-size: 0.9rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      opacity: 0; transform: translateY(10px); transition: opacity 0.25s ease, transform 0.25s ease;
-    }
-    .toast.toast-error { background-color: var(--danger); }
-    .toast.show { opacity: 1; transform: translateY(0); }
-  `;
-  document.head.appendChild(style);
-}
+  </style>
+</head>
+<body>
 
-// ==========================================================================
-// 2. ログイン状態ヘルパー（新旧キー両対応で確実に保持）
-// ==========================================================================
-function checkUserLogin() {
-  return (
-    localStorage.getItem(CONFIG.STORAGE_KEYS.IS_LOGGED_IN) === "true" ||
-    localStorage.getItem(CONFIG.STORAGE_KEYS.OLD_IS_LOGGED_IN) === "true"
-  );
-}
+  <!-- 未ログイン画面 -->
+  <div id="login-section" class="container" style="display: none;">
+    <div class="card login-box">
+      <h2>サークル員ログイン</h2>
+      <p style="font-size: 0.85rem; color: var(--text-sub, #64748b);">パスワードを入力してください</p>
+      <form id="form-login" onsubmit="event.preventDefault(); handleLogin();">
+        <input type="password" id="input-password" class="input-text" placeholder="パスワード" style="margin-bottom: 12px;" required>
+        <button type="submit" id="btn-login" class="btn btn-primary" style="width: 100%;">ログイン</button>
+      </form>
+    </div>
+  </div>
 
-function setUserLogin(status) {
-  if (status) {
-    localStorage.setItem(CONFIG.STORAGE_KEYS.IS_LOGGED_IN, "true");
-    localStorage.setItem(CONFIG.STORAGE_KEYS.OLD_IS_LOGGED_IN, "true");
-  } else {
-    localStorage.removeItem(CONFIG.STORAGE_KEYS.IS_LOGGED_IN);
-    localStorage.removeItem(CONFIG.STORAGE_KEYS.OLD_IS_LOGGED_IN);
-  }
-}
+  <!-- ログイン後メイン画面 -->
+  <main id="main-section" class="container" style="display: none;">
+    <section class="card">
+      <div class="card-title">次回の部会</div>
+      <div id="next-meeting-text" class="meeting-date">計算中...</div>
+    </section>
 
-function checkAdminLogin() {
-  return (
-    localStorage.getItem(CONFIG.STORAGE_KEYS.IS_ADMIN) === "true" ||
-    localStorage.getItem(CONFIG.STORAGE_KEYS.OLD_IS_ADMIN) === "true"
-  );
-}
+    <section class="quick-links">
+      <a href="booking/index.html" class="btn btn-primary">練習予約</a>
+      <a href="searchYT/index.html" class="btn btn-primary">YouTube検索</a>
+      <a href="forms/index.html" class="btn btn-primary">申請フォーム</a>
+    </section>
 
-function setAdminLogin(status) {
-  if (status) {
-    localStorage.setItem(CONFIG.STORAGE_KEYS.IS_ADMIN, "true");
-    localStorage.setItem(CONFIG.STORAGE_KEYS.OLD_IS_ADMIN, "true");
-  } else {
-    localStorage.removeItem(CONFIG.STORAGE_KEYS.IS_ADMIN);
-    localStorage.removeItem(CONFIG.STORAGE_KEYS.OLD_IS_ADMIN);
-  }
-}
-
-// ==========================================================================
-// 3. ドロワーメニュー開閉制御（グローバル関数化）
-// ==========================================================================
-window.toggleDrawerMenu = function(isOpen) {
-  const drawer = document.getElementById("drawer-menu");
-  const overlay = document.getElementById("drawer-overlay");
-  if (!drawer || !overlay) return;
-
-  if (isOpen) {
-    drawer.classList.add("active");
-    overlay.classList.add("active");
-  } else {
-    drawer.classList.remove("active");
-    overlay.classList.remove("active");
-  }
-};
-
-// ==========================================================================
-// 4. セキュリティ & API通信
-// ==========================================================================
-function escapeHtml(str) {
-  if (str === null || str === undefined) return "";
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-async function callGasApi(action, data = {}) {
-  try {
-    const payload = { action: action, data: data };
-    const response = await fetch(CONFIG.GAS_API_URL, {
-      method: "POST",
-      body: JSON.stringify(payload),
-      headers: { "Content-Type": "text/plain;charset=utf-8" }
-    });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return await response.json();
-  } catch (error) {
-    console.warn(`[GAS通信注意] action: ${action}`, error);
-    throw error;
-  }
-}
-
-async function withButtonLoading(button, asyncCallback, loadingText = "通信中...") {
-  if (!button || button.disabled) return;
-  const originalText = button.textContent;
-  button.disabled = true;
-  button.classList.add("is-loading");
-  button.textContent = loadingText;
-
-  try {
-    await asyncCallback();
-  } finally {
-    button.disabled = false;
-    button.classList.remove("is-loading");
-    button.textContent = originalText;
-  }
-}
-
-function showToast(message, type = "info") {
-  let container = document.querySelector(".toast-container");
-  if (!container) {
-    container = document.createElement("div");
-    container.className = "toast-container";
-    document.body.appendChild(container);
-  }
-
-  const toast = document.createElement("div");
-  toast.className = `toast ${type === "error" ? "toast-error" : ""}`;
-  toast.textContent = message;
-  container.appendChild(toast);
-
-  setTimeout(() => toast.classList.add("show"), 10);
-  setTimeout(() => {
-    toast.classList.remove("show");
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
-}
-
-// ==========================================================================
-// 5. 共通レイアウトの初期化
-// ==========================================================================
-function initCommonLayout(activeKey = "") {
-  injectCoreStyles();
-
-  const isSubDir = activeKey !== "home";
-  const basePath = isSubDir ? "../" : "./";
-  const iconPath = `${basePath}src/icon.png`;
-
-  const menuItems = [
-    { key: "home", title: "ホーム", href: `${basePath}index.html` },
-    { key: "booking", title: "練習予約", href: `${basePath}booking/index.html` },
-    { key: "forms", title: "申請フォーム", href: `${basePath}forms/index.html` },
-    { key: "searchYT", title: "YouTube検索", href: `${basePath}searchYT/index.html` },
-    { key: "admin", title: "管理者画面", href: `${basePath}admin/index.html` }
-  ];
-
-  const layoutHtml = `
-    <header class="site-header">
-      <a href="${basePath}index.html" class="site-logo">
-        <img src="${iconPath}" alt="Logo" onerror="this.style.display='none'">
-        <span>Higo-Pella Portal</span>
-      </a>
-      <button type="button" class="btn-menu" id="btn-open-drawer" onclick="toggleDrawerMenu(true)" aria-label="メニューを開く">☰</button>
-    </header>
-
-    <div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawerMenu(false)"></div>
-
-    <nav class="drawer-menu" id="drawer-menu" aria-label="メインメニュー">
-      <div class="drawer-header">
-        <span class="drawer-title">メニュー</span>
-        <button type="button" class="btn-close" id="btn-close-drawer" onclick="toggleDrawerMenu(false)" aria-label="メニューを閉じる">×</button>
+    <section class="card">
+      <div class="card-title">
+        <span>お知らせ</span>
+        <button type="button" class="btn btn-primary" id="btn-refresh-notice" style="padding: 4px 10px; font-size: 0.8rem;">更新</button>
       </div>
-      <ul class="drawer-nav">
-        ${menuItems
-          .map(
-            (item) =>
-              `<li><a href="${item.href}" class="${item.key === activeKey ? "current" : ""}">${escapeHtml(item.title)}</a></li>`
-          )
-          .join("")}
-      </ul>
-    </nav>
+      <div id="notice-container" class="notice-list">
+        <div style="text-align: center; color: var(--text-sub); padding: 20px;">読み込み中...</div>
+      </div>
+    </section>
 
-    <button type="button" class="btn-scroll-top" id="btn-scroll-top" aria-label="ページ最上部へスクロール">↑</button>
-  `;
+    <div style="text-align: center; margin-top: 10px;">
+      <button type="button" class="btn btn-danger" style="padding: 6px 16px; font-size: 0.85rem;" onclick="handleLogout()">ログアウト</button>
+    </div>
+  </main>
 
-  document.body.insertAdjacentHTML("afterbegin", layoutHtml);
+  <script src="src/menu.js"></script>
+  <script>
+    initCommonLayout('home');
 
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") toggleDrawerMenu(false);
-  });
+    // 画面表示切替
+    function renderHomeView() {
+      const loginSec = document.getElementById('login-section');
+      const mainSec = document.getElementById('main-section');
+      if (!loginSec || !mainSec) return;
 
-  const scrollTopBtn = document.getElementById("btn-scroll-top");
-  window.addEventListener("scroll", () => {
-    if (window.scrollY > 200) scrollTopBtn.classList.add("visible");
-    else scrollTopBtn.classList.remove("visible");
-  });
+      if (checkUserLogin()) {
+        loginSec.style.display = 'none';
+        mainSec.style.display = 'flex';
+        calcNextMeeting();
+        fetchNotices();
+      } else {
+        loginSec.style.display = 'block';
+        mainSec.style.display = 'none';
+      }
+    }
 
-  if (scrollTopBtn) {
-    scrollTopBtn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
-  }
-}
+    // ページ復元（bfcache）および初回読み込みの両方で即座に実行
+    window.addEventListener('pageshow', renderHomeView);
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', renderHomeView);
+    } else {
+      renderHomeView();
+    }
+
+    // ログイン処理（GAS通信 ＋ フォールバック照合）
+    async function handleLogin() {
+      const passInput = document.getElementById('input-password');
+      const btn = document.getElementById('btn-login');
+      const password = passInput.value.trim();
+
+      await withButtonLoading(btn, async () => {
+        let isSuccess = false;
+        try {
+          const res = await callGasApi('verifyPassword', { password });
+          if (res && res.success) {
+            isSuccess = true;
+          } else if (res && res.error) {
+            showToast(res.error, 'error');
+            return;
+          }
+        } catch (err) {
+          // GAS API未設定や通信失敗時のフォールバック判定
+          if (password === 'higo0314') {
+            isSuccess = true;
+          } else {
+            showToast('パスワードが間違っています', 'error');
+            return;
+          }
+        }
+
+        if (isSuccess) {
+          setUserLogin(true);
+          showToast('ログインしました');
+          renderHomeView();
+        }
+      }, '認証中...');
+    }
+
+    function handleLogout() {
+      if (confirm('ログアウトしますか？')) {
+        setUserLogin(false);
+        showToast('ログアウトしました');
+        renderHomeView();
+      }
+    }
+
+    function calcNextMeeting() {
+      const today = new Date();
+      let targetDate = null;
+
+      for (let monthOffset = 0; monthOffset < 3; monthOffset++) {
+        let year = today.getFullYear();
+        let month = today.getMonth() + monthOffset;
+        let tuesdayCount = 0;
+
+        for (let day = 1; day <= 31; day++) {
+          let checkDate = new Date(year, month, day);
+          if (checkDate.getMonth() !== (month % 12)) break;
+          if (checkDate.getDay() === 2) {
+            tuesdayCount++;
+            if (tuesdayCount === 2) {
+              if (checkDate >= new Date(today.getFullYear(), today.getMonth(), today.getDate())) {
+                targetDate = checkDate;
+                break;
+              }
+            }
+          }
+        }
+        if (targetDate) break;
+      }
+
+      if (targetDate) {
+        const str = `${targetDate.getFullYear()}年${targetDate.getMonth() + 1}月${targetDate.getDate()}日 (火) 18:30〜`;
+        document.getElementById('next-meeting-text').textContent = str;
+      }
+    }
+
+    async function fetchNotices() {
+      const container = document.getElementById('notice-container');
+      try {
+        const res = await callGasApi('getNotice');
+        if (!res.success || !res.notices || res.notices.length === 0) {
+          container.innerHTML = '<div style="text-align: center; color: var(--text-sub); padding: 20px;">現在お知らせはありません。</div>';
+          return;
+        }
+
+        container.innerHTML = res.notices.map(item => {
+          let safeText = escapeHtml(item.text);
+          safeText = safeText.replace(/\[\[(.*?)\]\]/g, '<span class="highlight">$1</span>');
+
+          return `
+            <div class="notice-item ${item.isPinned ? 'is-pinned' : ''}">
+              <div class="notice-header">
+                ${item.isPinned ? '<span class="notice-pin-tag">[固定]</span>' : ''}
+                <span>${escapeHtml(item.time)}</span>
+              </div>
+              <div class="notice-body">${safeText}</div>
+            </div>
+          `;
+        }).join('');
+      } catch (e) {
+        container.innerHTML = '<div style="text-align: center; color: var(--text-sub); padding: 20px;">お知らせの取得を待機中</div>';
+      }
+    }
+  </script>
+</body>
+</html>
