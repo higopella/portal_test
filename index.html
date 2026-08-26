@@ -12,73 +12,83 @@
     .container {
       max-width: 800px;
       margin: 0 auto;
-      padding: 16px;
+      padding: 12px 14px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 12px;
       box-sizing: border-box;
     }
-    .meeting-bar {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      background-color: var(--primary-light, #e1f5fe);
-      border: 1px solid var(--primary, #4fc3f7);
-      border-radius: var(--radius, 8px);
-      padding: 12px 16px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: var(--primary-dark, #0288d1);
-    }
+    /* 外枠カード（余白を引き締めてコンパクト化） */
     .card {
       background-color: var(--card, #ffffff);
       border-radius: var(--radius, 8px);
       border: 1px solid var(--border, #e2e8f0);
-      padding: 20px;
+      padding: 12px 14px;
       box-shadow: var(--shadow, 0 2px 8px rgba(0, 0, 0, 0.06));
+    }
+    /* お知らせヘッダー ＆ 次回部会バッジの一体化 */
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .card-title-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
     }
     .card-title {
       font-size: 1rem;
       font-weight: bold;
       color: var(--text, #2c3e50);
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
     }
+    .meeting-badge {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--primary-dark, #0288d1);
+      background-color: var(--primary-light, #e1f5fe);
+      padding: 3px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(79, 195, 247, 0.4);
+    }
+    /* お知らせリスト（高さを抑えてスマホ画面に収まるよう調整） */
     .notice-list {
-      max-height: 420px;
+      max-height: 280px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
+      padding-right: 2px;
     }
     .notice-item {
-      padding: 12px;
+      padding: 8px 10px;
       background-color: var(--bg, #f8fafc);
       border-radius: var(--radius, 8px);
-      border-left: 4px solid var(--primary, #4fc3f7);
+      border-left: 3px solid var(--primary, #4fc3f7);
     }
     .notice-item.is-pinned {
       border-left-color: var(--primary-dark, #0288d1);
       background-color: var(--primary-light, #e1f5fe);
     }
     .notice-header {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       color: var(--text-sub, #64748b);
-      margin-bottom: 4px;
+      margin-bottom: 2px;
       display: flex;
-      gap: 8px;
+      gap: 6px;
     }
     .notice-pin-tag { font-weight: bold; color: var(--primary-dark, #0288d1); }
-    .notice-body { font-size: 0.95rem; white-space: pre-wrap; word-break: break-word; }
+    .notice-body { font-size: 0.95rem; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
     .notice-body .highlight { color: var(--primary-dark, #0288d1); font-weight: bold; }
 
-    /* ログイン画面のデザイン（円形ロゴ ＋ フォーム） */
+    /* ログイン画面 */
     .login-container {
       max-width: 360px;
-      margin: 50px auto 20px;
+      margin: 40px auto 20px;
       width: 100%;
       text-align: center;
     }
@@ -86,7 +96,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
     .login-logo {
       width: 72px;
@@ -136,23 +146,21 @@
 
   <!-- ログイン後メイン画面 -->
   <main id="main-section" class="container" style="display: none;">
-    <div class="meeting-bar">
-      <span>次回部会:</span>
-      <span id="next-meeting-text">計算中...</span>
-    </div>
-
     <section class="card">
-      <div class="card-title">
-        <span>お知らせ</span>
-        <button type="button" class="btn btn-primary" id="btn-refresh-notice" style="min-height: 32px; padding: 4px 12px; font-size: 0.85rem;" onclick="refreshNotices()">更新</button>
+      <div class="card-header">
+        <div class="card-title-group">
+          <span class="card-title">お知らせ</span>
+          <span class="meeting-badge">次回部会: <span id="next-meeting-text">計算中...</span></span>
+        </div>
+        <button type="button" class="btn btn-primary" id="btn-refresh-notice" style="min-height: 30px; padding: 2px 10px; font-size: 0.8rem;" onclick="refreshNotices()">更新</button>
       </div>
       <div id="notice-container" class="notice-list">
-        <div style="text-align: center; color: var(--text-sub); padding: 20px;">読み込み中...</div>
+        <div style="text-align: center; color: var(--text-sub); padding: 14px;">読み込み中...</div>
       </div>
     </section>
 
-    <div style="text-align: center; margin-top: 4px;">
-      <button type="button" class="btn btn-danger" style="min-height: 36px; padding: 6px 20px; font-size: 0.85rem;" onclick="handleLogout()">ログアウト</button>
+    <div style="text-align: center; margin-top: 2px;">
+      <button type="button" class="btn btn-danger" style="min-height: 34px; padding: 4px 18px; font-size: 0.85rem;" onclick="handleLogout()">ログアウト</button>
     </div>
   </main>
 
@@ -272,11 +280,14 @@
           let safeText = escapeHtml(item.text);
           safeText = safeText.replace(/\[\[(.*?)\]\]/g, '<span class="highlight">$1</span>');
 
+          // 秒表記（:ss）を削除
+          const timeFormatted = escapeHtml(item.time).replace(/:\d{2}$/, '');
+
           return `
             <div class="notice-item ${item.isPinned ? 'is-pinned' : ''}">
               <div class="notice-header">
                 ${item.isPinned ? '<span class="notice-pin-tag">[固定]</span>' : ''}
-                <span>${escapeHtml(item.time)}</span>
+                <span>${timeFormatted}</span>
               </div>
               <div class="notice-body">${safeText}</div>
             </div>
