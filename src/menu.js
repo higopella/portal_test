@@ -21,19 +21,19 @@ function toggleDrawer() {
   document.getElementById('drawer-overlay').classList.toggle('open'); 
 }
 
-// ★追加：アクセス数を計測する関数（1時間以上空いた場合のみカウント）
 function trackAccess(gasUrl) {
   const now = new Date().getTime();
   const lastAccess = localStorage.getItem('lastAccessTime');
   
-  // 3600000ミリ秒 = 1時間。初回、または1時間以上経過している場合
   if (!lastAccess || (now - parseInt(lastAccess)) > 3600000) {
-    // 画面の動作を止めないようにバックグラウンドでこっそり送信（awaitしない）
+    // 1時間以上経過（または初回）ならカウントアップ
     fetch(gasUrl, {
       method: "POST",
       body: JSON.stringify({ action: "recordAccess" })
     }).catch(e => {}); 
+    localStorage.setItem('lastAccessTime', now.toString());
+  } else if ((now - parseInt(lastAccess)) > 600000) {
+    // ★追加：10分（600,000ミリ秒）以上経過していた場合のみ時間を更新する
+    localStorage.setItem('lastAccessTime', now.toString());
   }
-  // 操作中は常に「今」の時間をメモに残す
-  localStorage.setItem('lastAccessTime', now.toString());
 }
