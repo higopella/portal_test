@@ -35,15 +35,15 @@
     .checkbox-label { font-size: 14px; font-weight: bold; color: var(--text); display: flex; align-items: center; gap: 5px; margin-bottom: 15px; }
     
     .scrollable-list { max-height: 350px; overflow-y: auto; padding-right: 5px; }
-    .admin-notice-item { display: flex; justify-content: space-between; align-items: stretch; padding: 15px; border: 1px solid var(--border); margin-bottom: 10px; border-radius: 4px; background: #fafcfd; }
-    .admin-notice-content { flex-grow: 1; padding-right: 15px; font-size: 14px; line-height: 1.6; word-break: break-word; }
-    .tag-pinned { color: var(--primary-dark); font-weight: bold; font-size: 12px; border: 1px solid var(--primary-dark); padding: 2px 6px; border-radius: 3px; display: inline-block; margin-bottom: 5px; }
+    /* ★修正：お知らせリストの余白・文字サイズ調整 */
+    .admin-notice-item { display: flex; justify-content: space-between; align-items: stretch; padding: 10px 15px; border: 1px solid var(--border); margin-bottom: 8px; border-radius: 4px; background: #fafcfd; }
+    .admin-notice-content { flex-grow: 1; padding-right: 15px; font-size: 13px; line-height: 1.4; word-break: break-word; }
+    .tag-pinned { color: var(--primary-dark); font-weight: bold; font-size: 11px; border: 1px solid var(--primary-dark); padding: 2px 4px; border-radius: 3px; display: inline-block; margin-bottom: 5px; }
     
-    /* 固定/解除ボタンのベーススタイル */
-    .btn-toggle { width: auto !important; flex-shrink: 0; align-self: center; padding: 10px 15px; border-radius: 4px; font-size: 13px; font-weight: bold; cursor: pointer; margin-right: 8px; transition: 0.2s; }
+    .btn-toggle { width: auto !important; flex-shrink: 0; align-self: center; padding: 8px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; margin-right: 8px; transition: 0.2s; }
     .btn-toggle:disabled { color: #fff !important; border-color: #999 !important; background: #999 !important; cursor: not-allowed; }
     
-    .btn-delete { width: auto !important; flex-shrink: 0; align-self: center; padding: 10px 15px; background: #fff; color: #d93025; border: 1px solid #d93025; border-radius: 4px; font-size: 13px; font-weight: bold; cursor: pointer; }
+    .btn-delete { width: auto !important; flex-shrink: 0; align-self: center; padding: 8px 12px; background: #fff; color: #d93025; border: 1px solid #d93025; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; }
     .btn-delete:disabled { color: #fff; border-color: #999; background: #999; cursor: not-allowed; }
     
     .table-container { max-height: 400px; overflow-y: auto; display: block; border-bottom: 1px solid var(--border); }
@@ -92,7 +92,11 @@
         <label class="checkbox-label"><input type="checkbox" id="isPinned"> [固定] 優先表示</label>
         <button id="updBtn" class="btn-main" style="width: auto; padding: 10px 25px;" onclick="upd()">追加</button>
         
-        <h4 style="font-size: 15px; margin-top: 30px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">現在のお知らせ</h4>
+        <!-- ★追加：手動更新ボタン -->
+        <h4 style="font-size: 15px; margin-top: 30px; border-bottom: 1px solid var(--border); padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+          現在のお知らせ
+          <button id="refreshNoticeBtn" type="button" style="width: auto; padding: 6px 12px; background: #f0f4f8; color: var(--primary-dark); border: 1px solid var(--border); border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer;" onclick="refreshAdminData()">更新</button>
+        </h4>
         <div id="admin-notice-list" class="scrollable-list">
           <p style="font-size:14px; color:#888;">読込中...</p>
         </div>
@@ -112,10 +116,10 @@
   
   <button class="scroll-top" onclick="window.scrollTo({top:0, behavior:'smooth'})" id="scrollTopBtn">↑</button>
 
-  <script src="../src/menu.js"></script>
+  <script src="../src/menu.js?ver=3"></script>
   <script>
     if (localStorage.getItem("isLoggedIn") !== "true") window.location.href = "../";
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzSrC43yLEMa0WxqpNa7r4ONX17LSAkHzSGCO6Sw8QhebGKQQTlElZVsyFSBk_yFQIFfQ/exec";
+    const GAS_API_URL = "YOUR_GAS_API_URL_HERE";
 
     window.onload = () => { 
       injectMenu('../'); 
@@ -162,6 +166,20 @@
       fetchData();
     }
 
+    // ★追加：手動更新および追加後のリフレッシュ処理
+    async function refreshAdminData() {
+      const btn = document.getElementById('refreshNoticeBtn');
+      if (btn) { btn.disabled = true; btn.innerText = "更新中..."; }
+      
+      // 目に見えて更新していることがわかるよう「読込中」に書き換え、スクロールを一番上に戻す
+      document.getElementById('admin-notice-list').innerHTML = '<p style="font-size:14px; color:#888;">読込中...</p>';
+      document.getElementById('admin-notice-list').scrollTop = 0;
+      
+      await fetchData();
+      
+      if (btn) { btn.disabled = false; btn.innerText = "更新"; }
+    }
+
     async function fetchData() {
       try {
         const ar = await fetch(GAS_API_URL, { method:"POST", body: JSON.stringify({action:"getAccessCount"}) });
@@ -178,16 +196,15 @@
             let date = n.time.split(" ")[0].substring(5);
             let formattedText = n.text.replace(/\n/g, '<br>').replace(/\[\[(.*?)\]\]/g, '<span style="color: var(--primary-dark); font-weight: bold;">$1</span>');
             
-            // ★変更：三項演算子で「固定」と「解除」のテキストとデザインを切り替え
             let toggleText = n.isPinned ? '解除' : '固定';
             let toggleStyle = n.isPinned 
-                ? 'background: #f0f4f8; color: #666; border: 1px solid #ccc;' // 解除ボタンは控えめなグレー
-                : 'background: #fff; color: var(--primary-dark); border: 1px solid var(--primary-dark);'; // 固定ボタンは水色
+                ? 'background: #f0f4f8; color: #666; border: 1px solid #ccc;'
+                : 'background: #fff; color: var(--primary-dark); border: 1px solid var(--primary-dark);';
             
             nl.innerHTML += `
               <div class="admin-notice-item">
                 <div class="admin-notice-content">
-                  ${tag}<span style="color:#888; font-size:12px; margin-bottom: 4px; display: block;">${date}</span>${formattedText}
+                  ${tag}<span style="color:#888; font-size:11px; margin-bottom: 2px; display: block;">${date}</span>${formattedText}
                 </div>
                 <div style="display:flex; flex-shrink:0;">
                   <button class="btn-toggle" style="${toggleStyle}" onclick="togglePin('${n.time}', this)">${toggleText}</button>
@@ -219,14 +236,14 @@
         if((await res.json()).success) { 
           document.getElementById('notice').value = ""; 
           document.getElementById('isPinned').checked = false; 
-          fetchData(); 
+          // ★変更：追加後、リストを一旦クリアして最新状態を読み込み直す
+          await refreshAdminData();
         }
       } catch(e){}
       
       btn.disabled = false; btn.innerText = "追加";
     }
 
-    // ★変更：ボタンの無効化（切替中...）処理
     async function togglePin(timeStr, btnElement) {
       const originalText = btnElement.innerText;
       btnElement.disabled = true;
@@ -234,7 +251,7 @@
       
       try {
         const res = await fetch(GAS_API_URL, { method:"POST", body: JSON.stringify({action:"toggleNoticePin", data:{time: timeStr}}) });
-        if((await res.json()).success) { fetchData(); } 
+        if((await res.json()).success) { refreshAdminData(); } 
         else { alert("エラー"); btnElement.disabled = false; btnElement.innerText = originalText; }
       } catch(e) { alert("エラー"); btnElement.disabled = false; btnElement.innerText = originalText; }
     }
@@ -248,7 +265,7 @@
       
       try {
         const res = await fetch(GAS_API_URL, { method:"POST", body: JSON.stringify({action:"deleteNotice", data:{time: timeStr}}) });
-        if((await res.json()).success) { fetchData(); } 
+        if((await res.json()).success) { refreshAdminData(); } 
         else { alert("エラー"); btnElement.disabled = false; btnElement.innerText = originalText; }
       } catch(e) { alert("エラー"); btnElement.disabled = false; btnElement.innerText = originalText; }
     }
