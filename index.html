@@ -50,10 +50,11 @@
       #miniCalendar { height: 450px; }
     }
     
-    .notice-item { font-size: 14px; line-height: 1.6; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px dashed var(--border); }
+    /* ★修正：お知らせの余白を狭め、行間・文字サイズを微調整 */
+    .notice-item { font-size: 13px; line-height: 1.4; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed var(--border); }
     .notice-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-    .tag-pinned { color: var(--primary-dark); font-weight: bold; font-size: 12px; border: 1px solid var(--primary-dark); padding: 2px 6px; border-radius: 3px; margin-right: 6px; }
-    .notice-time { color: #888; font-size: 12px; display: block; margin-bottom: 6px; }
+    .tag-pinned { color: var(--primary-dark); font-weight: bold; font-size: 11px; border: 1px solid var(--primary-dark); padding: 2px 4px; border-radius: 3px; margin-right: 5px; }
+    .notice-time { color: #888; font-size: 11px; display: block; margin-bottom: 4px; }
   </style>
 </head>
 <body>
@@ -78,7 +79,6 @@
     <div class="layout-grid">
       <div class="card">
         <h3 class="card-title">お知らせ</h3>
-        <!-- ★変更：日付部分のfont-sizeを18pxに微調整しました -->
         <p style="font-size: 14px; margin-bottom: 15px; font-weight: bold; display: flex; align-items: baseline; gap: 8px;">
           次回の部会: <span id="next-meeting" style="color:var(--primary-dark); font-size: 18px;"></span>
         </p>
@@ -92,9 +92,10 @@
     </div>
   </div>
 
-  <script src="./src/menu.js"></script>
+  <!-- ブラウザキャッシュ対策でver=3を指定 -->
+  <script src="./src/menu.js?ver=3"></script>
   <script>
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzSrC43yLEMa0WxqpNa7r4ONX17LSAkHzSGCO6Sw8QhebGKQQTlElZVsyFSBk_yFQIFfQ/exec";
+    const GAS_API_URL = "YOUR_GAS_API_URL_HERE";
 
     window.onload = function() {
       injectMenu('./');
