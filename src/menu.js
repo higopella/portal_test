@@ -3,8 +3,8 @@
  */
 
 const CONFIG = {
-  // ★ここにGASのウェブアプリURL（.../exec）を記述してください
-  GAS_API_URL: "https://script.google.com/macros/s/AKfycbzSrC43yLEMa0WxqpNa7r4ONX17LSAkHzSGCO6Sw8QhebGKQQTlElZVsyFSBk_yFQIFfQ/exec",
+  // ★GASのウェブアプリURL（.../exec）
+  GAS_API_URL: "https://script.google.com/macros/s/AKfycbzL5n1Kz_g_YOUR_DEPLOYMENT_ID/exec",
   STORAGE_KEYS: {
     IS_LOGGED_IN: "higopella_is_logged_in",
     OLD_IS_LOGGED_IN: "isLoggedIn",
@@ -14,7 +14,6 @@ const CONFIG = {
   }
 };
 
-// 必須CSS自動注入（左側ドロワー対応）
 function injectCoreStyles() {
   if (document.getElementById("injected-core-styles")) return;
   const style = document.createElement("style");
@@ -56,9 +55,8 @@ function injectCoreStyles() {
     }
     .site-logo {
       font-size: 1.1rem; font-weight: 700; color: var(--primary-dark);
-      text-decoration: none; display: flex; align-items: center; gap: 8px;
+      text-decoration: none; display: flex; align-items: center;
     }
-    .site-logo img { width: 28px; height: 28px; border-radius: 4px; }
     .btn-menu {
       background: none; border: none; font-size: 1.5rem; color: var(--text);
       cursor: pointer; padding: 6px; line-height: 1; touch-action: manipulation;
@@ -70,7 +68,6 @@ function injectCoreStyles() {
       transition: opacity 0.25s ease, visibility 0.25s ease;
     }
     .drawer-overlay.active { opacity: 1; visibility: visible; pointer-events: auto; }
-    /* 左側からスライドイン */
     .drawer-menu {
       position: fixed; top: 0; left: -280px; width: 260px; height: 100%;
       background-color: var(--card); box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
@@ -211,9 +208,7 @@ function initCommonLayout(activeKey = "") {
 
   const isSubDir = activeKey !== "home";
   const basePath = isSubDir ? "../" : "./";
-  const iconPath = `${basePath}src/icon.png`;
 
-  // ディレクトリ指定のリンク
   const menuItems = [
     { key: "home", title: "ホーム", href: `${basePath}` },
     { key: "booking", title: "練習予約", href: `${basePath}booking/` },
@@ -222,11 +217,11 @@ function initCommonLayout(activeKey = "") {
     { key: "admin", title: "管理者画面", href: `${basePath}admin/` }
   ];
 
+  // ヘッダーロゴ画像（img）を削除し、テキストのみに更新
   const layoutHtml = `
     <header class="site-header">
       <button type="button" class="btn-menu" id="btn-open-drawer" onclick="toggleDrawerMenu(true)" aria-label="メニューを開く">☰</button>
       <a href="${basePath}" class="site-logo">
-        <img src="${iconPath}" alt="Logo" onerror="this.style.display='none'">
         <span>Higo-Pella Portal</span>
       </a>
     </header>
