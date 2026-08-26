@@ -8,7 +8,7 @@
 
 const CONFIG = {
   // ★GASのウェブアプリURL（未設定時はクライアント側でパスワード照合を行います）
-  GAS_API_URL: "https://script.google.com/macros/s/AKfycbzL5n1Kz_g_YOUR_DEPLOYMENT_ID/exec",
+  GAS_API_URL: "https://script.google.com/macros/s/AKfycbzSrC43yLEMa0WxqpNa7r4ONX17LSAkHzSGCO6Sw8QhebGKQQTlElZVsyFSBk_yFQIFfQ/exec",
   STORAGE_KEYS: {
     IS_LOGGED_IN: "higopella_is_logged_in",
     OLD_IS_LOGGED_IN: "isLoggedIn",
