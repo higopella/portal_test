@@ -1,32 +1,183 @@
 /**
  * Higo-Pella Portal 共通スクリプト (src/menu.js)
- * - 全画面共通のヘッダー・メニュー生成
- * - アクセス解析セッション管理（1時間経過判定）
- * - API通信・XSS対策・二重送信防止ヘルパー
+ * - 必須スタイルの自動注入（CSS未読み込み時の防壊処理）
+ * - 共通ヘッダー・ドロワーメニューの自動生成
+ * - 新旧互換ログイン状態管理
+ * - API通信・二重送信防止・XSS対策
  */
 
-// ==========================================================================
-// 1. 基本設定（GAS API URLの一元管理）
-// ==========================================================================
 const CONFIG = {
-  // ★本番・テスト環境の切り替えはここ1箇所を変更するだけで全画面に反映されます
+  // ★GASのウェブアプリURL（未設定時はクライアント側でパスワード照合を行います）
   GAS_API_URL: "https://script.google.com/macros/s/AKfycbzL5n1Kz_g_YOUR_DEPLOYMENT_ID/exec",
   STORAGE_KEYS: {
     IS_LOGGED_IN: "higopella_is_logged_in",
+    OLD_IS_LOGGED_IN: "isLoggedIn",
     IS_ADMIN: "higopella_is_admin",
+    OLD_IS_ADMIN: "isAdmin",
     LAST_ACCESS_TIME: "higopella_last_access_time"
   }
 };
 
 // ==========================================================================
-// 2. セキュリティ・XSS（悪意あるタグ混入）対策関数
+// 1. 必須CSSの自動注入（外部CSSが読み込めなくてもヘッダー・メニューを動作させる）
 // ==========================================================================
-/**
- * 文字列中の特殊文字を安全なHTMLエンティティに変換します。
- * バンド名、代表者名、お知らせ文などの描画時は必ずこれを通します。
- * @param {string} str - エスケープする文字列
- * @returns {string} エスケープ後の文字列
- */
+function injectCoreStyles() {
+  if (document.getElementById("injected-core-styles")) return;
+  const style = document.createElement("style");
+  style.id = "injected-core-styles";
+  style.textContent = `
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #2c3e50;
+      --text-sub: #64748b;
+      --primary: #4fc3f7;
+      --primary-light: #e1f5fe;
+      --primary-dark: #0288d1;
+      --border: #e2e8f0;
+      --danger: #ef5350;
+      --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      --radius: 8px;
+      --header-height: 56px;
+    }
+    body {
+      margin: 0;
+      padding-top: var(--header-height);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+    }
+    .site-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--header-height);
+      background-color: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px;
+      z-index: 1000;
+      box-shadow: var(--shadow);
+      box-sizing: border-box;
+    }
+    .site-logo {
+      font-size: 1.1rem; font-weight: 700; color: var(--primary-dark);
+      text-decoration: none; display: flex; align-items: center; gap: 8px;
+    }
+    .site-logo img { width: 28px; height: 28px; border-radius: 4px; }
+    .btn-menu {
+      background: none; border: none; font-size: 1.5rem; color: var(--text);
+      cursor: pointer; padding: 8px; line-height: 1; touch-action: manipulation;
+    }
+    .drawer-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0, 0, 0, 0.4);
+      z-index: 1010; opacity: 0; visibility: hidden; pointer-events: none;
+      transition: opacity 0.25s ease, visibility 0.25s ease;
+    }
+    .drawer-overlay.active { opacity: 1; visibility: visible; pointer-events: auto; }
+    .drawer-menu {
+      position: fixed; top: 0; right: -280px; width: 260px; height: 100%;
+      background-color: var(--card); box-shadow: -2px 0 12px rgba(0, 0, 0, 0.15);
+      z-index: 1020; transition: right 0.25s ease;
+      display: flex; flex-direction: column; padding: 20px 16px; box-sizing: border-box;
+    }
+    .drawer-menu.active { right: 0; }
+    .drawer-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+    }
+    .drawer-title { font-weight: bold; font-size: 1rem; color: var(--text); }
+    .btn-close {
+      background: none; border: none; font-size: 1.4rem; color: var(--text-sub);
+      cursor: pointer; padding: 4px 8px;
+    }
+    .drawer-nav { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+    .drawer-nav a {
+      display: block; padding: 10px 14px; color: var(--text); text-decoration: none;
+      border-radius: var(--radius); font-weight: 500;
+    }
+    .drawer-nav a:hover, .drawer-nav a.current {
+      background-color: var(--primary-light); color: var(--primary-dark);
+    }
+    .btn-scroll-top {
+      position: fixed; bottom: 24px; right: 20px; width: 44px; height: 44px;
+      background-color: var(--card); border: 1px solid var(--border); border-radius: 50%;
+      box-shadow: var(--shadow); color: var(--text-sub); font-size: 1.2rem;
+      display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 900;
+    }
+    .btn-scroll-top.visible { display: flex; }
+    .toast-container {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      z-index: 2000; display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+    }
+    .toast {
+      background-color: #333333; color: #ffffff; padding: 10px 20px;
+      border-radius: 20px; font-size: 0.9rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      opacity: 0; transform: translateY(10px); transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    .toast.toast-error { background-color: var(--danger); }
+    .toast.show { opacity: 1; transform: translateY(0); }
+  `;
+  document.head.appendChild(style);
+}
+
+// ==========================================================================
+// 2. ログイン状態ヘルパー（新旧キー両対応で確実に保持）
+// ==========================================================================
+function checkUserLogin() {
+  return (
+    localStorage.getItem(CONFIG.STORAGE_KEYS.IS_LOGGED_IN) === "true" ||
+    localStorage.getItem(CONFIG.STORAGE_KEYS.OLD_IS_LOGGED_IN) === "true"
+  );
+}
+
+function setUserLogin(status) {
+  if (status) {
+    localStorage.setItem(CONFIG.STORAGE_KEYS.IS_LOGGED_IN, "true");
+    localStorage.setItem(CONFIG.STORAGE_KEYS.OLD_IS_LOGGED_IN, "true");
+  } else {
+    localStorage.removeItem(CONFIG.STORAGE_KEYS.IS_LOGGED_IN);
+    localStorage.removeItem(CONFIG.STORAGE_KEYS.OLD_IS_LOGGED_IN);
+  }
+}
+
+function checkAdminLogin() {
+  return (
+    localStorage.getItem(CONFIG.STORAGE_KEYS.IS_ADMIN) === "true" ||
+    localStorage.getItem(CONFIG.STORAGE_KEYS.OLD_IS_ADMIN) === "true"
+  );
+}
+
+function setAdminLogin(status) {
+  if (status) {
+    localStorage.setItem(CONFIG.STORAGE_KEYS.IS_ADMIN, "true");
+    localStorage.setItem(CONFIG.STORAGE_KEYS.OLD_IS_ADMIN, "true");
+  } else {
+    localStorage.removeItem(CONFIG.STORAGE_KEYS.IS_ADMIN);
+    localStorage.removeItem(CONFIG.STORAGE_KEYS.OLD_IS_ADMIN);
+  }
+}
+
+// ==========================================================================
+// 3. ドロワーメニュー開閉制御（グローバル関数化）
+// ==========================================================================
+window.toggleDrawerMenu = function(isOpen) {
+  const drawer = document.getElementById("drawer-menu");
+  const overlay = document.getElementById("drawer-overlay");
+  if (!drawer || !overlay) return;
+
+  if (isOpen) {
+    drawer.classList.add("active");
+    overlay.classList.add("active");
+  } else {
+    drawer.classList.remove("active");
+    overlay.classList.remove("active");
+  }
+};
+
+// ==========================================================================
+// 4. セキュリティ & API通信
+// ==========================================================================
 function escapeHtml(str) {
   if (str === null || str === undefined) return "";
   return String(str)
@@ -37,15 +188,6 @@ function escapeHtml(str) {
     .replace(/'/g, "&#39;");
 }
 
-// ==========================================================================
-// 3. 通信処理ラッパー（エラーハンドリング共通化）
-// ==========================================================================
-/**
- * Google Apps Script API へ POST リクエストを送信します。
- * @param {string} action - GAS側のswitchで分岐するアクション名
- * @param {object} data - 送信するデータ
- * @returns {Promise<object>} APIレスポンス
- */
 async function callGasApi(action, data = {}) {
   try {
     const payload = { action: action, data: data };
@@ -54,32 +196,16 @@ async function callGasApi(action, data = {}) {
       body: JSON.stringify(payload),
       headers: { "Content-Type": "text/plain;charset=utf-8" }
     });
-
-    if (!response.ok) {
-      throw new Error(`HTTPエラー: ステータス ${response.status}`);
-    }
-
-    const result = await response.json();
-    return result;
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
   } catch (error) {
-    console.error(`[API通信エラー] action: ${action}`, error);
-    showToast("通信に失敗しました。電波状況をご確認ください。", "error");
+    console.warn(`[GAS通信注意] action: ${action}`, error);
     throw error;
   }
 }
 
-// ==========================================================================
-// 4. UI操作・二重送信防止・トースト通知
-// ==========================================================================
-/**
- * 非同期処理中にボタンを無効化し、二重送信を防止します。
- * @param {HTMLButtonElement} button - 対象のボタン要素
- * @param {Function} asyncCallback - 実行する非同期関数
- * @param {string} loadingText - 通信中に表示するテキスト
- */
 async function withButtonLoading(button, asyncCallback, loadingText = "通信中...") {
   if (!button || button.disabled) return;
-  
   const originalText = button.textContent;
   button.disabled = true;
   button.classList.add("is-loading");
@@ -94,11 +220,6 @@ async function withButtonLoading(button, asyncCallback, loadingText = "通信中
   }
 }
 
-/**
- * 画面下部に簡易通知（トースト）を表示します。
- * @param {string} message - 表示するメッセージ
- * @param {string} type - 'info' または 'error'
- */
 function showToast(message, type = "info") {
   let container = document.querySelector(".toast-container");
   if (!container) {
@@ -120,38 +241,11 @@ function showToast(message, type = "info") {
 }
 
 // ==========================================================================
-// 5. アクセス解析（セッション管理）
+// 5. 共通レイアウトの初期化
 // ==========================================================================
-/**
- * 前回のアクセスから1時間以上経過している場合、GASへアクセス数+1を送信します。
- * 10分以内の連続操作時は端末負荷軽減のため時刻の更新のみ行います。
- */
-function handleAccessAnalytics() {
-  const now = Date.now();
-  const ONE_HOUR = 60 * 60 * 1000;
-  const TEN_MINUTES = 10 * 60 * 1000;
-
-  const lastAccess = parseInt(localStorage.getItem(CONFIG.STORAGE_KEYS.LAST_ACCESS_TIME) || "0", 10);
-
-  if (!lastAccess || now - lastAccess >= ONE_HOUR) {
-    // 1時間以上経過しているためカウントアップ
-    localStorage.setItem(CONFIG.STORAGE_KEYS.LAST_ACCESS_TIME, now.toString());
-    callGasApi("recordAccess").catch(() => {});
-  } else if (now - lastAccess >= TEN_MINUTES) {
-    // 10分〜1時間の間は時刻のみ更新
-    localStorage.setItem(CONFIG.STORAGE_KEYS.LAST_ACCESS_TIME, now.toString());
-  }
-}
-
-// ==========================================================================
-// 6. 共通ヘッダー・ドロワーメニューの自動生成
-// ==========================================================================
-/**
- * ページ読み込み時に共通のヘッダー・メニュー・スクロールトップを自動生成します。
- * @param {string} activeKey - 現在のページ識別子 ('home' | 'booking' | 'forms' | 'searchYT' | 'admin')
- */
 function initCommonLayout(activeKey = "") {
-  // 現在の階層（ルートかサブディレクトリか）に応じて相対パスを調整
+  injectCoreStyles();
+
   const isSubDir = activeKey !== "home";
   const basePath = isSubDir ? "../" : "./";
   const iconPath = `${basePath}src/icon.png`;
@@ -170,15 +264,15 @@ function initCommonLayout(activeKey = "") {
         <img src="${iconPath}" alt="Logo" onerror="this.style.display='none'">
         <span>Higo-Pella Portal</span>
       </a>
-      <button type="button" class="btn-menu" id="btn-open-drawer" aria-label="メニューを開く">☰</button>
+      <button type="button" class="btn-menu" id="btn-open-drawer" onclick="toggleDrawerMenu(true)" aria-label="メニューを開く">☰</button>
     </header>
 
-    <div class="drawer-overlay" id="drawer-overlay"></div>
+    <div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawerMenu(false)"></div>
 
     <nav class="drawer-menu" id="drawer-menu" aria-label="メインメニュー">
       <div class="drawer-header">
         <span class="drawer-title">メニュー</span>
-        <button type="button" class="btn-close" id="btn-close-drawer" aria-label="メニューを閉じる">×</button>
+        <button type="button" class="btn-close" id="btn-close-drawer" onclick="toggleDrawerMenu(false)" aria-label="メニューを閉じる">×</button>
       </div>
       <ul class="drawer-nav">
         ${menuItems
@@ -195,49 +289,17 @@ function initCommonLayout(activeKey = "") {
 
   document.body.insertAdjacentHTML("afterbegin", layoutHtml);
 
-  // ドロワー開閉イベント
-  const openBtn = document.getElementById("btn-open-drawer");
-  const closeBtn = document.getElementById("btn-close-drawer");
-  const overlay = document.getElementById("drawer-overlay");
-  const drawer = document.getElementById("drawer-menu");
-  const scrollTopBtn = document.getElementById("btn-scroll-top");
-
-  function openMenu() {
-    drawer.classList.add("active");
-    overlay.classList.add("active");
-  }
-
-  function closeMenu() {
-    drawer.classList.remove("active");
-    overlay.classList.remove("active");
-  }
-
-  if (openBtn) openBtn.addEventListener("click", openMenu);
-  if (closeBtn) closeBtn.addEventListener("click", closeMenu);
-  if (overlay) overlay.addEventListener("click", closeMenu);
-
-  // Escキーで閉じる（アクセシビリティ対応）
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && drawer.classList.contains("active")) {
-      closeMenu();
-    }
+    if (e.key === "Escape") toggleDrawerMenu(false);
   });
 
-  // スクロールトップボタン
+  const scrollTopBtn = document.getElementById("btn-scroll-top");
   window.addEventListener("scroll", () => {
-    if (window.scrollY > 200) {
-      scrollTopBtn.classList.add("visible");
-    } else {
-      scrollTopBtn.classList.remove("visible");
-    }
+    if (window.scrollY > 200) scrollTopBtn.classList.add("visible");
+    else scrollTopBtn.classList.remove("visible");
   });
 
   if (scrollTopBtn) {
-    scrollTopBtn.addEventListener("click", () => {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
+    scrollTopBtn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
   }
-
-  // アクセス解析を実行
-  handleAccessAnalytics();
 }
