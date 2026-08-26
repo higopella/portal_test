@@ -15,23 +15,8 @@
       padding: 12px 14px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
       box-sizing: border-box;
-    }
-    /* 次回部会バー（文字サイズを拡大して視認性を向上） */
-    .meeting-bar {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      background-color: var(--primary-light, #e1f5fe);
-      border: 1px solid var(--primary, #4fc3f7);
-      border-radius: var(--radius, 8px);
-      padding: 10px 14px;
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: var(--primary-dark, #0288d1);
-      letter-spacing: 0.3px;
     }
     .card {
       background-color: var(--card, #ffffff);
@@ -40,19 +25,45 @@
       padding: 14px;
       box-shadow: var(--shadow, 0 2px 8px rgba(0, 0, 0, 0.06));
     }
+    /* ヘッダー行に次回部会を一体化（縦幅を最小化） */
     .card-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 10px;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border, #e2e8f0);
+      flex-wrap: wrap;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
     }
     .card-title {
-      font-size: 1rem;
+      font-size: 1.05rem;
       font-weight: bold;
       color: var(--text, #2c3e50);
     }
+    /* 次回部会の視認性向上バッジ */
+    .meeting-tag {
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: var(--primary-dark, #0288d1);
+      background-color: var(--primary-light, #e1f5fe);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(79, 195, 247, 0.5);
+    }
+    .btn-sm {
+      min-height: 32px;
+      padding: 4px 12px;
+      font-size: 0.85rem;
+    }
     .notice-list {
-      max-height: 300px;
+      max-height: 360px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
@@ -141,24 +152,20 @@
 
   <!-- ログイン後メイン画面 -->
   <main id="main-section" class="container" style="display: none;">
-    <!-- 次回部会（視認性を高めた案内バー） -->
-    <div class="meeting-bar">
-      <span>次回部会:</span>
-      <span id="next-meeting-text">計算中...</span>
-    </div>
-
-    <!-- お知らせカード -->
     <section class="card">
       <div class="card-header">
-        <span class="card-title">お知らせ</span>
-        <button type="button" class="btn btn-primary" id="btn-refresh-notice" style="min-height: 30px; padding: 2px 10px; font-size: 0.8rem;" onclick="refreshNotices()">更新</button>
+        <div class="header-left">
+          <span class="card-title">お知らせ</span>
+          <!-- 次回部会をインライン統合 -->
+          <div class="meeting-tag">次回部会: <span id="next-meeting-text">計算中...</span></div>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" id="btn-refresh-notice" onclick="refreshNotices()">更新</button>
       </div>
       <div id="notice-container" class="notice-list">
         <div style="text-align: center; color: var(--text-sub); padding: 14px;">読み込み中...</div>
       </div>
     </section>
 
-    <!-- ログアウトボタン -->
     <div style="text-align: center; margin-top: 2px;">
       <button type="button" class="btn btn-danger" style="min-height: 34px; padding: 4px 18px; font-size: 0.85rem;" onclick="handleLogout()">ログアウト</button>
     </div>
@@ -231,9 +238,6 @@
       }
     }
 
-    /**
-     * 直近の第2火曜日を計算して表示（年は省略）
-     */
     function calcNextMeeting() {
       const today = new Date();
       let targetDate = null;
@@ -270,9 +274,6 @@
       await withButtonLoading(btn, fetchNotices, '更新中');
     }
 
-    /**
-     * お知らせを取得して描画（秒表記の削除 ＆ XSSサニタイズ）
-     */
     async function fetchNotices() {
       const container = document.getElementById('notice-container');
       try {
@@ -285,8 +286,6 @@
         container.innerHTML = res.notices.map(item => {
           let safeText = escapeHtml(item.text);
           safeText = safeText.replace(/\[\[(.*?)\]\]/g, '<span class="highlight">$1</span>');
-
-          // 秒表記（:ss）を削除
           const timeFormatted = escapeHtml(item.time).replace(/:\d{2}$/, '');
 
           return `
