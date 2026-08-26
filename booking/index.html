@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>練習予約 - Higo-Pella Portal</title>
+  <link rel="icon" type="image/png" href="../src/icon.png">
+  <link rel="apple-touch-icon" href="../src/icon.png">
   <link rel="stylesheet" href="../src/common.css">
   <style>
     .container {
@@ -12,7 +14,8 @@
       padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 16px;
+      box-sizing: border-box;
     }
     .card {
       background-color: var(--card);
@@ -22,24 +25,25 @@
       box-shadow: var(--shadow);
     }
     .tab-nav {
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 8px;
       margin-bottom: 16px;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 8px;
     }
     .tab-btn {
-      padding: 8px 16px;
-      background: none;
-      border: none;
+      height: 44px;
+      background-color: var(--bg);
+      border: 1px solid var(--border);
       font-size: 0.95rem;
       font-weight: bold;
       color: var(--text-sub);
       cursor: pointer;
       border-radius: var(--radius);
+      touch-action: manipulation;
     }
     .tab-btn.active {
       background-color: var(--primary-light);
+      border-color: var(--primary);
       color: var(--primary-dark);
     }
     .form-group {
@@ -54,26 +58,28 @@
       color: var(--text);
     }
     .form-control {
-      padding: 10px 12px;
+      height: 44px;
+      padding: 0 12px;
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      font-size: 0.95rem;
+      font-size: 1rem;
       outline: none;
+      background-color: #ffffff;
+      box-sizing: border-box;
     }
     .form-control:focus {
       border-color: var(--primary);
     }
-    /* 終了時刻の自動計算表示 */
     .end-time-preview {
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       font-weight: bold;
       color: var(--primary-dark);
       background-color: var(--primary-light);
-      padding: 8px 12px;
+      padding: 10px 14px;
       border-radius: var(--radius);
-      display: inline-block;
+      display: block;
+      text-align: center;
     }
-    /* 検索結果アイテム */
     .event-card {
       display: flex;
       justify-content: space-between;
@@ -84,32 +90,20 @@
       margin-bottom: 8px;
       background-color: var(--bg);
     }
-    .event-info {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .event-title {
-      font-weight: bold;
-      color: var(--text);
-    }
-    .event-time {
-      font-size: 0.85rem;
-      color: var(--text-sub);
-    }
+    .event-title { font-weight: bold; color: var(--text); }
+    .event-time { font-size: 0.85rem; color: var(--text-sub); }
   </style>
 </head>
 <body>
 
   <main class="container">
     <div class="card">
-      <!-- タブ切り替え（単語で簡潔化） -->
       <div class="tab-nav">
         <button type="button" class="tab-btn active" id="tab-btn-create" onclick="switchTab('create')">新規</button>
         <button type="button" class="tab-btn" id="tab-btn-search" onclick="switchTab('search')">検索・削除</button>
       </div>
 
-      <!-- 1. 新規予約フォーム -->
+      <!-- 新規予約 -->
       <section id="panel-create">
         <form id="form-booking" onsubmit="event.preventDefault(); handleAddBooking();">
           <div class="form-group">
@@ -126,7 +120,7 @@
             </select>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <div class="form-group">
               <label class="form-label" for="book-start-time">開始時刻</label>
               <input type="time" id="book-start-time" class="form-control" required onchange="updateEndTimePreview()">
@@ -137,14 +131,13 @@
                 <option value="30">30分</option>
                 <option value="60" selected>60分</option>
                 <option value="90">90分</option>
-                <option value="120">120分 (最大)</option>
+                <option value="120">120分</option>
               </select>
             </div>
           </div>
 
-          <!-- 終了時刻の自動計算表示 -->
           <div class="form-group">
-            <span class="form-label">予定終了時刻</span>
+            <span class="form-label">終了予定時刻</span>
             <div id="end-time-preview" class="end-time-preview">開始時刻を選択してください</div>
           </div>
 
@@ -167,11 +160,12 @@
             </select>
           </div>
 
+          <!-- スマホ対応のフルワイド予約ボタン -->
           <button type="submit" id="btn-submit-booking" class="btn btn-primary" style="width: 100%; margin-top: 8px;">予約</button>
         </form>
       </section>
 
-      <!-- 2. 予約検索・削除パネル -->
+      <!-- 検索・削除 -->
       <section id="panel-search" style="display: none;">
         <form id="form-search" onsubmit="event.preventDefault(); handleSearch();" style="margin-bottom: 20px;">
           <div class="form-group">
@@ -185,13 +179,11 @@
           <button type="submit" id="btn-search-booking" class="btn btn-primary" style="width: 100%;">検索</button>
         </form>
 
-        <div id="search-results">
-          <!-- 検索結果がここに挿入されます -->
-        </div>
+        <div id="search-results"></div>
       </section>
     </div>
 
-    <!-- カレンダー埋め込み（横スクロール対応） -->
+    <!-- カレンダー -->
     <div class="card">
       <h3 style="margin-bottom: 12px; font-size: 1rem; color: var(--primary-dark);">予約カレンダー</h3>
       <div class="table-responsive">
@@ -204,16 +196,12 @@
   <script>
     initCommonLayout('booking');
 
-    // 本日の日付をデフォルトセット
     document.addEventListener('DOMContentLoaded', () => {
       const today = new Date().toISOString().split('T')[0];
       document.getElementById('book-date').value = today;
       updateEndTimePreview();
     });
 
-    /**
-     * タブを切り替えます（新規 / 検索・削除）
-     */
     function switchTab(tabKey) {
       const isCreate = tabKey === 'create';
       document.getElementById('panel-create').style.display = isCreate ? 'block' : 'none';
@@ -222,9 +210,6 @@
       document.getElementById('tab-btn-search').classList.toggle('active', !isCreate);
     }
 
-    /**
-     * 開始時刻と利用分数から終了時刻を自動計算して表示します。
-     */
     function updateEndTimePreview() {
       const timeVal = document.getElementById('book-start-time').value;
       const durationVal = parseInt(document.getElementById('book-duration').value, 10);
@@ -243,12 +228,9 @@
       const endHours = String(endDate.getHours()).padStart(2, '0');
       const endMinutes = String(endDate.getMinutes()).padStart(2, '0');
 
-      previewEl.textContent = `終了時刻: ${endHours}:${endMinutes}`;
+      previewEl.textContent = `終了予定: ${endHours}:${endMinutes}`;
     }
 
-    /**
-     * 新規予約をバリデーションして送信します。
-     */
     async function handleAddBooking() {
       const date = document.getElementById('book-date').value;
       const room = document.getElementById('book-room').value;
@@ -259,7 +241,6 @@
       const transferStatus = document.getElementById('book-transfer').value;
       const btn = document.getElementById('btn-submit-booking');
 
-      // フロントバリデーション
       const startDateTime = new Date(`${date.replace(/-/g, '/')} ${startTime}:00`);
       const now = new Date();
       if (startDateTime <= now) {
@@ -267,7 +248,6 @@
         return;
       }
 
-      // 1ヶ月先制限
       const maxDate = new Date();
       maxDate.setMonth(maxDate.getMonth() + 1);
       maxDate.setHours(23, 59, 59, 999);
@@ -276,7 +256,6 @@
         return;
       }
 
-      // 18時以降制限（終了時刻が18:00を超える場合は最大90分まで）
       const endDateTime = new Date(startDateTime.getTime() + duration * 60000);
       const limit18 = new Date(startDateTime);
       limit18.setHours(18, 0, 0, 0);
@@ -300,9 +279,6 @@
       }, '予約中...');
     }
 
-    /**
-     * 予約を検索します。
-     */
     async function handleSearch() {
       const date = document.getElementById('search-date').value;
       const bandName = document.getElementById('search-band-name').value.trim();
@@ -320,19 +296,16 @@
 
         resultsContainer.innerHTML = res.events.map(ev => `
           <div class="event-card">
-            <div class="event-info">
-              <span class="event-title">${escapeHtml(ev.title)}</span>
-              <span class="event-time">${escapeHtml(ev.startStr)} (${escapeHtml(ev.duration)}分)</span>
+            <div>
+              <div class="event-title">${escapeHtml(ev.title)}</div>
+              <div class="event-time">${escapeHtml(ev.startStr)} (${escapeHtml(ev.duration)}分)</div>
             </div>
-            <button type="button" class="btn btn-danger" style="padding: 6px 12px; font-size: 0.85rem;" onclick="handleDeleteBooking('${escapeHtml(ev.id)}', this)">削除</button>
+            <button type="button" class="btn btn-danger" style="min-height: 36px; padding: 4px 12px; font-size: 0.85rem;" onclick="handleDeleteBooking('${escapeHtml(ev.id)}', this)">削除</button>
           </div>
         `).join('');
       }, '検索中...');
     }
 
-    /**
-     * 予約を削除します。
-     */
     async function handleDeleteBooking(eventId, buttonEl) {
       if (!confirm('本当にこの予約を削除しますか？')) return;
 
