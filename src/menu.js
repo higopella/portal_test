@@ -1,13 +1,9 @@
 /**
  * Higo-Pella Portal 共通スクリプト (src/menu.js)
- * - 必須スタイルの自動注入（CSS未読み込み時の防壊処理）
- * - 共通ヘッダー・ドロワーメニューの自動生成
- * - 新旧互換ログイン状態管理
- * - API通信・二重送信防止・XSS対策
  */
 
 const CONFIG = {
-  // ★GASのウェブアプリURL（未設定時はクライアント側でパスワード照合を行います）
+  // ★ここにGASのウェブアプリURL（.../exec）を記述してください
   GAS_API_URL: "https://script.google.com/macros/s/AKfycbzSrC43yLEMa0WxqpNa7r4ONX17LSAkHzSGCO6Sw8QhebGKQQTlElZVsyFSBk_yFQIFfQ/exec",
   STORAGE_KEYS: {
     IS_LOGGED_IN: "higopella_is_logged_in",
@@ -18,9 +14,7 @@ const CONFIG = {
   }
 };
 
-// ==========================================================================
-// 1. 必須CSSの自動注入（外部CSSが読み込めなくてもヘッダー・メニューを動作させる）
-// ==========================================================================
+// 必須CSS自動注入（左側ドロワー対応）
 function injectCoreStyles() {
   if (document.getElementById("injected-core-styles")) return;
   const style = document.createElement("style");
@@ -53,7 +47,8 @@ function injectCoreStyles() {
       height: var(--header-height);
       background-color: var(--card);
       border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
+      display: flex; align-items: center; justify-content: flex-start;
+      gap: 12px;
       padding: 0 16px;
       z-index: 1000;
       box-shadow: var(--shadow);
@@ -66,7 +61,7 @@ function injectCoreStyles() {
     .site-logo img { width: 28px; height: 28px; border-radius: 4px; }
     .btn-menu {
       background: none; border: none; font-size: 1.5rem; color: var(--text);
-      cursor: pointer; padding: 8px; line-height: 1; touch-action: manipulation;
+      cursor: pointer; padding: 6px; line-height: 1; touch-action: manipulation;
     }
     .drawer-overlay {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -75,13 +70,14 @@ function injectCoreStyles() {
       transition: opacity 0.25s ease, visibility 0.25s ease;
     }
     .drawer-overlay.active { opacity: 1; visibility: visible; pointer-events: auto; }
+    /* 左側からスライドイン */
     .drawer-menu {
-      position: fixed; top: 0; right: -280px; width: 260px; height: 100%;
-      background-color: var(--card); box-shadow: -2px 0 12px rgba(0, 0, 0, 0.15);
-      z-index: 1020; transition: right 0.25s ease;
+      position: fixed; top: 0; left: -280px; width: 260px; height: 100%;
+      background-color: var(--card); box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
+      z-index: 1020; transition: left 0.25s ease;
       display: flex; flex-direction: column; padding: 20px 16px; box-sizing: border-box;
     }
-    .drawer-menu.active { right: 0; }
+    .drawer-menu.active { left: 0; }
     .drawer-header {
       display: flex; justify-content: space-between; align-items: center;
       margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
@@ -121,9 +117,6 @@ function injectCoreStyles() {
   document.head.appendChild(style);
 }
 
-// ==========================================================================
-// 2. ログイン状態ヘルパー（新旧キー両対応で確実に保持）
-// ==========================================================================
 function checkUserLogin() {
   return (
     localStorage.getItem(CONFIG.STORAGE_KEYS.IS_LOGGED_IN) === "true" ||
@@ -141,31 +134,10 @@ function setUserLogin(status) {
   }
 }
 
-function checkAdminLogin() {
-  return (
-    localStorage.getItem(CONFIG.STORAGE_KEYS.IS_ADMIN) === "true" ||
-    localStorage.getItem(CONFIG.STORAGE_KEYS.OLD_IS_ADMIN) === "true"
-  );
-}
-
-function setAdminLogin(status) {
-  if (status) {
-    localStorage.setItem(CONFIG.STORAGE_KEYS.IS_ADMIN, "true");
-    localStorage.setItem(CONFIG.STORAGE_KEYS.OLD_IS_ADMIN, "true");
-  } else {
-    localStorage.removeItem(CONFIG.STORAGE_KEYS.IS_ADMIN);
-    localStorage.removeItem(CONFIG.STORAGE_KEYS.OLD_IS_ADMIN);
-  }
-}
-
-// ==========================================================================
-// 3. ドロワーメニュー開閉制御（グローバル関数化）
-// ==========================================================================
 window.toggleDrawerMenu = function(isOpen) {
   const drawer = document.getElementById("drawer-menu");
   const overlay = document.getElementById("drawer-overlay");
   if (!drawer || !overlay) return;
-
   if (isOpen) {
     drawer.classList.add("active");
     overlay.classList.add("active");
@@ -175,9 +147,6 @@ window.toggleDrawerMenu = function(isOpen) {
   }
 };
 
-// ==========================================================================
-// 4. セキュリティ & API通信
-// ==========================================================================
 function escapeHtml(str) {
   if (str === null || str === undefined) return "";
   return String(str)
@@ -199,7 +168,7 @@ async function callGasApi(action, data = {}) {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     return await response.json();
   } catch (error) {
-    console.warn(`[GAS通信注意] action: ${action}`, error);
+    console.warn(`[GAS通信エラー] action: ${action}`, error);
     throw error;
   }
 }
@@ -210,7 +179,6 @@ async function withButtonLoading(button, asyncCallback, loadingText = "通信中
   button.disabled = true;
   button.classList.add("is-loading");
   button.textContent = loadingText;
-
   try {
     await asyncCallback();
   } finally {
@@ -227,12 +195,10 @@ function showToast(message, type = "info") {
     container.className = "toast-container";
     document.body.appendChild(container);
   }
-
   const toast = document.createElement("div");
   toast.className = `toast ${type === "error" ? "toast-error" : ""}`;
   toast.textContent = message;
   container.appendChild(toast);
-
   setTimeout(() => toast.classList.add("show"), 10);
   setTimeout(() => {
     toast.classList.remove("show");
@@ -240,9 +206,6 @@ function showToast(message, type = "info") {
   }, 3000);
 }
 
-// ==========================================================================
-// 5. 共通レイアウトの初期化
-// ==========================================================================
 function initCommonLayout(activeKey = "") {
   injectCoreStyles();
 
@@ -250,21 +213,22 @@ function initCommonLayout(activeKey = "") {
   const basePath = isSubDir ? "../" : "./";
   const iconPath = `${basePath}src/icon.png`;
 
+  // ディレクトリ指定のリンク
   const menuItems = [
-    { key: "home", title: "ホーム", href: `${basePath}index.html` },
-    { key: "booking", title: "練習予約", href: `${basePath}booking/index.html` },
-    { key: "forms", title: "申請フォーム", href: `${basePath}forms/index.html` },
-    { key: "searchYT", title: "YouTube検索", href: `${basePath}searchYT/index.html` },
-    { key: "admin", title: "管理者画面", href: `${basePath}admin/index.html` }
+    { key: "home", title: "ホーム", href: `${basePath}` },
+    { key: "booking", title: "練習予約", href: `${basePath}booking/` },
+    { key: "forms", title: "申請フォーム", href: `${basePath}forms/` },
+    { key: "searchYT", title: "YouTube検索", href: `${basePath}searchYT/` },
+    { key: "admin", title: "管理者画面", href: `${basePath}admin/` }
   ];
 
   const layoutHtml = `
     <header class="site-header">
-      <a href="${basePath}index.html" class="site-logo">
+      <button type="button" class="btn-menu" id="btn-open-drawer" onclick="toggleDrawerMenu(true)" aria-label="メニューを開く">☰</button>
+      <a href="${basePath}" class="site-logo">
         <img src="${iconPath}" alt="Logo" onerror="this.style.display='none'">
         <span>Higo-Pella Portal</span>
       </a>
-      <button type="button" class="btn-menu" id="btn-open-drawer" onclick="toggleDrawerMenu(true)" aria-label="メニューを開く">☰</button>
     </header>
 
     <div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawerMenu(false)"></div>
