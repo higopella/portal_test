@@ -3,142 +3,238 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>YouTube | Higo-Pella</title>
-  <link rel="icon" href="../src/icon.png" type="image/png">
-  <link rel="apple-touch-icon" href="../src/icon.png">
-  <link rel="manifest" href="../manifest.json">
+  <title>YouTube検索 - Higo-Pella Portal</title>
+  <link rel="stylesheet" href="../src/common.css">
   <style>
-    * { box-sizing: border-box; }
-    :root { --primary: #4fc3f7; --primary-dark: #0288d1; --bg: #f7fbff; --card: #fff; --border: #e1e8ed; --text: #333; }
-    body { font-family: Arial, sans-serif; font-size: 15px; background: var(--bg); color: var(--text); margin: 0; }
-    
-    .header { background: var(--card); padding: 10px 20px; display: flex; align-items: center; justify-content: flex-start !important; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
-    .menu-toggle { font-size: 26px; color: var(--primary-dark); cursor: pointer; background: none; border: none; padding: 0; margin-right: 15px; width: auto !important; }
-    .header-logo { height: 30px; cursor: pointer; display: block; }
-    
-    .drawer { position: fixed; top: 0; left: -260px; width: 250px; height: 100vh; background: var(--card); border-right: 1px solid var(--border); z-index: 200; transition: left 0.3s; padding-top: 60px; display: flex; flex-direction: column; }
-    .drawer.open { left: 0; }
-    .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 150; display: none; opacity: 0; transition: opacity 0.3s; }
-    .drawer-overlay.open { display: block; opacity: 1; }
-    .drawer-item { display: block; padding: 18px 20px; color: var(--text); text-decoration: none; font-size: 16px; font-weight: bold; border-bottom: 1px solid #f0f4f8; }
-    .drawer-close { position: absolute; top: 15px; right: 20px; font-size: 28px; color: #999; cursor: pointer; background: none; border: none; }
-
-    .content { max-width: 800px; margin: 20px auto; padding: 0 15px; }
-    .card { background: var(--card); padding: 25px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 20px; }
-    
-    .row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
-    select, input, button { height: 45px; border: 1px solid var(--border); border-radius: 4px; font-size: 15px; background: #fff; outline: none; }
-    select { flex: 1; min-width: 200px; padding: 0 10px; }
-    .btn-update { width: 80px; flex: 0 0 80px; background: #f0f4f8; cursor: pointer; font-weight: bold; }
-    
-    .tabs { display: flex; gap: 5px; margin-bottom: 15px; }
-    .tab-btn { flex: 1; padding: 10px; background: var(--card); cursor: pointer; border: 1px solid var(--border); font-weight: bold; }
-    .tab-btn.active { background: #333; color: #fff; border-color: #333; }
-    input[type="text"] { width: 100%; padding: 0 15px; }
-    
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
-    .v-card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; text-decoration: none; color: inherit; display: block; position: relative; }
-    .v-thumb { width: 100%; aspect-ratio: 16/9; object-fit: cover; background: #eee; }
-    .v-info { padding: 12px; }
-    .v-title { font-size: 13px; font-weight: bold; margin: 0 0 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; }
-    .v-date { font-size: 11px; color: #777; margin: 0; }
-    .badge { position: absolute; top: 5px; right: 5px; background: #000; color: #fff; font-size: 10px; padding: 3px 6px; border-radius: 3px; font-weight: bold; }
-    
-    .scroll-top { position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: #fff; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 20px; cursor: pointer; display: none; z-index: 99; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .card {
+      background-color: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+    .filter-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .form-control {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.95rem;
+      outline: none;
+    }
+    .tab-nav {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+    .tab-btn {
+      padding: 6px 14px;
+      background: none;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: bold;
+      color: var(--text-sub);
+      cursor: pointer;
+      border-radius: var(--radius);
+    }
+    .tab-btn.active {
+      background-color: var(--primary-light);
+      color: var(--primary-dark);
+    }
+    /* 動画グリッド */
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+    }
+    .video-card {
+      background-color: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      color: var(--text);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .video-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+    .video-thumb {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background-color: #000;
+    }
+    .video-info {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
+    .video-title {
+      font-size: 0.9rem;
+      font-weight: bold;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .video-date {
+      font-size: 0.75rem;
+      color: var(--text-sub);
+      margin-top: auto;
+    }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <button class="menu-toggle" onclick="toggleDrawer()">☰</button>
-    <a href="../" style="display: flex; align-items: center; text-decoration: none;"><img src="../src/home.png" alt="Home" class="header-logo"></a>
-  </div>
-
-  <div id="global-menu-container"></div>
-
-  <div class="content">
+  <main class="container">
     <div class="card">
-      <div class="row">
-        <select id="pl" onchange="load(false)"><option value="ALL">ALL</option></select>
-        <button class="btn-update" id="refBtn" onclick="force()">更新</button>
+      <div class="filter-group">
+        <select id="select-playlist" class="form-control" style="flex: 1; min-width: 200px;" onchange="loadVideos()">
+          <option value="ALL">すべての動画</option>
+        </select>
+        <input type="text" id="input-search" class="form-control" placeholder="タイトル検索" style="flex: 1; min-width: 160px;" oninput="filterVideos()">
+        <button type="button" class="btn btn-primary" id="btn-refresh" onclick="loadPlaylists()">更新</button>
       </div>
-      <div class="tabs">
-        <button class="tab-btn active" id="btn-all" onclick="mode('all')">全て</button>
-        <button class="tab-btn" id="btn-normal" onclick="mode('normal')">通常</button>
-        <button class="tab-btn" id="btn-shorts" onclick="mode('shorts')">Shorts</button>
-      </div>
-      <input type="text" id="search" placeholder="Search..." oninput="filter()">
-    </div>
-    <div id="grid" class="grid"><p style="font-size:14px; color:#888;">読込中...</p></div>
-  </div>
 
-  <button class="scroll-top" onclick="window.scrollTo({top:0, behavior:'smooth'})" id="scrollTopBtn">↑</button>
+      <div class="tab-nav">
+        <button type="button" class="tab-btn active" id="tab-all" onclick="setVideoType('ALL')">すべて</button>
+        <button type="button" class="tab-btn" id="tab-regular" onclick="setVideoType('REGULAR')">通常動画</button>
+        <button type="button" class="tab-btn" id="tab-shorts" onclick="setVideoType('SHORTS')">Shorts</button>
+      </div>
+
+      <div id="video-list" class="video-grid">
+        <div style="grid-column: 1 / -1; text-align: center; color: var(--text-sub); padding: 40px;">動画を読み込み中...</div>
+      </div>
+    </div>
+  </main>
 
   <script src="../src/menu.js"></script>
   <script>
-    if (localStorage.getItem("isLoggedIn") !== "true") window.location.href = "../";
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzSrC43yLEMa0WxqpNa7r4ONX17LSAkHzSGCO6Sw8QhebGKQQTlElZVsyFSBk_yFQIFfQ/exec";
-    let vids = [], cur = 'all';
+    initCommonLayout('searchYT');
 
-    window.onload = async () => {
-      injectMenu('../');
-      trackAccess(GAS_API_URL);
-      const c = localStorage.getItem("yt_pl");
-      if (c) { setupPl(JSON.parse(c)); load(false); } else force();
-    };
-    window.onscroll = function() {
-      document.getElementById("scrollTopBtn").style.display = (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) ? "block" : "none";
-    };
+    let allVideos = [];
+    let currentType = 'ALL'; // 'ALL', 'REGULAR', 'SHORTS'
 
-    function setupPl(pls) {
-      const s = document.getElementById('pl'); s.innerHTML = '<option value="ALL">ALL</option>';
-      pls.forEach(p => s.innerHTML += `<option value="${p.id}">${p.title}</option>`);
+    document.addEventListener('DOMContentLoaded', () => {
+      loadPlaylists();
+    });
+
+    /**
+     * 再生リスト一覧を取得してプルダウンにセットします。
+     */
+    async function loadPlaylists() {
+      const selectEl = document.getElementById('select-playlist');
+      const refreshBtn = document.getElementById('btn-refresh');
+
+      await withButtonLoading(refreshBtn, async () => {
+        try {
+          const res = await callGasApi('getPlaylists');
+          selectEl.innerHTML = '<option value="ALL">すべての動画</option>';
+          if (res.success && res.playlists) {
+            res.playlists.forEach(pl => {
+              const opt = document.createElement('option');
+              opt.value = pl.id;
+              opt.textContent = pl.title;
+              selectEl.appendChild(opt);
+            });
+          }
+          await loadVideos();
+        } catch(e) {
+          showToast('再生リストの取得に失敗しました', 'error');
+        }
+      }, '更新中');
     }
 
-    async function force() {
-      const btn = document.getElementById('refBtn');
-      btn.disabled = true; btn.innerText = "更新中";
-      localStorage.removeItem("yt_pl");
-      Object.keys(localStorage).forEach(k => { if(k.startsWith("yt_v_")) localStorage.removeItem(k); });
+    /**
+     * 選択した再生リストの動画を取得します。
+     */
+    async function loadVideos() {
+      const playlistId = document.getElementById('select-playlist').value;
+      const listContainer = document.getElementById('video-list');
+
+      listContainer.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--text-sub); padding: 40px;">読み込み中...</div>';
+
       try {
-        const res = await fetch(GAS_API_URL, { method:"POST", body: JSON.stringify({action:"getPlaylists"}) });
-        const json = await res.json();
-        if(json.success) { localStorage.setItem("yt_pl", JSON.stringify(json.playlists)); setupPl(json.playlists); load(true); }
-      } catch(e){}
-      btn.disabled = false; btn.innerText = "更新";
-    }
-
-    async function load(f) {
-      const pid = document.getElementById('pl').value;
-      const key = "yt_v_" + pid;
-      if(!f && localStorage.getItem(key)) { vids = JSON.parse(localStorage.getItem(key)); filter(); return; }
-      try {
-        const res = await fetch(GAS_API_URL, { method:"POST", body: JSON.stringify({action:"getPlaylistVideos", data:{playlistId: pid}}) });
-        const json = await res.json();
-        if(json.success) { vids = json.videos; localStorage.setItem(key, JSON.stringify(vids)); filter(); }
-      } catch(e){}
-    }
-
-    function mode(m) {
-      cur = m; document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById('btn-'+m).classList.add('active'); 
-      setTimeout(() => { filter(); }, 10);
-    }
-
-    function filter() {
-      const k = document.getElementById('search').value.toLowerCase();
-      const f = vids.filter(v => v.title.toLowerCase().includes(k) && (cur==='all' || (cur==='normal' && !v.isShort) || (cur==='shorts' && v.isShort)));
-      let htmlStr = "";
-      if(f.length === 0) { htmlStr = `<p style="font-size:14px; color:#888;">該当なし</p>`; }
-      else {
-        f.forEach(v => {
-          const d = new Date(v.publishedAt);
-          htmlStr += `<a href="https://youtube.com/watch?v=${v.videoId}" target="_blank" class="v-card">
-            <div style="position:relative;"><img src="${v.thumbnail}" class="v-thumb">${v.isShort?'<span class="badge">SHORTS</span>':''}</div>
-            <div class="v-info"><p class="v-title">${v.title}</p><p class="v-date">${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}</p></div></a>`;
-        });
+        const res = await callGasApi('getPlaylistVideos', { playlistId });
+        if (res.success && res.videos) {
+          allVideos = res.videos;
+          filterVideos();
+        } else {
+          listContainer.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--text-sub); padding: 40px;">動画が見つかりませんでした</div>';
+        }
+      } catch(e) {
+        listContainer.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--danger); padding: 40px;">動画の読み込みに失敗しました</div>';
       }
-      document.getElementById('grid').innerHTML = htmlStr;
+    }
+
+    /**
+     * タブ切り替え（すべて / 通常 / Shorts）
+     */
+    function setVideoType(type) {
+      currentType = type;
+      document.getElementById('tab-all').classList.toggle('active', type === 'ALL');
+      document.getElementById('tab-regular').classList.toggle('active', type === 'REGULAR');
+      document.getElementById('tab-shorts').classList.toggle('active', type === 'SHORTS');
+      filterVideos();
+    }
+
+    /**
+     * 検索キーワードとタブ状態に応じて動画を絞り込み描画します。
+     */
+    function filterVideos() {
+      const query = document.getElementById('input-search').value.toLowerCase().trim();
+      const listContainer = document.getElementById('video-list');
+
+      let filtered = allVideos.filter(v => {
+        const matchesQuery = v.title.toLowerCase().includes(query);
+        if (!matchesQuery) return false;
+
+        if (currentType === 'REGULAR') return !v.isShort;
+        if (currentType === 'SHORTS') return v.isShort;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        listContainer.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--text-sub); padding: 40px;">該当する動画がありません</div>';
+        return;
+      }
+
+      listContainer.innerHTML = filtered.map(v => {
+        const dateStr = v.publishedAt ? v.publishedAt.split('T')[0] : '';
+        const youtubeUrl = `https://www.youtube.com/watch?v=${encodeURIComponent(v.videoId)}`;
+
+        return `
+          <a href="${youtubeUrl}" target="_blank" rel="noopener noreferrer" class="video-card">
+            <img src="${escapeHtml(v.thumbnail)}" alt="${escapeHtml(v.title)}" class="video-thumb" loading="lazy">
+            <div class="video-info">
+              <span class="video-title">${escapeHtml(v.title)}</span>
+              <span class="video-date">${escapeHtml(dateStr)}</span>
+            </div>
+          </a>
+        `;
+      }).join('');
     }
   </script>
 </body>
