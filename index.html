@@ -3,161 +3,268 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portal | Higo-Pella</title>
-  <link rel="icon" href="./src/icon.png" type="image/png">
-  <link rel="apple-touch-icon" href="./src/icon.png">
-  <link rel="manifest" href="./manifest.json">
+  <title>ホーム - Higo-Pella Portal</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="src/common.css">
   <style>
-    * { box-sizing: border-box; }
-    :root { --primary: #4fc3f7; --primary-dark: #0288d1; --bg: #f7fbff; --card: #ffffff; --text: #333; --border: #e1e8ed; }
-    body { font-family: Arial, sans-serif; font-size: 15px; background: var(--bg); color: var(--text); margin: 0; min-height: 100vh; overflow-x: hidden; }
-    
-    .auth-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-    .auth-box { width: 100%; max-width: 400px; background: var(--card); padding: 40px 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(79, 195, 247, 0.15); text-align: center; }
-    .auth-box input { width: 100%; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); border-radius: 6px; font-size: 16px; outline: none; }
-    .auth-box input:focus { border-color: var(--primary); }
-    .btn { width: 100%; padding: 15px; background: var(--primary); color: #fff; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
-    .btn:disabled { background: #999; cursor: not-allowed; }
-    .msg { font-size: 14px; color: #d93025; margin-top: 15px; display: none; }
-
-    #portal-screen { display: none; }
-    
-    .header { background: var(--card); padding: 10px 20px; display: flex; align-items: center; justify-content: flex-start !important; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
-    .menu-toggle { font-size: 26px; color: var(--primary-dark); cursor: pointer; background: none; border: none; padding: 0; margin-right: 15px; width: auto !important; }
-    .header-logo { height: 30px; cursor: pointer; display: block; }
-    
-    .drawer { position: fixed; top: 0; left: -260px; width: 250px; height: 100vh; background: var(--card); border-right: 1px solid var(--border); z-index: 200; transition: left 0.3s; padding-top: 60px; display: flex; flex-direction: column; }
-    .drawer.open { left: 0; }
-    .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 150; display: none; opacity: 0; transition: opacity 0.3s; }
-    .drawer-overlay.open { display: block; opacity: 1; }
-    .drawer-item { display: block; padding: 18px 20px; color: var(--text); text-decoration: none; font-size: 16px; font-weight: bold; border-bottom: 1px solid #f0f4f8; }
-    .drawer-close { position: absolute; top: 15px; right: 20px; font-size: 28px; color: #999; cursor: pointer; background: none; border: none; }
-
-    .layout-grid { display: grid; gap: 20px; max-width: 1000px; margin: 20px auto; padding: 0 15px; }
-    .card { background: var(--card); padding: 25px; border-radius: 10px; border: 1px solid var(--border); display: flex; flex-direction: column; }
-    .card-title { font-size: 16px; font-weight: bold; color: var(--primary-dark); margin: 0 0 15px 0; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-
-    .scrollable-list { max-height: 350px; overflow-y: auto; padding-right: 5px; }
-
-    @media (min-width: 768px) {
-      .layout-grid { grid-template-columns: 1fr 2fr; height: calc(100vh - 80px); align-items: stretch; margin-top: 15px; margin-bottom: 15px; }
-      .card { height: 100%; overflow: hidden; }
-      .scrollable-list { max-height: none; flex-grow: 1; }
-      #miniCalendar { flex-grow: 1; height: 100%; min-height: 0; }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
     }
-    @media (max-width: 767px) {
-      .layout-grid { grid-template-columns: 1fr; }
-      #miniCalendar { height: 450px; }
+    .card {
+      background-color: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 20px;
+      box-shadow: var(--shadow);
     }
-    
-    /* ★修正：お知らせの余白を狭め、行間・文字サイズを微調整 */
-    .notice-item { font-size: 13px; line-height: 1.4; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed var(--border); }
-    .notice-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-    .tag-pinned { color: var(--primary-dark); font-weight: bold; font-size: 11px; border: 1px solid var(--primary-dark); padding: 2px 4px; border-radius: 3px; margin-right: 5px; }
-    .notice-time { color: #888; font-size: 11px; display: block; margin-bottom: 4px; }
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: var(--primary-dark);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    /* 次回の部会表示 */
+    .meeting-date {
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--primary-dark);
+      background-color: var(--primary-light);
+      padding: 12px;
+      border-radius: var(--radius);
+      text-align: center;
+    }
+    /* お知らせエリア */
+    .notice-list {
+      max-height: 350px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-right: 4px;
+    }
+    .notice-item {
+      padding: 12px;
+      background-color: var(--bg);
+      border-radius: var(--radius);
+      border-left: 4px solid var(--primary);
+    }
+    .notice-item.is-pinned {
+      border-left-color: var(--primary-dark);
+      background-color: var(--primary-light);
+    }
+    .notice-header {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      margin-bottom: 4px;
+      display: flex;
+      gap: 8px;
+    }
+    .notice-pin-tag {
+      font-weight: bold;
+      color: var(--primary-dark);
+    }
+    .notice-body {
+      font-size: 0.95rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .notice-body .highlight {
+      color: var(--primary-dark);
+      font-weight: bold;
+    }
+    /* ログインフォーム */
+    .login-box {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 320px;
+      margin: 40px auto;
+      text-align: center;
+    }
+    .input-text {
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 1rem;
+      outline: none;
+    }
+    .input-text:focus {
+      border-color: var(--primary);
+    }
+    .quick-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+    }
   </style>
 </head>
 <body>
 
-  <div class="auth-container" id="login-screen">
-    <div class="auth-box">
-      <img src="./src/home.png" alt="Logo" style="height:45px; margin-bottom: 20px;">
-      <input type="password" id="password" placeholder="Password">
-      <button class="btn" id="loginBtn" onclick="checkPassword()">ログイン</button>
-      <div id="msg-area" class="msg"></div>
+  <!-- 未ログイン時の表示 -->
+  <div id="login-section" class="container" style="display: none;">
+    <div class="card login-box">
+      <h2>サークル員ログイン</h2>
+      <p style="font-size: 0.85rem; color: var(--text-sub);">パスワードを入力してください</p>
+      <form id="form-login" onsubmit="event.preventDefault(); handleLogin();">
+        <input type="password" id="input-password" class="input-text" placeholder="パスワード" style="width: 100%; margin-bottom: 12px;" required>
+        <button type="submit" id="btn-login" class="btn btn-primary" style="width: 100%;">ログイン</button>
+      </form>
     </div>
   </div>
 
-  <div id="portal-screen">
-    <div class="header">
-      <button class="menu-toggle" onclick="toggleDrawer()">☰</button>
-      <a href="./" style="display: flex; align-items: center; text-decoration: none;"><img src="./src/home.png" alt="Home" class="header-logo" onclick="window.scrollTo(0,0)"></a>
-    </div>
+  <!-- ログイン後のメイン画面 -->
+  <main id="main-section" class="container" style="display: none;">
+    <!-- 次回の部会 -->
+    <section class="card">
+      <div class="card-title">次回の部会</div>
+      <div id="next-meeting-text" class="meeting-date">計算中...</div>
+    </section>
 
-    <div id="global-menu-container"></div>
+    <!-- クイックアクセス -->
+    <section class="quick-links">
+      <a href="booking/index.html" class="btn btn-primary">練習予約</a>
+      <a href="searchYT/index.html" class="btn btn-primary">YouTube検索</a>
+      <a href="forms/index.html" class="btn btn-primary">申請フォーム</a>
+    </section>
 
-    <div class="layout-grid">
-      <div class="card">
-        <h3 class="card-title">お知らせ</h3>
-        <p style="font-size: 14px; margin-bottom: 15px; font-weight: bold; display: flex; align-items: baseline; gap: 8px;">
-          次回の部会: <span id="next-meeting" style="color:var(--primary-dark); font-size: 18px;"></span>
-        </p>
-        <div id="notice-list" class="scrollable-list"><p style="font-size:13px; color:#888;">読込中...</p></div>
+    <!-- お知らせ -->
+    <section class="card">
+      <div class="card-title">
+        <span>お知らせ</span>
+        <button type="button" class="btn btn-primary" id="btn-refresh-notice" style="padding: 4px 10px; font-size: 0.8rem;">更新</button>
       </div>
-      
-      <div class="card">
-        <h3 class="card-title">スケジュール</h3>
-        <iframe id="miniCalendar" style="width: 100%; border: none; border-radius: 6px;" scrolling="no"></iframe>
+      <div id="notice-container" class="notice-list">
+        <div style="text-align: center; color: var(--text-sub); padding: 20px;">読み込み中...</div>
       </div>
-    </div>
-  </div>
+    </section>
+  </main>
 
-  <!-- ブラウザキャッシュ対策でver=3を指定 -->
-  <script src="./src/menu.js?ver=3"></script>
+  <script src="src/menu.js"></script>
   <script>
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzSrC43yLEMa0WxqpNa7r4ONX17LSAkHzSGCO6Sw8QhebGKQQTlElZVsyFSBk_yFQIFfQ/exec";
+    // 共通ヘッダー・ドロワーの初期化
+    initCommonLayout('home');
 
-    window.onload = function() {
-      injectMenu('./');
-      trackAccess(GAS_API_URL);
-      if (localStorage.getItem("isLoggedIn") === "true") showPortal();
-    };
+    // 画面の初期判定
+    document.addEventListener('DOMContentLoaded', () => {
+      const isLoggedIn = localStorage.getItem(CONFIG.STORAGE_KEYS.IS_LOGGED_IN) === 'true';
+      if (isLoggedIn) {
+        showMainView();
+      } else {
+        document.getElementById('login-section').style.display = 'block';
+      }
 
-    function showPortal() {
-      document.getElementById("login-screen").style.display = "none";
-      document.getElementById("portal-screen").style.display = "block";
-      calcMeeting(); loadCal(); fetchNotice();
+      // お知らせ更新ボタンのイベント
+      const refreshBtn = document.getElementById('btn-refresh-notice');
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+          withButtonLoading(refreshBtn, fetchNotices, '更新中');
+        });
+      }
+    });
+
+    /**
+     * 一般パスワード認証を実行します。
+     */
+    async function handleLogin() {
+      const passInput = document.getElementById('input-password');
+      const btn = document.getElementById('btn-login');
+      const password = passInput.value.trim();
+
+      await withButtonLoading(btn, async () => {
+        const res = await callGasApi('verifyPassword', { password });
+        if (res.success) {
+          localStorage.setItem(CONFIG.STORAGE_KEYS.IS_LOGGED_IN, 'true');
+          showToast('ログインしました');
+          showMainView();
+        } else {
+          showToast(res.error || 'パスワードが間違っています', 'error');
+        }
+      }, '認証中...');
     }
 
-    async function checkPassword() {
-      const pwd = document.getElementById("password").value;
-      const btn = document.getElementById("loginBtn");
-      const msg = document.getElementById("msg-area");
-      if (!pwd) return;
-      
-      btn.disabled = true; btn.innerText = "通信中..."; msg.style.display = "none";
-      
+    /**
+     * ログイン完了後の画面を描画します。
+     */
+    function showMainView() {
+      document.getElementById('login-section').style.display = 'none';
+      document.getElementById('main-section').style.display = 'flex';
+      calcNextMeeting();
+      fetchNotices();
+    }
+
+    /**
+     * 直近の「第2火曜日」を計算して表示します。
+     */
+    function calcNextMeeting() {
+      const today = new Date();
+      let targetDate = null;
+
+      for (let monthOffset = 0; monthOffset < 3; monthOffset++) {
+        let year = today.getFullYear();
+        let month = today.getMonth() + monthOffset;
+        let firstDay = new Date(year, month, 1);
+        let tuesdayCount = 0;
+
+        for (let day = 1; day <= 31; day++) {
+          let checkDate = new Date(year, month, day);
+          if (checkDate.getMonth() !== (month % 12)) break;
+          if (checkDate.getDay() === 2) { // 2 = 火曜日
+            tuesdayCount++;
+            if (tuesdayCount === 2) {
+              if (checkDate >= new Date(today.getFullYear(), today.getMonth(), today.getDate())) {
+                targetDate = checkDate;
+                break;
+              }
+            }
+          }
+        }
+        if (targetDate) break;
+      }
+
+      if (targetDate) {
+        const str = `${targetDate.getFullYear()}年${targetDate.getMonth() + 1}月${targetDate.getDate()}日 (火) 18:30〜`;
+        document.getElementById('next-meeting-text').textContent = str;
+      }
+    }
+
+    /**
+     * お知らせ一覧を取得して画面に描画します（XSS対策・強調記号装飾）。
+     */
+    async function fetchNotices() {
+      const container = document.getElementById('notice-container');
       try {
-        const res = await fetch(GAS_API_URL, { method: "POST", body: JSON.stringify({ action: "verifyPassword", data: { password: pwd } }) });
-        const data = await res.json();
-        if (data.success) { localStorage.setItem("isLoggedIn", "true"); showPortal(); } 
-        else { msg.innerText = data.error; msg.style.display = "block"; }
-      } catch (e) { msg.innerText = "通信エラー"; msg.style.display = "block"; }
-      
-      btn.disabled = false; btn.innerText = "ログイン";
-    }
+        const res = await callGasApi('getNotice');
+        if (!res.success || !res.notices || res.notices.length === 0) {
+          container.innerHTML = '<div style="text-align: center; color: var(--text-sub); padding: 20px;">現在お知らせはありません。</div>';
+          return;
+        }
 
-    function calcMeeting() {
-      const today = new Date(); let y = today.getFullYear(), m = today.getMonth();
-      let d = getSecTue(y, m);
-      if (today.getDate() > d.getDate()) { m++; if (m > 11) { m = 0; y++; } d = getSecTue(y, m); }
-      document.getElementById('next-meeting').innerText = `${d.getMonth() + 1}/${d.getDate()}`;
-    }
-    
-    function getSecTue(y, m) {
-      let d = new Date(y, m, 1); d.setDate(1 + ((2 - d.getDay() + 7) % 7) + 7); return d;
-    }
+        container.innerHTML = res.notices.map(item => {
+          // XSS対策：エスケープ後に [[強調]] を水色太字タグに変換
+          let safeText = escapeHtml(item.text);
+          safeText = safeText.replace(/\[\[(.*?)\]\]/g, '<span class="highlight">$1</span>');
 
-    function loadCal() {
-      const src = `src=pellapella.calendar@gmail.com&color=%23D50000&src=a18eeaccc3fb519de5b4b3492df6b26232f7967ab4582a2cd4d314600aa03186@group.calendar.google.com&color=%23039BE5&src=aade55a25aef3abb1ab00c832c44b660df1336a113dc29c6fff776f046df3dd3@group.calendar.google.com&color=%23F6BF26&src=fdb34873e469d812b70c3e1f79978398d9a3c0a793287551c3a77ae84f7ed079@group.calendar.google.com&color=%2333B679`;
-      document.getElementById('miniCalendar').src = `https://calendar.google.com/calendar/embed?${src}&ctz=Asia%2FTokyo&mode=AGENDA&showTitle=0&showPrint=0&showTabs=0&showNav=0&showDate=0&showCalendars=0`;
-    }
-
-    async function fetchNotice() {
-      try {
-        const res = await fetch(GAS_API_URL, { method: "POST", body: JSON.stringify({ action: "getNotice" }) });
-        const data = await res.json();
-        const list = document.getElementById('notice-list');
-        list.innerHTML = "";
-        if(data.success && data.notices.length > 0) {
-          data.notices.forEach(n => {
-            let tag = n.isPinned ? `<span class="tag-pinned">[固定]</span>` : '';
-            let date = n.time.split(" ")[0].substring(5);
-            let formattedText = n.text.replace(/\n/g, '<br>').replace(/\[\[(.*?)\]\]/g, '<span style="color: var(--primary-dark); font-weight: bold;">$1</span>');
-            list.innerHTML += `<div class="notice-item"><span class="notice-time">${date}</span>${tag}${formattedText}</div>`;
-          });
-        } else { list.innerHTML = `<p style="font-size:13px; color:#888;">お知らせはありません</p>`; }
-      } catch (e) {}
+          return `
+            <div class="notice-item ${item.isPinned ? 'is-pinned' : ''}">
+              <div class="notice-header">
+                ${item.isPinned ? '<span class="notice-pin-tag">[固定]</span>' : ''}
+                <span>${escapeHtml(item.time)}</span>
+              </div>
+              <div class="notice-body">${safeText}</div>
+            </div>
+          `;
+        }).join('');
+      } catch (e) {
+        container.innerHTML = '<div style="text-align: center; color: var(--danger); padding: 20px;">お知らせの取得に失敗しました。</div>';
+      }
     }
   </script>
 </body>
