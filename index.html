@@ -75,10 +75,10 @@
     .notice-body { font-size: 0.95rem; white-space: pre-wrap; word-break: break-word; }
     .notice-body .highlight { color: var(--primary-dark, #0288d1); font-weight: bold; }
 
-    /* ログイン画面のデザイン（ロゴ・ブランド表示） */
+    /* ログイン画面のデザイン（ロゴ ＋ フォームのみ） */
     .login-container {
       max-width: 360px;
-      margin: 40px auto 20px;
+      margin: 50px auto 20px;
       width: 100%;
       text-align: center;
     }
@@ -86,7 +86,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-bottom: 16px;
+      margin-bottom: 24px;
     }
     .login-logo {
       width: 72px;
@@ -98,17 +98,11 @@
       box-shadow: 0 4px 14px rgba(2, 136, 209, 0.2);
     }
     .login-app-name {
-      font-size: 1.15rem;
+      font-size: 1.2rem;
       font-weight: 700;
       color: var(--primary-dark, #0288d1);
       margin-top: 10px;
       letter-spacing: 0.5px;
-    }
-    .login-title {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--text-sub, #64748b);
-      margin-bottom: 20px;
     }
     .input-text {
       width: 100%;
@@ -136,7 +130,6 @@
         <img src="src/icon.png" alt="Higo-Pella Logo" class="login-logo" onerror="this.style.display='none'">
         <div class="login-app-name">Higo-Pella</div>
       </div>
-      <div class="login-title">ログイン</div>
       <form id="form-login" onsubmit="event.preventDefault(); handleLogin();">
         <input type="password" id="input-password" class="input-text" placeholder="パスワードを入力" required>
         <button type="submit" id="btn-login" class="btn btn-primary" style="width: 100%;">ログイン</button>
