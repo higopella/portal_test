@@ -1,0 +1,84 @@
+		.container {
+			max-width: 900px;
+			padding: 16px;
+			gap: 16px;
+		}
+		.card {
+			padding: 16px;
+		}
+		.filter-group {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 10px;
+			align-items: center;
+			margin-bottom: 12px;
+		}
+		.form-control {
+			padding: 8px 12px;
+			border: 1px solid var(--border);
+			border-radius: var(--radius);
+			font-size: 0.95rem;
+			outline: none;
+		}
+		.tab-nav {
+			display: flex;
+			gap: 8px;
+			margin-bottom: 16px;
+			border-bottom: 1px solid var(--border);
+			padding-bottom: 8px;
+		}
+		.tab-btn {
+			padding: 6px 14px;
+			background: none;
+			border: none;
+			font-size: 0.9rem;
+			font-weight: bold;
+			color: var(--text-sub);
+			cursor: pointer;
+			border-radius: var(--radius);
+		}
+		.tab-btn.active { background-color: var(--primary-light); color: var(--primary-dark); }
+		.video-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+			gap: 16px;
+		}
+		.video-card {
+			background-color: var(--bg);
+			border: 1px solid var(--border);
+			border-radius: var(--radius);
+			overflow: hidden;
+			display: flex;
+			flex-direction: column;
+			text-decoration: none;
+			color: var(--text);
+			transition: transform 0.15s ease, box-shadow 0.15s ease;
+		}
+		.video-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+		.video-thumb {
+			width: 100%;
+			aspect-ratio: 16 / 9;
+			object-fit: cover;
+			background-color: #000;
+		}
+		.video-info {
+			padding: 10px;
+			display: flex;
+			flex-direction: column;
+			gap: 4px;
+			flex: 1;
+		}
+		.video-title {
+			font-size: 0.9rem;
+			font-weight: bold;
+			line-height: 1.4;
+			display: -webkit-box;
+			-webkit-line-clamp: 2;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+		}
+		.video-date { font-size: 0.75rem; color: var(--text-sub); margin-top: auto; }
+		.playlist-control { flex: 1; min-width: 200px; }
+		.video-search-control { flex: 1; min-width: 160px; }
+		.video-message { grid-column: 1 / -1; text-align: center; color: var(--text-sub); padding: 40px; }
+		.video-message-error { color: var(--danger); }

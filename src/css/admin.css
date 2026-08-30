@@ -1,0 +1,77 @@
+		.container {
+			max-width: 900px;
+			padding: 16px;
+			gap: 20px;
+		}
+		.card {
+			padding: 20px;
+		}
+		.card-title {
+			font-size: 1.1rem;
+			font-weight: bold;
+			color: var(--primary-dark);
+			margin-bottom: 14px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+		}
+		.input-text, .textarea {
+			width: 100%;
+			padding: 10px 12px;
+			border: 1px solid var(--border);
+			border-radius: var(--radius);
+			font-size: 0.95rem;
+			outline: none;
+		}
+		.input-text:focus, .textarea:focus { border-color: var(--primary); }
+		.log-table {
+			width: 100%;
+			border-collapse: collapse;
+			font-size: 0.85rem;
+			min-width: 600px;
+		}
+		.log-table th, .log-table td {
+			padding: 10px;
+			border: 1px solid var(--border);
+			text-align: left;
+		}
+		.log-table th {
+			background-color: var(--primary-light);
+			color: var(--primary-dark);
+			font-weight: bold;
+		}
+		.admin-notice-item {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: 10px 12px;
+			border: 1px solid var(--border);
+			border-radius: var(--radius);
+			margin-bottom: 8px;
+			background-color: var(--bg);
+			gap: 8px;
+		}
+		.admin-notice-text {
+			flex: 1;
+			font-size: 0.9rem;
+			white-space: pre-wrap;
+			word-break: break-word;
+		}
+		.admin-notice-actions { display: flex; gap: 6px; }
+		.admin-login-card { max-width: 360px; margin: 40px auto; text-align: center; }
+		.admin-login-title { margin-bottom: 12px; color: var(--primary-dark); }
+		.admin-login-username { margin-bottom: 12px; }
+		.admin-login-password { margin-bottom: 16px; }
+		.dashboard-summary { display: flex; justify-content: space-between; align-items: center; }
+		.access-label { font-size: 0.9rem; color: var(--text-sub); }
+		.access-count { font-size: 1.6rem; font-weight: bold; color: var(--primary-dark); }
+		.notice-form { margin-bottom: 20px; }
+		.highlight-control { margin-bottom: 8px; }
+		.highlight-button { padding: 4px 10px; font-size: 0.8rem; margin-bottom: 6px; }
+		.notice-form-row { display: flex; justify-content: space-between; align-items: center; }
+		.pin-label { font-size: 0.9rem; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+		.notice-list-heading { font-size: 1rem; border-top: 1px solid var(--border); padding-top: 14px; }
+		.table-message { text-align: center; }
+		.table-message-error { color: var(--danger); }
+		.admin-notice-time { font-size: 0.75rem; color: var(--text-sub); display: block; }
+		.small-action-button { padding: 4px 8px; font-size: 0.8rem; }

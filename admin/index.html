@@ -4,105 +4,30 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>管理者画面 - Higo-Pella Portal</title>
-  <link rel="stylesheet" href="../src/common.css">
-  <style>
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-    .card {
-      background-color: var(--card);
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      padding: 20px;
-      box-shadow: var(--shadow);
-    }
-    .card-title {
-      font-size: 1.1rem;
-      font-weight: bold;
-      color: var(--primary-dark);
-      margin-bottom: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .input-text, .textarea {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      font-size: 0.95rem;
-      outline: none;
-    }
-    .input-text:focus, .textarea:focus {
-      border-color: var(--primary);
-    }
-    /* ログテーブル */
-    .log-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.85rem;
-      min-width: 600px;
-    }
-    .log-table th, .log-table td {
-      padding: 10px;
-      border: 1px solid var(--border);
-      text-align: left;
-    }
-    .log-table th {
-      background-color: var(--primary-light);
-      color: var(--primary-dark);
-      font-weight: bold;
-    }
-    /* お知らせ行 */
-    .admin-notice-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 12px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      margin-bottom: 8px;
-      background-color: var(--bg);
-      gap: 8px;
-    }
-    .admin-notice-text {
-      flex: 1;
-      font-size: 0.9rem;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-    .admin-notice-actions {
-      display: flex;
-      gap: 6px;
-    }
-  </style>
+  <link rel="stylesheet" href="../src/css/common.css">
+  <link rel="stylesheet" href="../src/css/admin.css">
 </head>
 <body>
 
   <!-- 1. 管理者ログインフォーム -->
-  <div id="admin-login-section" class="container" style="display: none;">
-    <div class="card" style="max-width: 360px; margin: 40px auto; text-align: center;">
-      <h2 style="margin-bottom: 12px; color: var(--primary-dark);">管理者ログイン</h2>
+  <div id="admin-login-section" class="container is-hidden">
+    <div class="card admin-login-card">
+      <h2 class="admin-login-title">管理者ログイン</h2>
       <form id="form-admin-login" onsubmit="event.preventDefault(); handleAdminLogin();">
-        <input type="text" id="admin-username" class="input-text" placeholder="ユーザー名" style="margin-bottom: 12px;" required>
-        <input type="password" id="admin-password" class="input-text" placeholder="パスワード" style="margin-bottom: 16px;" required>
-        <button type="submit" id="btn-admin-login" class="btn btn-primary" style="width: 100%;">ログイン</button>
+        <input type="text" id="admin-username" class="input-text admin-login-username" placeholder="ユーザー名" required>
+        <input type="password" id="admin-password" class="input-text admin-login-password" placeholder="パスワード" required>
+        <button type="submit" id="btn-admin-login" class="btn btn-primary full-width">ログイン</button>
       </form>
     </div>
   </div>
 
   <!-- 2. 管理者ダッシュボード -->
-  <main id="admin-dashboard-section" class="container" style="display: none;">
+  <main id="admin-dashboard-section" class="container is-hidden">
     <!-- 概要・アクセス数 -->
-    <section class="card" style="display: flex; justify-content: space-between; align-items: center;">
+    <section class="card dashboard-summary">
       <div>
-        <span style="font-size: 0.9rem; color: var(--text-sub);">累計アクセス数</span>
-        <div id="stat-access-count" style="font-size: 1.6rem; font-weight: bold; color: var(--primary-dark);">--</div>
+        <span class="access-label">累計アクセス数</span>
+        <div id="stat-access-count" class="access-count">--</div>
       </div>
       <button type="button" class="btn btn-primary" id="btn-refresh-all" onclick="loadDashboardData()">更新</button>
     </section>
@@ -110,20 +35,20 @@
     <!-- お知らせ管理 -->
     <section class="card">
       <div class="card-title">お知らせの追加・管理</div>
-      <form id="form-add-notice" onsubmit="event.preventDefault(); handleAddNotice();" style="margin-bottom: 20px;">
-        <div style="margin-bottom: 8px;">
-          <button type="button" class="btn btn-primary" style="padding: 4px 10px; font-size: 0.8rem; margin-bottom: 6px;" onclick="insertHighlightTag()">強調(水色)</button>
+      <form id="form-add-notice" class="notice-form" onsubmit="event.preventDefault(); handleAddNotice();">
+        <div class="highlight-control">
+          <button type="button" class="btn btn-primary highlight-button" onclick="insertHighlightTag()">強調(水色)</button>
           <textarea id="notice-text" class="textarea" rows="3" placeholder="お知らせ内容を入力（選択して「強調」を押すと [[文字]] になります）" required></textarea>
         </div>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <label style="font-size: 0.9rem; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+        <div class="notice-form-row">
+          <label class="pin-label">
             <input type="checkbox" id="notice-is-pinned"> 最上部に固定する
           </label>
           <button type="submit" id="btn-submit-notice" class="btn btn-primary">追加</button>
         </div>
       </form>
 
-      <div class="card-title" style="font-size: 1rem; border-top: 1px solid var(--border); padding-top: 14px;">投稿済み一覧</div>
+      <div class="card-title notice-list-heading">投稿済み一覧</div>
       <div id="admin-notice-list">読み込み中...</div>
     </section>
 
@@ -144,179 +69,17 @@
             </tr>
           </thead>
           <tbody id="log-table-body">
-            <tr><td colspan="7" style="text-align: center;">読み込み中...</td></tr>
+            <tr><td colspan="7" class="table-message">読み込み中...</td></tr>
           </tbody>
         </table>
       </div>
     </section>
   </main>
 
-  <script src="../src/menu.js"></script>
-  <script>
-    initCommonLayout('admin');
-
-    document.addEventListener('DOMContentLoaded', () => {
-      const isAdmin = localStorage.getItem(CONFIG.STORAGE_KEYS.IS_ADMIN) === 'true';
-      if (isAdmin) {
-        showDashboard();
-      } else {
-        document.getElementById('admin-login-section').style.display = 'block';
-      }
-    });
-
-    /**
-     * 管理者ログインを実行します。
-     */
-    async function handleAdminLogin() {
-      const username = document.getElementById('admin-username').value.trim();
-      const password = document.getElementById('admin-password').value.trim();
-      const btn = document.getElementById('btn-admin-login');
-
-      await withButtonLoading(btn, async () => {
-        const res = await callGasApi('verifyAdminLogin', { username, password });
-        if (res.success) {
-          localStorage.setItem(CONFIG.STORAGE_KEYS.IS_ADMIN, 'true');
-          showToast('管理者としてログインしました');
-          showDashboard();
-        } else {
-          showToast(res.error || '認証に失敗しました', 'error');
-        }
-      }, '認証中...');
-    }
-
-    function showDashboard() {
-      document.getElementById('admin-login-section').style.display = 'none';
-      document.getElementById('admin-dashboard-section').style.display = 'flex';
-      loadDashboardData();
-    }
-
-    async function loadDashboardData() {
-      const refreshBtn = document.getElementById('btn-refresh-all');
-      await withButtonLoading(refreshBtn, async () => {
-        await Promise.all([fetchAccessCount(), fetchAdminNotices(), fetchLogs()]);
-      }, '更新中');
-    }
-
-    async function fetchAccessCount() {
-      try {
-        const res = await callGasApi('getAccessCount');
-        if (res.success) {
-          document.getElementById('stat-access-count').textContent = Number(res.count).toLocaleString();
-        }
-      } catch(e) {}
-    }
-
-    /**
-     * 選択テキストを [[ ]] で囲む入力補助
-     */
-    function insertHighlightTag() {
-      const textarea = document.getElementById('notice-text');
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const selected = textarea.value.substring(start, end);
-      if (!selected) {
-        showToast('強調したい文字を選択してください');
-        return;
-      }
-      textarea.setRangeText(`[[${selected}]]`, start, end, 'end');
-    }
-
-    async function handleAddNotice() {
-      const text = document.getElementById('notice-text').value.trim();
-      const isPinned = document.getElementById('notice-is-pinned').checked;
-      const btn = document.getElementById('btn-submit-notice');
-
-      await withButtonLoading(btn, async () => {
-        const res = await callGasApi('updateNotice', { text, isPinned });
-        if (res.success) {
-          showToast('お知らせを追加しました');
-          document.getElementById('form-add-notice').reset();
-          fetchAdminNotices();
-        } else {
-          showToast(res.error || '追加に失敗しました', 'error');
-        }
-      }, '追加中...');
-    }
-
-    async function fetchAdminNotices() {
-      const container = document.getElementById('admin-notice-list');
-      try {
-        const res = await callGasApi('getNotice');
-        if (!res.success || !res.notices || res.notices.length === 0) {
-          container.innerHTML = '<div style="text-align: center; color: var(--text-sub); padding: 10px;">お知らせはありません</div>';
-          return;
-        }
-
-        container.innerHTML = res.notices.map(item => `
-          <div class="admin-notice-item">
-            <div class="admin-notice-text">
-              <span style="font-size: 0.75rem; color: var(--text-sub); display: block;">${escapeHtml(item.time)}</span>
-              ${escapeHtml(item.text)}
-            </div>
-            <div class="admin-notice-actions">
-              <button type="button" class="btn btn-primary" style="padding: 4px 8px; font-size: 0.8rem;" onclick="handleTogglePin('${escapeHtml(item.time)}', this)">
-                ${item.isPinned ? '解除' : '固定'}
-              </button>
-              <button type="button" class="btn btn-danger" style="padding: 4px 8px; font-size: 0.8rem;" onclick="handleDeleteNotice('${escapeHtml(item.time)}', this)">
-                削除
-              </button>
-            </div>
-          </div>
-        `).join('');
-      } catch(e) {
-        container.innerHTML = '<div style="text-align: center; color: var(--danger);">取得失敗</div>';
-      }
-    }
-
-    async function handleTogglePin(timeStr, btn) {
-      await withButtonLoading(btn, async () => {
-        const res = await callGasApi('toggleNoticePin', { time: timeStr });
-        if (res.success) {
-          showToast('固定状態を切り替えました');
-          fetchAdminNotices();
-        } else {
-          showToast(res.error || '失敗しました', 'error');
-        }
-      }, '処理中');
-    }
-
-    async function handleDeleteNotice(timeStr, btn) {
-      if (!confirm('このお知らせを削除しますか？')) return;
-      await withButtonLoading(btn, async () => {
-        const res = await callGasApi('deleteNotice', { time: timeStr });
-        if (res.success) {
-          showToast('削除しました');
-          fetchAdminNotices();
-        } else {
-          showToast(res.error || '失敗しました', 'error');
-        }
-      }, '削除中');
-    }
-
-    async function fetchLogs() {
-      const tbody = document.getElementById('log-table-body');
-      try {
-        const res = await callGasApi('getLogs');
-        if (!res.success || !res.logs || res.logs.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">ログはありません</td></tr>';
-          return;
-        }
-
-        tbody.innerHTML = res.logs.map(row => `
-          <tr>
-            <td>${escapeHtml(row[0])}</td>
-            <td>${escapeHtml(row)}</td>
-            <td>${escapeHtml(row)}</td>
-            <td>${escapeHtml(row[3])}</td>
-            <td>${escapeHtml(row[4])}</td>
-            <td>${escapeHtml(row[5])}</td>
-            <td>${escapeHtml(row[6])}</td>
-          </tr>
-        `).join('');
-      } catch(e) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--danger);">取得失敗</td></tr>';
-      }
-    }
-  </script>
+  <script src="../src/js/ui.js"></script>
+  <script src="../src/js/api.js"></script>
+  <script src="../src/js/auth.js"></script>
+  <script src="../src/js/menu.js"></script>
+  <script src="../src/js/admin.js"></script>
 </body>
 </html>
