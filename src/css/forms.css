@@ -1,0 +1,38 @@
+		.container {
+			max-width: 800px;
+			padding: 16px;
+			gap: 16px;
+		}
+		.card {
+			padding: 16px;
+		}
+		.form-selector {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 8px;
+			margin-bottom: 16px;
+		}
+		.form-tab-btn {
+			padding: 8px 14px;
+			background-color: var(--bg);
+			border: 1px solid var(--border);
+			border-radius: var(--radius);
+			font-size: 0.9rem;
+			font-weight: bold;
+			cursor: pointer;
+			color: var(--text);
+		}
+		.form-tab-btn.active {
+			background-color: var(--primary-light);
+			border-color: var(--primary);
+			color: var(--primary-dark);
+		}
+		.iframe-wrapper {
+			width: 100%;
+			height: 700px;
+			border: 1px solid var(--border);
+			border-radius: var(--radius);
+			overflow: hidden;
+		}
+		.iframe-wrapper iframe { width: 100%; height: 100%; border: none; }
+		.form-heading { font-size: 1.1rem; color: var(--primary-dark); margin-bottom: 12px; }

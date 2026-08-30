@@ -4,117 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>YouTube検索 - Higo-Pella Portal</title>
-  <link rel="stylesheet" href="../src/common.css">
-  <style>
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    .card {
-      background-color: var(--card);
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      padding: 16px;
-      box-shadow: var(--shadow);
-    }
-    .filter-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-    .form-control {
-      padding: 8px 12px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      font-size: 0.95rem;
-      outline: none;
-    }
-    .tab-nav {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 8px;
-    }
-    .tab-btn {
-      padding: 6px 14px;
-      background: none;
-      border: none;
-      font-size: 0.9rem;
-      font-weight: bold;
-      color: var(--text-sub);
-      cursor: pointer;
-      border-radius: var(--radius);
-    }
-    .tab-btn.active {
-      background-color: var(--primary-light);
-      color: var(--primary-dark);
-    }
-    /* 動画グリッド */
-    .video-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 16px;
-    }
-    .video-card {
-      background-color: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      text-decoration: none;
-      color: var(--text);
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
-    .video-card:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow);
-    }
-    .video-thumb {
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      object-fit: cover;
-      background-color: #000;
-    }
-    .video-info {
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      flex: 1;
-    }
-    .video-title {
-      font-size: 0.9rem;
-      font-weight: bold;
-      line-height: 1.4;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-    .video-date {
-      font-size: 0.75rem;
-      color: var(--text-sub);
-      margin-top: auto;
-    }
-  </style>
+  <link rel="stylesheet" href="../src/css/common.css">
+  <link rel="stylesheet" href="../src/css/searchYT.css">
 </head>
 <body>
 
   <main class="container">
     <div class="card">
       <div class="filter-group">
-        <select id="select-playlist" class="form-control" style="flex: 1; min-width: 200px;" onchange="loadVideos()">
+        <select id="select-playlist" class="form-control playlist-control" onchange="loadVideos()">
           <option value="ALL">すべての動画</option>
         </select>
-        <input type="text" id="input-search" class="form-control" placeholder="タイトル検索" style="flex: 1; min-width: 160px;" oninput="filterVideos()">
+        <input type="text" id="input-search" class="form-control video-search-control" placeholder="タイトル検索" oninput="filterVideos()">
         <button type="button" class="btn btn-primary" id="btn-refresh" onclick="loadPlaylists()">更新</button>
       </div>
 
@@ -125,117 +26,15 @@
       </div>
 
       <div id="video-list" class="video-grid">
-        <div style="grid-column: 1 / -1; text-align: center; color: var(--text-sub); padding: 40px;">動画を読み込み中...</div>
+        <div class="video-message">動画を読み込み中...</div>
       </div>
     </div>
   </main>
 
-  <script src="../src/menu.js"></script>
-  <script>
-    initCommonLayout('searchYT');
-
-    let allVideos = [];
-    let currentType = 'ALL'; // 'ALL', 'REGULAR', 'SHORTS'
-
-    document.addEventListener('DOMContentLoaded', () => {
-      loadPlaylists();
-    });
-
-    /**
-     * 再生リスト一覧を取得してプルダウンにセットします。
-     */
-    async function loadPlaylists() {
-      const selectEl = document.getElementById('select-playlist');
-      const refreshBtn = document.getElementById('btn-refresh');
-
-      await withButtonLoading(refreshBtn, async () => {
-        try {
-          const res = await callGasApi('getPlaylists');
-          selectEl.innerHTML = '<option value="ALL">すべての動画</option>';
-          if (res.success && res.playlists) {
-            res.playlists.forEach(pl => {
-              const opt = document.createElement('option');
-              opt.value = pl.id;
-              opt.textContent = pl.title;
-              selectEl.appendChild(opt);
-            });
-          }
-          await loadVideos();
-        } catch(e) {
-          showToast('再生リストの取得に失敗しました', 'error');
-        }
-      }, '更新中');
-    }
-
-    /**
-     * 選択した再生リストの動画を取得します。
-     */
-    async function loadVideos() {
-      const playlistId = document.getElementById('select-playlist').value;
-      const listContainer = document.getElementById('video-list');
-
-      listContainer.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--text-sub); padding: 40px;">読み込み中...</div>';
-
-      try {
-        const res = await callGasApi('getPlaylistVideos', { playlistId });
-        if (res.success && res.videos) {
-          allVideos = res.videos;
-          filterVideos();
-        } else {
-          listContainer.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--text-sub); padding: 40px;">動画が見つかりませんでした</div>';
-        }
-      } catch(e) {
-        listContainer.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--danger); padding: 40px;">動画の読み込みに失敗しました</div>';
-      }
-    }
-
-    /**
-     * タブ切り替え（すべて / 通常 / Shorts）
-     */
-    function setVideoType(type) {
-      currentType = type;
-      document.getElementById('tab-all').classList.toggle('active', type === 'ALL');
-      document.getElementById('tab-regular').classList.toggle('active', type === 'REGULAR');
-      document.getElementById('tab-shorts').classList.toggle('active', type === 'SHORTS');
-      filterVideos();
-    }
-
-    /**
-     * 検索キーワードとタブ状態に応じて動画を絞り込み描画します。
-     */
-    function filterVideos() {
-      const query = document.getElementById('input-search').value.toLowerCase().trim();
-      const listContainer = document.getElementById('video-list');
-
-      let filtered = allVideos.filter(v => {
-        const matchesQuery = v.title.toLowerCase().includes(query);
-        if (!matchesQuery) return false;
-
-        if (currentType === 'REGULAR') return !v.isShort;
-        if (currentType === 'SHORTS') return v.isShort;
-        return true;
-      });
-
-      if (filtered.length === 0) {
-        listContainer.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--text-sub); padding: 40px;">該当する動画がありません</div>';
-        return;
-      }
-
-      listContainer.innerHTML = filtered.map(v => {
-        const dateStr = v.publishedAt ? v.publishedAt.split('T')[0] : '';
-        const youtubeUrl = `https://www.youtube.com/watch?v=${encodeURIComponent(v.videoId)}`;
-
-        return `
-          <a href="${youtubeUrl}" target="_blank" rel="noopener noreferrer" class="video-card">
-            <img src="${escapeHtml(v.thumbnail)}" alt="${escapeHtml(v.title)}" class="video-thumb" loading="lazy">
-            <div class="video-info">
-              <span class="video-title">${escapeHtml(v.title)}</span>
-              <span class="video-date">${escapeHtml(dateStr)}</span>
-            </div>
-          </a>
-        `;
-      }).join('');
-    }
-  </script>
+  <script src="../src/js/ui.js"></script>
+  <script src="../src/js/api.js"></script>
+  <script src="../src/js/auth.js"></script>
+  <script src="../src/js/menu.js"></script>
+  <script src="../src/js/searchYT.js"></script>
 </body>
 </html>

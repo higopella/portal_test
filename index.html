@@ -7,137 +7,13 @@
   <link rel="icon" type="image/png" href="src/icon.png">
   <link rel="apple-touch-icon" href="src/icon.png">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="src/common.css">
-  <style>
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 12px 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      box-sizing: border-box;
-    }
-    .card {
-      background-color: var(--card, #ffffff);
-      border-radius: var(--radius, 8px);
-      border: 1px solid var(--border, #e2e8f0);
-      padding: 14px;
-      box-shadow: var(--shadow, 0 2px 8px rgba(0, 0, 0, 0.06));
-    }
-    /* ヘッダー行に次回部会を一体化（縦幅を最小化） */
-    .card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      margin-bottom: 12px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--border, #e2e8f0);
-      flex-wrap: wrap;
-    }
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .card-title {
-      font-size: 1.05rem;
-      font-weight: bold;
-      color: var(--text, #2c3e50);
-    }
-    /* 次回部会の視認性向上バッジ */
-    .meeting-tag {
-      font-size: 0.95rem;
-      font-weight: bold;
-      color: var(--primary-dark, #0288d1);
-      background-color: var(--primary-light, #e1f5fe);
-      padding: 4px 10px;
-      border-radius: 6px;
-      border: 1px solid rgba(79, 195, 247, 0.5);
-    }
-    .btn-sm {
-      min-height: 32px;
-      padding: 4px 12px;
-      font-size: 0.85rem;
-    }
-    .notice-list {
-      max-height: 360px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      padding-right: 2px;
-    }
-    .notice-item {
-      padding: 8px 10px;
-      background-color: var(--bg, #f8fafc);
-      border-radius: var(--radius, 8px);
-      border-left: 3px solid var(--primary, #4fc3f7);
-    }
-    .notice-item.is-pinned {
-      border-left-color: var(--primary-dark, #0288d1);
-      background-color: var(--primary-light, #e1f5fe);
-    }
-    .notice-header {
-      font-size: 0.75rem;
-      color: var(--text-sub, #64748b);
-      margin-bottom: 2px;
-      display: flex;
-      gap: 6px;
-    }
-    .notice-pin-tag { font-weight: bold; color: var(--primary-dark, #0288d1); }
-    .notice-body { font-size: 0.95rem; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
-    .notice-body .highlight { color: var(--primary-dark, #0288d1); font-weight: bold; }
-
-    /* ログイン画面 */
-    .login-container {
-      max-width: 360px;
-      margin: 40px auto 20px;
-      width: 100%;
-      text-align: center;
-    }
-    .login-brand {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    .login-logo {
-      width: 72px;
-      height: 72px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-    .login-app-name {
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: var(--primary-dark, #0288d1);
-      margin-top: 10px;
-      letter-spacing: 0.5px;
-    }
-    .input-text {
-      width: 100%;
-      height: 46px;
-      padding: 0 14px;
-      border: 1px solid var(--border, #e2e8f0);
-      border-radius: var(--radius, 8px);
-      font-size: 1rem;
-      box-sizing: border-box;
-      margin-bottom: 14px;
-      outline: none;
-      background-color: #ffffff;
-    }
-    .input-text:focus {
-      border-color: var(--primary, #4fc3f7);
-    }
-  </style>
+  <link rel="stylesheet" href="src/css/common.css">
+  <link rel="stylesheet" href="src/css/home.css">
 </head>
 <body>
 
   <!-- ログイン画面 -->
-  <div id="login-section" class="container" style="display: none;">
+  <div id="login-section" class="container is-hidden">
     <div class="card login-container">
       <div class="login-brand">
         <img src="src/icon.png" alt="Higo-Pella Logo" class="login-logo" onerror="this.style.display='none'">
@@ -145,13 +21,13 @@
       </div>
       <form id="form-login" onsubmit="event.preventDefault(); handleLogin();">
         <input type="password" id="input-password" class="input-text" placeholder="パスワードを入力" required>
-        <button type="submit" id="btn-login" class="btn btn-primary" style="width: 100%;">ログイン</button>
+        <button type="submit" id="btn-login" class="btn btn-primary full-width">ログイン</button>
       </form>
     </div>
   </div>
 
   <!-- ログイン後メイン画面 -->
-  <main id="main-section" class="container" style="display: none;">
+  <main id="main-section" class="container is-hidden">
     <section class="card">
       <div class="card-header">
         <div class="header-left">
@@ -162,146 +38,19 @@
         <button type="button" class="btn btn-primary btn-sm" id="btn-refresh-notice" onclick="refreshNotices()">更新</button>
       </div>
       <div id="notice-container" class="notice-list">
-        <div style="text-align: center; color: var(--text-sub); padding: 14px;">読み込み中...</div>
+        <div class="notice-message-loading">読み込み中...</div>
       </div>
     </section>
 
-    <div style="text-align: center; margin-top: 2px;">
-      <button type="button" class="btn btn-danger" style="min-height: 34px; padding: 4px 18px; font-size: 0.85rem;" onclick="handleLogout()">ログアウト</button>
+    <div class="logout-wrapper">
+      <button type="button" class="btn btn-danger logout-button" onclick="handleLogout()">ログアウト</button>
     </div>
   </main>
 
-  <script src="src/menu.js"></script>
-  <script>
-    initCommonLayout('home');
-
-    function renderHomeView() {
-      const loginSec = document.getElementById('login-section');
-      const mainSec = document.getElementById('main-section');
-      if (!loginSec || !mainSec) return;
-
-      if (checkUserLogin()) {
-        loginSec.style.display = 'none';
-        mainSec.style.display = 'flex';
-        calcNextMeeting();
-        fetchNotices();
-      } else {
-        loginSec.style.display = 'block';
-        mainSec.style.display = 'none';
-      }
-    }
-
-    window.addEventListener('pageshow', renderHomeView);
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', renderHomeView);
-    } else {
-      renderHomeView();
-    }
-
-    async function handleLogin() {
-      const passInput = document.getElementById('input-password');
-      const btn = document.getElementById('btn-login');
-      const password = passInput.value.trim();
-
-      await withButtonLoading(btn, async () => {
-        let isSuccess = false;
-        try {
-          const res = await callGasApi('verifyPassword', { password });
-          if (res && res.success) {
-            isSuccess = true;
-          } else if (res && res.error) {
-            showToast(res.error, 'error');
-            return;
-          }
-        } catch (err) {
-          if (password === 'higo0314') {
-            isSuccess = true;
-          } else {
-            showToast('パスワードが間違っています', 'error');
-            return;
-          }
-        }
-
-        if (isSuccess) {
-          setUserLogin(true);
-          showToast('ログインしました');
-          renderHomeView();
-        }
-      }, '認証中...');
-    }
-
-    function handleLogout() {
-      if (confirm('ログアウトしますか？')) {
-        setUserLogin(false);
-        showToast('ログアウトしました');
-        renderHomeView();
-      }
-    }
-
-    function calcNextMeeting() {
-      const today = new Date();
-      let targetDate = null;
-
-      for (let monthOffset = 0; monthOffset < 3; monthOffset++) {
-        let year = today.getFullYear();
-        let month = today.getMonth() + monthOffset;
-        let tuesdayCount = 0;
-
-        for (let day = 1; day <= 31; day++) {
-          let checkDate = new Date(year, month, day);
-          if (checkDate.getMonth() !== (month % 12)) break;
-          if (checkDate.getDay() === 2) {
-            tuesdayCount++;
-            if (tuesdayCount === 2) {
-              if (checkDate >= new Date(today.getFullYear(), today.getMonth(), today.getDate())) {
-                targetDate = checkDate;
-                break;
-              }
-            }
-          }
-        }
-        if (targetDate) break;
-      }
-
-      if (targetDate) {
-        const str = `${targetDate.getMonth() + 1}月${targetDate.getDate()}日(火) 18:30〜`;
-        document.getElementById('next-meeting-text').textContent = str;
-      }
-    }
-
-    async function refreshNotices() {
-      const btn = document.getElementById('btn-refresh-notice');
-      await withButtonLoading(btn, fetchNotices, '更新中');
-    }
-
-    async function fetchNotices() {
-      const container = document.getElementById('notice-container');
-      try {
-        const res = await callGasApi('getNotice');
-        if (!res.success || !res.notices || res.notices.length === 0) {
-          container.innerHTML = '<div style="text-align: center; color: var(--text-sub); padding: 20px;">現在お知らせはありません。</div>';
-          return;
-        }
-
-        container.innerHTML = res.notices.map(item => {
-          let safeText = escapeHtml(item.text);
-          safeText = safeText.replace(/\[\[(.*?)\]\]/g, '<span class="highlight">$1</span>');
-          const timeFormatted = escapeHtml(item.time).replace(/:\d{2}$/, '');
-
-          return `
-            <div class="notice-item ${item.isPinned ? 'is-pinned' : ''}">
-              <div class="notice-header">
-                ${item.isPinned ? '<span class="notice-pin-tag">[固定]</span>' : ''}
-                <span>${timeFormatted}</span>
-              </div>
-              <div class="notice-body">${safeText}</div>
-            </div>
-          `;
-        }).join('');
-      } catch (e) {
-        container.innerHTML = '<div style="text-align: center; color: var(--danger); padding: 20px;">お知らせの取得に失敗しました。GASのURLをご確認ください。</div>';
-      }
-    }
-  </script>
+  <script src="src/js/ui.js"></script>
+  <script src="src/js/api.js"></script>
+  <script src="src/js/auth.js"></script>
+  <script src="src/js/menu.js"></script>
+  <script src="src/js/home.js"></script>
 </body>
 </html>

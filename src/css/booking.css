@@ -1,0 +1,84 @@
+		.container {
+			max-width: 800px;
+			padding: 16px;
+			gap: 16px;
+		}
+		.card {
+			padding: 20px;
+		}
+		.tab-nav {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 8px;
+			margin-bottom: 16px;
+		}
+		.tab-btn {
+			height: 44px;
+			background-color: var(--bg);
+			border: 1px solid var(--border);
+			font-size: 0.95rem;
+			font-weight: bold;
+			color: var(--text-sub);
+			cursor: pointer;
+			border-radius: var(--radius);
+			touch-action: manipulation;
+		}
+		.tab-btn.active {
+			background-color: var(--primary-light);
+			border-color: var(--primary);
+			color: var(--primary-dark);
+		}
+		.form-group {
+			display: flex;
+			flex-direction: column;
+			gap: 6px;
+			margin-bottom: 14px;
+		}
+		.form-label {
+			font-size: 0.85rem;
+			font-weight: bold;
+			color: var(--text);
+		}
+		.form-control {
+			height: 44px;
+			padding: 0 12px;
+			border: 1px solid var(--border);
+			border-radius: var(--radius);
+			font-size: 1rem;
+			outline: none;
+			background-color: #ffffff;
+			box-sizing: border-box;
+		}
+		.form-control:focus { border-color: var(--primary); }
+		.end-time-preview {
+			font-size: 0.95rem;
+			font-weight: bold;
+			color: var(--primary-dark);
+			background-color: var(--primary-light);
+			padding: 10px 14px;
+			border-radius: var(--radius);
+			display: block;
+			text-align: center;
+		}
+		.event-card {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: 12px;
+			border: 1px solid var(--border);
+			border-radius: var(--radius);
+			margin-bottom: 8px;
+			background-color: var(--bg);
+		}
+		.event-title { font-weight: bold; color: var(--text); }
+		.event-time { font-size: 0.85rem; color: var(--text-sub); }
+		.booking-time-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+		.full-width-booking-button { width: 100%; margin-top: 8px; }
+		.search-panel-hidden { display: none; }
+		.search-form { margin-bottom: 20px; }
+		.full-width-search-button { width: 100%; }
+		.calendar-heading { margin-bottom: 12px; font-size: 1rem; color: var(--primary-dark); }
+		.calendar-frame { border: 0; width: 100%; min-width: 650px; height: 500px; }
+		.search-message { text-align: center; color: var(--text-sub); padding: 10px; }
+		.search-message-error { color: var(--danger); }
+		.delete-booking-button { min-height: 36px; padding: 4px 12px; font-size: 0.85rem; }

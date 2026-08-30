@@ -4,63 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>申請フォーム - Higo-Pella Portal</title>
-  <link rel="stylesheet" href="../src/common.css">
-  <style>
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    .card {
-      background-color: var(--card);
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      padding: 16px;
-      box-shadow: var(--shadow);
-    }
-    .form-selector {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-    .form-tab-btn {
-      padding: 8px 14px;
-      background-color: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      font-size: 0.9rem;
-      font-weight: bold;
-      cursor: pointer;
-      color: var(--text);
-    }
-    .form-tab-btn.active {
-      background-color: var(--primary-light);
-      border-color: var(--primary);
-      color: var(--primary-dark);
-    }
-    .iframe-wrapper {
-      width: 100%;
-      height: 700px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-    }
-    .iframe-wrapper iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-  </style>
+  <link rel="stylesheet" href="../src/css/common.css">
+  <link rel="stylesheet" href="../src/css/forms.css">
 </head>
 <body>
 
   <main class="container">
     <div class="card">
-      <h2 style="font-size: 1.1rem; color: var(--primary-dark); margin-bottom: 12px;">サークル申請フォーム</h2>
+      <h2 class="form-heading">サークル申請フォーム</h2>
       
       <!-- 切り替えタブ -->
       <div class="form-selector">
@@ -71,27 +22,15 @@
 
       <!-- Google Forms 埋め込み -->
       <div class="iframe-wrapper">
-        <iframe id="google-form-iframe" src="https://docs.google.com/forms/d/e/1FAIpQLSc_EXAMPLE_FORM_ID_1/viewform?embedded=true">読み込み中...</iframe>
+        <iframe id="google-form-iframe" src="https://docs.google.com/forms/d/e/1FAIpQLSeWlJzJjoWAmWohyY4kik12qSl0sBAPzBDBTV9VdUyARYeB7g/viewform?usp=header">読み込み中...</iframe>
       </div>
     </div>
   </main>
 
-  <script src="../src/menu.js"></script>
-  <script>
-    initCommonLayout('forms');
-
-    // フォームURL一覧
-    const FORMS = {
-      expense: "https://docs.google.com/forms/d/e/1FAIpQLSc_EXAMPLE_FORM_ID_1/viewform?embedded=true",
-      equipment: "https://docs.google.com/forms/d/e/1FAIpQLSc_EXAMPLE_FORM_ID_2/viewform?embedded=true",
-      inquiry: "https://docs.google.com/forms/d/e/1FAIpQLSc_EXAMPLE_FORM_ID_3/viewform?embedded=true"
-    };
-
-    function switchForm(key, btn) {
-      document.querySelectorAll('.form-tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('google-form-iframe').src = FORMS[key] || FORMS.expense;
-    }
-  </script>
+  <script src="../src/js/ui.js"></script>
+  <script src="../src/js/api.js"></script>
+  <script src="../src/js/auth.js"></script>
+  <script src="../src/js/menu.js"></script>
+  <script src="../src/js/forms.js"></script>
 </body>
 </html>
