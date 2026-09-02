@@ -4,6 +4,21 @@ let allVideos = [];
 let currentType = 'ALL';
 
 document.addEventListener('DOMContentLoaded', () => {
+	const selectPlaylist = document.getElementById('select-playlist');
+	if (selectPlaylist) {
+		selectPlaylist.addEventListener('change', loadVideos);
+	}
+	const inputSearch = document.getElementById('input-search');
+	if (inputSearch) {
+		inputSearch.addEventListener('input', filterVideos);
+	}
+	const refreshBtn = document.getElementById('btn-refresh');
+	if (refreshBtn) {
+		refreshBtn.addEventListener('click', loadPlaylists);
+	}
+	document.querySelectorAll('.tab-btn').forEach((button) => {
+		button.addEventListener('click', () => setVideoType(button.dataset.videoType || 'ALL'));
+	});
 	loadPlaylists();
 });
 
@@ -34,7 +49,11 @@ async function loadVideos() {
 	const playlistId = document.getElementById('select-playlist').value;
 	const listContainer = document.getElementById('video-list');
 
-	listContainer.innerHTML = '<div class="video-message">読み込み中...</div>';
+	listContainer.textContent = '';
+	const loading = document.createElement('div');
+	loading.className = 'video-message';
+	loading.textContent = '読み込み中...';
+	listContainer.appendChild(loading);
 
 	try {
 		const res = await callGasApi('getPlaylistVideos', { playlistId });
@@ -42,10 +61,18 @@ async function loadVideos() {
 			allVideos = res.videos;
 			filterVideos();
 		} else {
-			listContainer.innerHTML = '<div class="video-message">動画が見つかりませんでした</div>';
+			listContainer.textContent = '';
+			const empty = document.createElement('div');
+			empty.className = 'video-message';
+			empty.textContent = '動画が見つかりませんでした';
+			listContainer.appendChild(empty);
 		}
 	} catch(e) {
-		listContainer.innerHTML = '<div class="video-message video-message-error">動画の読み込みに失敗しました</div>';
+		listContainer.textContent = '';
+		const error = document.createElement('div');
+		error.className = 'video-message video-message-error';
+		error.textContent = '動画の読み込みに失敗しました';
+		listContainer.appendChild(error);
 	}
 }
 
@@ -62,7 +89,7 @@ function filterVideos() {
 	const listContainer = document.getElementById('video-list');
 
 	let filtered = allVideos.filter(v => {
-		const matchesQuery = v.title.toLowerCase().includes(query);
+		const matchesQuery = String(v.title ?? '').toLowerCase().includes(query);
 		if (!matchesQuery) return false;
 
 		if (currentType === 'REGULAR') return !v.isShort;
@@ -71,22 +98,40 @@ function filterVideos() {
 	});
 
 	if (filtered.length === 0) {
-		listContainer.innerHTML = '<div class="video-message">該当する動画がありません</div>';
+		listContainer.textContent = '';
+		const empty = document.createElement('div');
+		empty.className = 'video-message';
+		empty.textContent = '該当する動画がありません';
+		listContainer.appendChild(empty);
 		return;
 	}
 
-	listContainer.innerHTML = filtered.map(v => {
+	listContainer.textContent = '';
+	filtered.forEach((v) => {
 		const dateStr = v.publishedAt ? v.publishedAt.split('T')[0] : '';
 		const youtubeUrl = `https://www.youtube.com/watch?v=${encodeURIComponent(v.videoId)}`;
-
-		return `
-			<a href="${youtubeUrl}" target="_blank" rel="noopener noreferrer" class="video-card">
-				<img src="${escapeHtml(v.thumbnail)}" alt="${escapeHtml(v.title)}" class="video-thumb" loading="lazy">
-				<div class="video-info">
-					<span class="video-title">${escapeHtml(v.title)}</span>
-					<span class="video-date">${escapeHtml(dateStr)}</span>
-				</div>
-			</a>
-		`;
-	}).join('');
+		const card = document.createElement('a');
+		card.href = youtubeUrl;
+		card.target = '_blank';
+		card.rel = 'noopener noreferrer';
+		card.className = 'video-card';
+		const img = document.createElement('img');
+		img.src = v.thumbnail;
+		img.alt = v.title;
+		img.className = 'video-thumb';
+		img.loading = 'lazy';
+		const info = document.createElement('div');
+		info.className = 'video-info';
+		const title = document.createElement('span');
+		title.className = 'video-title';
+		title.textContent = v.title;
+		const date = document.createElement('span');
+		date.className = 'video-date';
+		date.textContent = dateStr;
+		info.appendChild(title);
+		info.appendChild(date);
+		card.appendChild(img);
+		card.appendChild(info);
+		listContainer.appendChild(card);
+	});
 }

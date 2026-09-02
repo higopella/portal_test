@@ -14,35 +14,35 @@
   <main class="container">
     <div class="card">
       <div class="tab-nav">
-        <button type="button" class="tab-btn active" id="tab-btn-create" onclick="switchTab('create')">新規</button>
-        <button type="button" class="tab-btn" id="tab-btn-search" onclick="switchTab('search')">検索・削除</button>
+        <button type="button" class="tab-btn active" id="tab-btn-create">新規予約</button>
+        <button type="button" class="tab-btn" id="tab-btn-search">検索・削除</button>
       </div>
 
       <!-- 新規予約 -->
       <section id="panel-create">
-        <form id="form-booking" onsubmit="event.preventDefault(); handleAddBooking();">
+        <form id="form-booking">
           <div class="form-group">
             <label class="form-label" for="book-date">練習日</label>
-            <input type="date" id="book-date" class="form-control" required onchange="updateEndTimePreview()">
+            <input type="date" id="book-date" class="form-control" required>
           </div>
 
           <div class="form-group">
             <label class="form-label" for="book-room">練習場所</label>
             <select id="book-room" class="form-control" required>
-              <option value="①">練習場所 ①</option>
-              <option value="②">練習場所 ②</option>
-              <option value="③">練習場所 ③</option>
+              <option value="①">部室①</option>
+              <option value="②">機材庫②</option>
+              <option value="③">教室③</option>
             </select>
           </div>
 
           <div class="booking-time-grid">
             <div class="form-group">
               <label class="form-label" for="book-start-time">開始時刻</label>
-              <input type="time" id="book-start-time" class="form-control" required onchange="updateEndTimePreview()">
+              <input type="time" id="book-start-time" class="form-control" required>
             </div>
             <div class="form-group">
               <label class="form-label" for="book-duration">利用分数</label>
-              <select id="book-duration" class="form-control" required onchange="updateEndTimePreview()">
+              <select id="book-duration" class="form-control" required>
                 <option value="30">30分</option>
                 <option value="60" selected>60分</option>
                 <option value="90">90分</option>
@@ -58,22 +58,33 @@
 
           <div class="form-group">
             <label class="form-label" for="book-band-name">バンド名</label>
-            <input type="text" id="book-band-name" class="form-control" placeholder="例: ひごペラーズ" required>
+            <input type="text" id="book-band-name" class="form-control" placeholder="例: バンドA" required>
           </div>
 
           <div class="form-group">
             <label class="form-label" for="book-rep-name">代表者名</label>
-            <input type="text" id="book-rep-name" class="form-control" placeholder="例: 松永" required>
+            <input type="text" id="book-rep-name" class="form-control" placeholder="例: 肥後" required>
           </div>
 
           <div class="form-group">
             <label class="form-label" for="book-transfer">譲ります情報</label>
             <select id="book-transfer" class="form-control">
-              <option value="">なし</option>
-              <option value="譲り可">譲り可</option>
-              <option value="譲り希望">譲り希望</option>
+              <option value="">-- 選択してください --</option>
+              <option value="いつでも">いつでも譲ります</option>
+              <option value="前半">前半譲ります</option>
+              <option value="後半">後半譲ります</option>
             </select>
           </div>
+
+          <div class="form-group">
+                    <label>譲ります情報</label>
+                    <select id="transferStatus" required>
+                        <option value="" disabled selected>-- 選択してください --</option>
+                        <option value="いつでも譲ります">いつでも譲ります</option>
+                        <option value="前半譲ります">前半譲ります</option>
+                        <option value="後半譲ります">後半譲ります</option>
+                    </select>
+          
 
           <!-- スマホ対応のフルワイド予約ボタン -->
           <button type="submit" id="btn-submit-booking" class="btn btn-primary full-width-booking-button">予約</button>
@@ -82,7 +93,7 @@
 
       <!-- 検索・削除 -->
       <section id="panel-search" class="search-panel-hidden">
-        <form id="form-search" class="search-form" onsubmit="event.preventDefault(); handleSearch();">
+        <form id="form-search" class="search-form">
           <div class="form-group">
             <label class="form-label" for="search-date">練習日</label>
             <input type="date" id="search-date" class="form-control">

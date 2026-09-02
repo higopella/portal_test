@@ -12,17 +12,17 @@
   <main class="container">
     <div class="card">
       <div class="filter-group">
-        <select id="select-playlist" class="form-control playlist-control" onchange="loadVideos()">
+        <select id="select-playlist" class="form-control playlist-control">
           <option value="ALL">すべての動画</option>
         </select>
-        <input type="text" id="input-search" class="form-control video-search-control" placeholder="タイトル検索" oninput="filterVideos()">
-        <button type="button" class="btn btn-primary" id="btn-refresh" onclick="loadPlaylists()">更新</button>
+        <input type="text" id="input-search" class="form-control video-search-control" placeholder="タイトル検索">
+        <button type="button" class="btn btn-primary" id="btn-refresh">更新</button>
       </div>
 
       <div class="tab-nav">
-        <button type="button" class="tab-btn active" id="tab-all" onclick="setVideoType('ALL')">すべて</button>
-        <button type="button" class="tab-btn" id="tab-regular" onclick="setVideoType('REGULAR')">通常動画</button>
-        <button type="button" class="tab-btn" id="tab-shorts" onclick="setVideoType('SHORTS')">Shorts</button>
+        <button type="button" class="tab-btn active" id="tab-all" data-video-type="ALL">すべて</button>
+        <button type="button" class="tab-btn" id="tab-regular" data-video-type="REGULAR">通常動画</button>
+        <button type="button" class="tab-btn" id="tab-shorts" data-video-type="SHORTS">Shorts</button>
       </div>
 
       <div id="video-list" class="video-grid">

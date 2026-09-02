@@ -14,21 +14,20 @@ function initCommonLayout(activeKey = "") {
     { key: "admin", title: "管理者画面", href: `${basePath}admin/` }
   ];
 
-  // ヘッダーロゴ画像（img）を削除し、テキストのみに更新
   const layoutHtml = `
     <header class="site-header">
-      <button type="button" class="btn-menu" id="btn-open-drawer" onclick="toggleDrawerMenu(true)" aria-label="メニューを開く">☰</button>
+      <button type="button" class="btn-menu" id="btn-open-drawer" aria-label="メニューを開く">☰</button>
       <a href="${basePath}" class="site-logo">
         <span>Higo-Pella Portal</span>
       </a>
     </header>
 
-    <div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawerMenu(false)"></div>
+    <div class="drawer-overlay" id="drawer-overlay"></div>
 
     <nav class="drawer-menu" id="drawer-menu" aria-label="メインメニュー">
       <div class="drawer-header">
         <span class="drawer-title">メニュー</span>
-        <button type="button" class="btn-close" id="btn-close-drawer" onclick="toggleDrawerMenu(false)" aria-label="メニューを閉じる">×</button>
+        <button type="button" class="btn-close" id="btn-close-drawer" aria-label="メニューを閉じる">×</button>
       </div>
       <ul class="drawer-nav">
         ${menuItems
@@ -44,6 +43,20 @@ function initCommonLayout(activeKey = "") {
   `;
 
   document.body.insertAdjacentHTML("afterbegin", layoutHtml);
+
+  const openDrawerBtn = document.getElementById("btn-open-drawer");
+  const closeDrawerBtn = document.getElementById("btn-close-drawer");
+  const drawerOverlay = document.getElementById("drawer-overlay");
+
+  if (openDrawerBtn) {
+    openDrawerBtn.addEventListener("click", () => toggleDrawerMenu(true));
+  }
+  if (closeDrawerBtn) {
+    closeDrawerBtn.addEventListener("click", () => toggleDrawerMenu(false));
+  }
+  if (drawerOverlay) {
+    drawerOverlay.addEventListener("click", () => toggleDrawerMenu(false));
+  }
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") toggleDrawerMenu(false);

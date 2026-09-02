@@ -82,28 +82,54 @@ async function fetchAdminNotices() {
 	try {
 		const res = await callGasApi('getNotice');
 		if (!res.success || !res.notices || res.notices.length === 0) {
-			container.innerHTML = '<div class="table-message">お知らせはありません</div>';
+			container.textContent = '';
+			const empty = document.createElement('div');
+			empty.className = 'table-message';
+			empty.textContent = 'お知らせはありません';
+			container.appendChild(empty);
 			return;
 		}
 
-		container.innerHTML = res.notices.map(item => `
-			<div class="admin-notice-item">
-				<div class="admin-notice-text">
-					<span class="admin-notice-time">${escapeHtml(item.time)}</span>
-					${escapeHtml(item.text)}
-				</div>
-				<div class="admin-notice-actions">
-					<button type="button" class="btn btn-primary small-action-button" onclick="handleTogglePin('${escapeHtml(item.time)}', this)">
-						${item.isPinned ? '解除' : '固定'}
-					</button>
-					<button type="button" class="btn btn-danger small-action-button" onclick="handleDeleteNotice('${escapeHtml(item.time)}', this)">
-						削除
-					</button>
-				</div>
-			</div>
-		`).join('');
+		container.textContent = '';
+		res.notices.forEach((item) => {
+			const noticeItem = document.createElement('div');
+			noticeItem.className = 'admin-notice-item';
+
+			const noticeText = document.createElement('div');
+			noticeText.className = 'admin-notice-text';
+			const time = document.createElement('span');
+			time.className = 'admin-notice-time';
+			time.textContent = item.time;
+			const body = document.createElement('div');
+			body.textContent = item.text;
+			noticeText.appendChild(time);
+			noticeText.appendChild(body);
+
+			const actions = document.createElement('div');
+			actions.className = 'admin-notice-actions';
+			const toggleBtn = document.createElement('button');
+			toggleBtn.type = 'button';
+			toggleBtn.className = 'btn btn-primary small-action-button';
+			toggleBtn.textContent = item.isPinned ? '解除' : '固定';
+			toggleBtn.addEventListener('click', () => handleTogglePin(item.time, toggleBtn));
+			const deleteBtn = document.createElement('button');
+			deleteBtn.type = 'button';
+			deleteBtn.className = 'btn btn-danger small-action-button';
+			deleteBtn.textContent = '削除';
+			deleteBtn.addEventListener('click', () => handleDeleteNotice(item.time, deleteBtn));
+
+			actions.appendChild(toggleBtn);
+			actions.appendChild(deleteBtn);
+			noticeItem.appendChild(noticeText);
+			noticeItem.appendChild(actions);
+			container.appendChild(noticeItem);
+		});
 	} catch(e) {
-		container.innerHTML = '<div class="table-message table-message-error">取得失敗</div>';
+		container.textContent = '';
+		const error = document.createElement('div');
+		error.className = 'table-message table-message-error';
+		error.textContent = '取得失敗';
+		container.appendChild(error);
 	}
 }
 
@@ -137,22 +163,35 @@ async function fetchLogs() {
 	try {
 		const res = await callGasApi('getLogs');
 		if (!res.success || !res.logs || res.logs.length === 0) {
-			tbody.innerHTML = '<tr><td colspan="7" class="table-message">ログはありません</td></tr>';
+			tbody.textContent = '';
+			const row = document.createElement('tr');
+			const cell = document.createElement('td');
+			cell.colSpan = 7;
+			cell.className = 'table-message';
+			cell.textContent = 'ログはありません';
+			row.appendChild(cell);
+			tbody.appendChild(row);
 			return;
 		}
 
-		tbody.innerHTML = res.logs.map(row => `
-			<tr>
-				<td>${escapeHtml(row[0])}</td>
-				<td>${escapeHtml(row)}</td>
-				<td>${escapeHtml(row)}</td>
-				<td>${escapeHtml(row[3])}</td>
-				<td>${escapeHtml(row[4])}</td>
-				<td>${escapeHtml(row[5])}</td>
-				<td>${escapeHtml(row[6])}</td>
-			</tr>
-		`).join('');
+		tbody.textContent = '';
+		res.logs.forEach((rowData) => {
+			const row = document.createElement('tr');
+			for (let i = 0; i < 7; i += 1) {
+				const cell = document.createElement('td');
+				cell.textContent = rowData[i] ?? '';
+				row.appendChild(cell);
+			}
+			tbody.appendChild(row);
+		});
 	} catch(e) {
-		tbody.innerHTML = '<tr><td colspan="7" class="table-message table-message-error">取得失敗</td></tr>';
+		tbody.textContent = '';
+		const row = document.createElement('tr');
+		const cell = document.createElement('td');
+		cell.colSpan = 7;
+		cell.className = 'table-message table-message-error';
+		cell.textContent = '取得失敗';
+		row.appendChild(cell);
+		tbody.appendChild(row);
 	}
 }

@@ -16,10 +16,10 @@
   <div id="login-section" class="container is-hidden">
     <div class="card login-container">
       <div class="login-brand">
-        <img src="src/icon.png" alt="Higo-Pella Logo" class="login-logo" onerror="this.style.display='none'">
+        <img src="src/icon.png" alt="Higo-Pella Logo" class="login-logo">
         <div class="login-app-name">Higo-Pella</div>
       </div>
-      <form id="form-login" onsubmit="event.preventDefault(); handleLogin();">
+      <form id="form-login">
         <input type="password" id="input-password" class="input-text" placeholder="パスワードを入力" required>
         <button type="submit" id="btn-login" class="btn btn-primary full-width">ログイン</button>
       </form>
@@ -35,7 +35,7 @@
           <!-- 次回部会をインライン統合 -->
           <div class="meeting-tag">次回部会: <span id="next-meeting-text">計算中...</span></div>
         </div>
-        <button type="button" class="btn btn-primary btn-sm" id="btn-refresh-notice" onclick="refreshNotices()">更新</button>
+        <button type="button" class="btn btn-primary btn-sm" id="btn-refresh-notice">更新</button>
       </div>
       <div id="notice-container" class="notice-list">
         <div class="notice-message-loading">読み込み中...</div>
@@ -43,7 +43,7 @@
     </section>
 
     <div class="logout-wrapper">
-      <button type="button" class="btn btn-danger logout-button" onclick="handleLogout()">ログアウト</button>
+      <button type="button" class="btn btn-danger logout-button">ログアウト</button>
     </div>
   </main>
 

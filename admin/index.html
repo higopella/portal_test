@@ -13,7 +13,7 @@
   <div id="admin-login-section" class="container is-hidden">
     <div class="card admin-login-card">
       <h2 class="admin-login-title">管理者ログイン</h2>
-      <form id="form-admin-login" onsubmit="event.preventDefault(); handleAdminLogin();">
+      <form id="form-admin-login">
         <input type="text" id="admin-username" class="input-text admin-login-username" placeholder="ユーザー名" required>
         <input type="password" id="admin-password" class="input-text admin-login-password" placeholder="パスワード" required>
         <button type="submit" id="btn-admin-login" class="btn btn-primary full-width">ログイン</button>
@@ -29,15 +29,15 @@
         <span class="access-label">累計アクセス数</span>
         <div id="stat-access-count" class="access-count">--</div>
       </div>
-      <button type="button" class="btn btn-primary" id="btn-refresh-all" onclick="loadDashboardData()">更新</button>
+      <button type="button" class="btn btn-primary" id="btn-refresh-all">更新</button>
     </section>
 
     <!-- お知らせ管理 -->
     <section class="card">
       <div class="card-title">お知らせの追加・管理</div>
-      <form id="form-add-notice" class="notice-form" onsubmit="event.preventDefault(); handleAddNotice();">
+      <form id="form-add-notice" class="notice-form">
         <div class="highlight-control">
-          <button type="button" class="btn btn-primary highlight-button" onclick="insertHighlightTag()">強調(水色)</button>
+          <button type="button" class="btn btn-primary highlight-button" id="btn-insert-highlight">強調(水色)</button>
           <textarea id="notice-text" class="textarea" rows="3" placeholder="お知らせ内容を入力（選択して「強調」を押すと [[文字]] になります）" required></textarea>
         </div>
         <div class="notice-form-row">

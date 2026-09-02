@@ -90,23 +90,44 @@ async function handleSearch() {
 	const resultsContainer = document.getElementById('search-results');
 
 	await withButtonLoading(btn, async () => {
-		resultsContainer.innerHTML = '<div class="search-message">検索中...</div>';
+		resultsContainer.textContent = '';
+		const loading = document.createElement('div');
+		loading.className = 'search-message';
+		loading.textContent = '検索中...';
+		resultsContainer.appendChild(loading);
 		const res = await callGasApi('findEvents', { date, bandName });
-    
+
 		if (!res.success || !res.events || res.events.length === 0) {
-			resultsContainer.innerHTML = '<div class="search-message">該当する予約が見つかりません</div>';
+			resultsContainer.textContent = '';
+			const empty = document.createElement('div');
+			empty.className = 'search-message';
+			empty.textContent = '該当する予約が見つかりません';
+			resultsContainer.appendChild(empty);
 			return;
 		}
 
-		resultsContainer.innerHTML = res.events.map(ev => `
-			<div class="event-card">
-				<div>
-					<div class="event-title">${escapeHtml(ev.title)}</div>
-					<div class="event-time">${escapeHtml(ev.startStr)} (${escapeHtml(ev.duration)}分)</div>
-				</div>
-				<button type="button" class="btn btn-danger delete-booking-button" onclick="handleDeleteBooking('${escapeHtml(ev.id)}', this)">削除</button>
-			</div>
-		`).join('');
+		resultsContainer.textContent = '';
+		res.events.forEach((ev) => {
+			const card = document.createElement('div');
+			card.className = 'event-card';
+			const info = document.createElement('div');
+			const title = document.createElement('div');
+			title.className = 'event-title';
+			title.textContent = ev.title;
+			const time = document.createElement('div');
+			time.className = 'event-time';
+			time.textContent = `${ev.startStr} (${ev.duration}分)`;
+			const deleteBtn = document.createElement('button');
+			deleteBtn.type = 'button';
+			deleteBtn.className = 'btn btn-danger delete-booking-button';
+			deleteBtn.textContent = '削除';
+			deleteBtn.addEventListener('click', () => handleDeleteBooking(ev.id, deleteBtn));
+			info.appendChild(title);
+			info.appendChild(time);
+			card.appendChild(info);
+			card.appendChild(deleteBtn);
+			resultsContainer.appendChild(card);
+		});
 	}, '検索中...');
 }
 

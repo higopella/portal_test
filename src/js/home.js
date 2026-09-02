@@ -16,12 +16,28 @@ function renderHomeView() {
 	}
 }
 
-window.addEventListener('pageshow', renderHomeView);
-if (document.readyState === 'loading') {
-	document.addEventListener('DOMContentLoaded', renderHomeView);
-} else {
+document.addEventListener('DOMContentLoaded', () => {
+	const formLogin = document.getElementById('form-login');
+	if (formLogin) {
+		formLogin.addEventListener('submit', (event) => {
+			event.preventDefault();
+			handleLogin();
+		});
+	}
+
+	const refreshNoticeBtn = document.getElementById('btn-refresh-notice');
+	if (refreshNoticeBtn) {
+		refreshNoticeBtn.addEventListener('click', refreshNotices);
+	}
+
+	const logoutBtn = document.querySelector('.logout-button');
+	if (logoutBtn) {
+		logoutBtn.addEventListener('click', handleLogout);
+	}
+
 	renderHomeView();
-}
+});
+window.addEventListener('pageshow', renderHomeView);
 
 async function handleLogin() {
 	const passInput = document.getElementById('input-password');
@@ -29,28 +45,21 @@ async function handleLogin() {
 	const password = passInput.value.trim();
 
 	await withButtonLoading(btn, async () => {
-		let isSuccess = false;
 		try {
 			const res = await callGasApi('verifyPassword', { password });
 			if (res && res.success) {
-				isSuccess = true;
-			} else if (res && res.error) {
+				setUserLogin(true);
+				showToast('ログインしました');
+				renderHomeView();
+				return;
+			}
+			if (res && res.error) {
 				showToast(res.error, 'error');
 				return;
 			}
+			showToast('パスワードが間違っています', 'error');
 		} catch (err) {
-			if (password === 'higo0314') {
-				isSuccess = true;
-			} else {
-				showToast('パスワードが間違っています', 'error');
-				return;
-			}
-		}
-
-		if (isSuccess) {
-			setUserLogin(true);
-			showToast('ログインしました');
-			renderHomeView();
+			showToast('認証に失敗しました', 'error');
 		}
 	}, '認証中...');
 }
@@ -99,31 +108,63 @@ async function refreshNotices() {
 	await withButtonLoading(btn, fetchNotices, '更新中');
 }
 
+function renderNoticeText(text) {
+	const wrapper = document.createElement('div');
+	wrapper.className = 'notice-body';
+	const parts = String(text ?? '').split(/\[\[(.*?)\]\]/g);
+	parts.forEach((part, index) => {
+		if (index % 2 === 1) {
+			const highlight = document.createElement('span');
+			highlight.className = 'highlight';
+			highlight.textContent = part;
+			wrapper.appendChild(highlight);
+			return;
+		}
+		if (part) {
+			wrapper.appendChild(document.createTextNode(part));
+		}
+	});
+	return wrapper;
+}
+
 async function fetchNotices() {
 	const container = document.getElementById('notice-container');
 	try {
 		const res = await callGasApi('getNotice');
 		if (!res.success || !res.notices || res.notices.length === 0) {
-			container.innerHTML = '<div class="notice-message">現在お知らせはありません。</div>';
+			container.textContent = '';
+			const empty = document.createElement('div');
+			empty.className = 'notice-message';
+			empty.textContent = '現在お知らせはありません。';
+			container.appendChild(empty);
 			return;
 		}
 
-		container.innerHTML = res.notices.map(item => {
-			let safeText = escapeHtml(item.text);
-			safeText = safeText.replace(/\[\[(.*?)\]\]/g, '<span class="highlight">$1</span>');
-			const timeFormatted = escapeHtml(item.time).replace(/:\d{2}$/, '');
-
-			return `
-				<div class="notice-item ${item.isPinned ? 'is-pinned' : ''}">
-					<div class="notice-header">
-						${item.isPinned ? '<span class="notice-pin-tag">[固定]</span>' : ''}
-						<span>${timeFormatted}</span>
-					</div>
-					<div class="notice-body">${safeText}</div>
-				</div>
-			`;
-		}).join('');
+		container.textContent = '';
+		res.notices.forEach((item) => {
+			const notice = document.createElement('div');
+			notice.className = `notice-item${item.isPinned ? ' is-pinned' : ''}`;
+			const header = document.createElement('div');
+			header.className = 'notice-header';
+			if (item.isPinned) {
+				const pinTag = document.createElement('span');
+				pinTag.className = 'notice-pin-tag';
+				pinTag.textContent = '[固定]';
+				header.appendChild(pinTag);
+			}
+			const time = document.createElement('span');
+			time.textContent = String(item.time ?? '').replace(/:\d{2}$/, '');
+			header.appendChild(time);
+			const body = renderNoticeText(item.text);
+			notice.appendChild(header);
+			notice.appendChild(body);
+			container.appendChild(notice);
+		});
 	} catch (e) {
-		container.innerHTML = '<div class="notice-message notice-message-error">お知らせの取得に失敗しました。GASのURLをご確認ください。</div>';
+		container.textContent = '';
+		const error = document.createElement('div');
+		error.className = 'notice-message notice-message-error';
+		error.textContent = 'お知らせの取得に失敗しました。GASのURLをご確認ください。';
+		container.appendChild(error);
 	}
 }
