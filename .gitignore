@@ -5,6 +5,7 @@
 .DS_Store
 .github
 .gitignore
+/docs
 
 #認証情報
 .clasprc.json
