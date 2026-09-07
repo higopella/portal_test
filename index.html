@@ -57,14 +57,10 @@
       <section class="card home-calendar">
         <div class="card-header">
           <span class="card-title">今日の予約</span>
+          <button type="button" class="btn btn-primary btn-sm" id="btn-refresh-schedule">更新</button>
         </div>
-        <div class="home-calendar-frame-wrapper">
-          <iframe
-            class="home-calendar-frame"
-            title="今日の予約"
-            src="https://calendar.google.com/calendar/embed?src=a18eeaccc3fb519de5b4b3492df6b26232f7967ab4582a2cd4d314600aa03186%40group.calendar.google.com&ctz=Asia%2FTokyo&mode=AGENDA&showTitle=0&showTabs=0&showCalendars=0&showPrint=0"
-            frameborder="0"
-            scrolling="no"></iframe>
+        <div id="home-schedule" class="home-schedule">
+          <div class="schedule-message">読み込み中...</div>
         </div>
       </section>
     </div>

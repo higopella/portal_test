@@ -1,11 +1,132 @@
 initCommonLayout('booking');
 
+let scheduleView = 'week';
+let scheduleAnchorDate = new Date();
+
 document.addEventListener('DOMContentLoaded', async () => {
 	if (!await requirePageAuthentication()) return;
-	const today = new Date().toISOString().split('T')[0];
+	const today = getLocalDateString(new Date());
 	document.getElementById('book-date').value = today;
+	document.getElementById('tab-btn-create').addEventListener('click', () => switchTab('create'));
+	document.getElementById('tab-btn-search').addEventListener('click', () => switchTab('search'));
+	document.getElementById('form-booking').addEventListener('submit', (event) => { event.preventDefault(); handleAddBooking(); });
+	document.getElementById('form-search').addEventListener('submit', (event) => { event.preventDefault(); handleSearch(); });
+	document.getElementById('book-start-time').addEventListener('change', updateEndTimePreview);
+	document.getElementById('book-duration').addEventListener('change', updateEndTimePreview);
+	document.getElementById('schedule-view-week').addEventListener('click', () => setScheduleView('week'));
+	document.getElementById('schedule-view-month').addEventListener('click', () => setScheduleView('month'));
+	document.getElementById('schedule-prev').addEventListener('click', () => moveSchedulePeriod(-1));
+	document.getElementById('schedule-next').addEventListener('click', () => moveSchedulePeriod(1));
+	document.getElementById('btn-refresh-schedule').addEventListener('click', () => loadBookingSchedule(true));
 	updateEndTimePreview();
+	loadBookingSchedule();
 });
+
+function getLocalDateString(date) {
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, '0');
+	const day = String(date.getDate()).padStart(2, '0');
+	return `${year}-${month}-${day}`;
+}
+
+function getScheduleRange() {
+	const anchor = new Date(scheduleAnchorDate.getFullYear(), scheduleAnchorDate.getMonth(), scheduleAnchorDate.getDate());
+	if (scheduleView === 'month') {
+		const start = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
+		const end = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0);
+		return { start, end };
+	}
+	const weekday = anchor.getDay();
+	const mondayOffset = weekday === 0 ? -6 : 1 - weekday;
+	const start = new Date(anchor);
+	start.setDate(start.getDate() + mondayOffset);
+	const end = new Date(start);
+	end.setDate(end.getDate() + 6);
+	return { start, end };
+}
+
+function setScheduleView(view) {
+	scheduleView = view;
+	document.getElementById('schedule-view-week').classList.toggle('active', view === 'week');
+	document.getElementById('schedule-view-month').classList.toggle('active', view === 'month');
+	loadBookingSchedule();
+}
+
+function moveSchedulePeriod(direction) {
+	if (scheduleView === 'month') scheduleAnchorDate.setMonth(scheduleAnchorDate.getMonth() + direction);
+	else scheduleAnchorDate.setDate(scheduleAnchorDate.getDate() + direction * 7);
+	loadBookingSchedule();
+}
+
+async function loadBookingSchedule(forceRefresh = false) {
+	const container = document.getElementById('booking-schedule');
+	const button = document.getElementById('btn-refresh-schedule');
+	const range = getScheduleRange();
+	const startDate = getLocalDateString(range.start);
+	const endDate = getLocalDateString(range.end);
+	document.getElementById('schedule-period-label').textContent = scheduleView === 'month'
+		? `${range.start.getFullYear()}年${range.start.getMonth() + 1}月`
+		: `${range.start.getMonth() + 1}/${range.start.getDate()} - ${range.end.getMonth() + 1}/${range.end.getDate()}`;
+	container.textContent = '';
+	const loading = document.createElement('div');
+	loading.className = 'schedule-message';
+	loading.textContent = '読み込み中...';
+	container.appendChild(loading);
+
+	if (forceRefresh) button.disabled = true;
+	try {
+		const result = await callGasApi('getScheduleEvents', { startDate, endDate, forceRefresh });
+		renderBookingSchedule(result.success ? result.events : [], range);
+	} catch (error) {
+		container.textContent = '';
+		const message = document.createElement('div');
+		message.className = 'schedule-message search-message-error';
+		message.textContent = '予定の取得に失敗しました。';
+		container.appendChild(message);
+	} finally {
+		if (forceRefresh) button.disabled = false;
+	}
+}
+
+function renderBookingSchedule(events, range) {
+	const container = document.getElementById('booking-schedule');
+	const eventsByDate = {};
+	events.forEach((event) => {
+		const date = String(event.start || '').slice(0, 10);
+		if (!eventsByDate[date]) eventsByDate[date] = [];
+		eventsByDate[date].push(event);
+	});
+	container.textContent = '';
+	for (const day = new Date(range.start); day <= range.end; day.setDate(day.getDate() + 1)) {
+		const dateKey = getLocalDateString(day);
+		const dayElement = document.createElement('div');
+		dayElement.className = 'schedule-day';
+		const heading = document.createElement('div');
+		heading.className = 'schedule-day-title';
+		heading.textContent = `${day.getMonth() + 1}/${day.getDate()} (${['日', '月', '火', '水', '木', '金', '土'][day.getDay()]})`;
+		dayElement.appendChild(heading);
+		const dayEvents = eventsByDate[dateKey] || [];
+		if (dayEvents.length === 0) {
+			const empty = document.createElement('div');
+			empty.className = 'schedule-empty';
+			empty.textContent = '予約なし';
+			dayElement.appendChild(empty);
+		}
+		dayEvents.forEach((event) => {
+			const eventElement = document.createElement('div');
+			eventElement.className = 'schedule-event';
+			const time = document.createElement('span');
+			time.className = 'schedule-event-time';
+			time.textContent = `${event.startTime} - ${event.endTime} ${event.room}`;
+			const title = document.createElement('span');
+			title.textContent = event.title;
+			eventElement.appendChild(time);
+			eventElement.appendChild(title);
+			dayElement.appendChild(eventElement);
+		});
+		container.appendChild(dayElement);
+	}
+}
 
 function switchTab(tabKey) {
 	const isCreate = tabKey === 'create';

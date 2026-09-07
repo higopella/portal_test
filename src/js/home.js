@@ -13,6 +13,7 @@ function renderHomeView() {
 		mainSec.style.display = 'flex';
 		calcNextMeeting();
 		fetchNotices();
+		fetchHomeSchedule();
 	} else {
 		loginSec.style.display = 'block';
 		mainSec.style.display = 'none';
@@ -33,6 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	if (refreshNoticeBtn) {
 		refreshNoticeBtn.addEventListener('click', refreshNotices);
 	}
+
+	const refreshScheduleBtn = document.getElementById('btn-refresh-schedule');
+	if (refreshScheduleBtn) refreshScheduleBtn.addEventListener('click', () => refreshHomeSchedule());
 
 	const logoutBtn = document.querySelector('.logout-button');
 	if (logoutBtn) {
@@ -184,6 +188,61 @@ function calcNextMeeting() {
 async function refreshNotices() {
 	const btn = document.getElementById('btn-refresh-notice');
 	await withButtonLoading(btn, fetchNotices, '更新中');
+}
+
+function getLocalDateString(date) {
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, '0');
+	const day = String(date.getDate()).padStart(2, '0');
+	return `${year}-${month}-${day}`;
+}
+
+async function refreshHomeSchedule() {
+	const button = document.getElementById('btn-refresh-schedule');
+	await withButtonLoading(button, () => fetchHomeSchedule(true), '更新中');
+}
+
+async function fetchHomeSchedule(forceRefresh = false) {
+	const container = document.getElementById('home-schedule');
+	if (!container) return;
+	const today = getLocalDateString(new Date());
+	container.textContent = '';
+	const loading = document.createElement('div');
+	loading.className = 'schedule-message';
+	loading.textContent = '読み込み中...';
+	container.appendChild(loading);
+
+	try {
+		const result = await callGasApi('getScheduleEvents', { startDate: today, endDate: today, forceRefresh: forceRefresh });
+		container.textContent = '';
+		if (!result.success || !result.events || result.events.length === 0) {
+			const empty = document.createElement('div');
+			empty.className = 'schedule-message';
+			empty.textContent = '今日の予約はありません。';
+			container.appendChild(empty);
+			return;
+		}
+
+		result.events.forEach((event) => {
+			const item = document.createElement('div');
+			item.className = 'schedule-item';
+			const time = document.createElement('span');
+			time.className = 'schedule-time';
+			time.textContent = `${event.startTime} - ${event.endTime} ${event.room}`;
+			const title = document.createElement('span');
+			title.className = 'schedule-title';
+			title.textContent = event.title;
+			item.appendChild(time);
+			item.appendChild(title);
+			container.appendChild(item);
+		});
+	} catch (error) {
+		container.textContent = '';
+		const message = document.createElement('div');
+		message.className = 'schedule-message notice-message-error';
+		message.textContent = '予定の取得に失敗しました。';
+		container.appendChild(message);
+	}
 }
 
 function renderNoticeText(text) {

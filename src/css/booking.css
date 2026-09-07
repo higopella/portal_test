@@ -6,6 +6,34 @@
 		.card {
 			padding: 20px;
 		}
+		.schedule-card { padding: 16px; }
+		.schedule-toolbar {
+			display: flex;
+			justify-content: space-between;
+			gap: 12px;
+			align-items: center;
+			margin-bottom: 14px;
+			flex-wrap: wrap;
+		}
+		.schedule-view-controls, .schedule-navigation { display: flex; align-items: center; gap: 6px; }
+		.schedule-view-btn, .schedule-nav-btn {
+			min-height: 36px;
+			padding: 6px 10px;
+			border: 1px solid var(--border);
+			border-radius: var(--radius);
+			background: var(--card);
+			color: var(--text);
+			cursor: pointer;
+		}
+		.schedule-view-btn.active { background: var(--primary-light); border-color: var(--primary); color: var(--primary-dark); }
+		.schedule-period-label { min-width: 120px; text-align: center; font-size: 0.9rem; font-weight: bold; }
+		.booking-schedule { display: grid; grid-template-columns: repeat(7, minmax(120px, 1fr)); overflow-x: auto; border: 1px solid var(--border); }
+		.schedule-day { min-height: 180px; padding: 10px; border-right: 1px solid var(--border); }
+		.schedule-day:last-child { border-right: 0; }
+		.schedule-day-title { font-size: 0.8rem; font-weight: bold; color: var(--text-sub); margin-bottom: 8px; }
+		.schedule-event { margin-bottom: 6px; padding: 6px; border-left: 3px solid var(--primary); background: var(--primary-light); font-size: 0.8rem; word-break: break-word; }
+		.schedule-event-time { display: block; color: var(--primary-dark); font-weight: bold; }
+		.schedule-empty { font-size: 0.8rem; color: var(--text-sub); }
 		.tab-nav {
 			display: grid;
 			grid-template-columns: 1fr 1fr;
@@ -82,3 +110,9 @@
 		.search-message { text-align: center; color: var(--text-sub); padding: 10px; }
 		.search-message-error { color: var(--danger); }
 		.delete-booking-button { min-height: 36px; padding: 4px 12px; font-size: 0.85rem; }
+		@media (max-width: 640px) {
+			.schedule-navigation { width: 100%; justify-content: space-between; }
+			.booking-schedule { grid-template-columns: 1fr; overflow: visible; }
+			.schedule-day { min-height: auto; border-right: 0; border-bottom: 1px solid var(--border); }
+			.schedule-day:last-child { border-bottom: 0; }
+		}

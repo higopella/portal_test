@@ -12,6 +12,24 @@
 <body>
 
   <main class="container">
+    <section class="card schedule-card">
+      <div class="schedule-toolbar">
+        <div class="schedule-view-controls" aria-label="カレンダー表示">
+          <button type="button" class="schedule-view-btn active" id="schedule-view-week">週</button>
+          <button type="button" class="schedule-view-btn" id="schedule-view-month">月</button>
+        </div>
+        <div class="schedule-navigation">
+          <button type="button" class="schedule-nav-btn" id="schedule-prev" aria-label="前の期間">前へ</button>
+          <span id="schedule-period-label" class="schedule-period-label"></span>
+          <button type="button" class="schedule-nav-btn" id="schedule-next" aria-label="次の期間">次へ</button>
+          <button type="button" class="btn btn-primary btn-sm" id="btn-refresh-schedule">更新</button>
+        </div>
+      </div>
+      <div id="booking-schedule" class="booking-schedule">
+        <div class="schedule-message">読み込み中...</div>
+      </div>
+    </section>
+
     <div class="card">
       <div class="tab-nav">
         <button type="button" class="tab-btn active" id="tab-btn-create">新規予約</button>
@@ -109,13 +127,6 @@
       </section>
     </div>
 
-    <!-- カレンダー -->
-    <div class="card">
-      <h3 class="calendar-heading">予約カレンダー</h3>
-      <div class="table-responsive">
-        <iframe class="calendar-frame" src="https://calendar.google.com/calendar/embed?src=a18eeaccc3fb519de5b4b3492df6b26232f7967ab4582a2cd4d314600aa03186%40group.calendar.google.com&ctz=Asia%2FTokyo" frameborder="0" scrolling="no"></iframe>
-      </div>
-    </div>
   </main>
 
   <script src="../src/js/ui.js"></script>
