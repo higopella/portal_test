@@ -1,6 +1,8 @@
 async function callGasApi(action, data = {}) {
   try {
     const payload = { action: action, data: data };
+    const idToken = typeof getCurrentIdToken === "function" ? getCurrentIdToken() : "";
+    if (idToken) payload.auth = { idToken: idToken };
     const response = await fetch(CONFIG.GAS_API_URL, {
       method: "POST",
       body: JSON.stringify(payload),

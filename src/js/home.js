@@ -1,11 +1,14 @@
 initCommonLayout('home');
 
+const GOOGLE_OAUTH_CLIENT_ID = '65097864960-vbe2ukqcoi9mpqc9capgtu9mak6vf4qs.apps.googleusercontent.com';
+let pendingGoogleIdentity = null;
+
 function renderHomeView() {
 	const loginSec = document.getElementById('login-section');
 	const mainSec = document.getElementById('main-section');
 	if (!loginSec || !mainSec) return;
 
-	if (checkUserLogin()) {
+	if (getCurrentIdToken()) {
 		loginSec.style.display = 'none';
 		mainSec.style.display = 'flex';
 		calcNextMeeting();
@@ -17,13 +20,13 @@ function renderHomeView() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-	const formLogin = document.getElementById('form-login');
-	if (formLogin) {
-		formLogin.addEventListener('submit', (event) => {
-			event.preventDefault();
-			handleLogin();
-		});
-	}
+	initializeGoogleLogin();
+
+	const schoolEmailForm = document.getElementById('form-school-email');
+	if (schoolEmailForm) schoolEmailForm.addEventListener('submit', handleSchoolEmailSubmit);
+
+	const otpForm = document.getElementById('form-otp');
+	if (otpForm) otpForm.addEventListener('submit', handleOtpSubmit);
 
 	const refreshNoticeBtn = document.getElementById('btn-refresh-notice');
 	if (refreshNoticeBtn) {
@@ -39,33 +42,107 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 window.addEventListener('pageshow', renderHomeView);
 
-async function handleLogin() {
-	const passInput = document.getElementById('input-password');
-	const btn = document.getElementById('btn-login');
-	const password = passInput.value.trim();
+function initializeGoogleLogin() {
+	const buttonContainer = document.getElementById('google-login-button');
+	if (!buttonContainer) return;
+	if (!window.google || !google.accounts || !google.accounts.id) {
+		const googleScript = document.getElementById('google-identity-script');
+		if (googleScript) googleScript.addEventListener('load', initializeGoogleLogin, { once: true });
+		return;
+	}
 
-	await withButtonLoading(btn, async () => {
-		try {
-			const res = await callGasApi('verifyPassword', { password });
-			if (res && res.success) {
-				setUserLogin(true);
-				showToast('ログインしました');
-				renderHomeView();
-				return;
-			}
-			if (res && res.error) {
-				showToast(res.error, 'error');
-				return;
-			}
-			showToast('パスワードが間違っています', 'error');
-		} catch (err) {
-			showToast('認証に失敗しました', 'error');
+	google.accounts.id.initialize({
+		client_id: GOOGLE_OAUTH_CLIENT_ID,
+		callback: handleGoogleCredential
+	});
+	google.accounts.id.renderButton(buttonContainer, { theme: 'outline', size: 'large', width: 280 });
+}
+
+async function handleGoogleCredential(response) {
+	if (!response || !response.credential) {
+		showToast('Google認証に失敗しました', 'error');
+		return;
+	}
+
+	setCurrentIdToken(response.credential);
+	try {
+		const result = await callGasApi('authenticateGoogle', { idToken: response.credential });
+		if (result.status === 'authenticated') {
+			setUserLogin(true);
+			showToast('ログインしました');
+			renderHomeView();
+			return;
 		}
-	}, '認証中...');
+		if (result.status === 'unregistered') {
+			pendingGoogleIdentity = response.credential;
+			showSchoolEmailPanel();
+			return;
+		}
+		clearCurrentIdToken();
+		showToast(result.error || 'ログインできません', 'error');
+	} catch (error) {
+		clearCurrentIdToken();
+		showToast('認証に失敗しました', 'error');
+	}
+}
+
+async function handleSchoolEmailSubmit(event) {
+	event.preventDefault();
+	const form = event.currentTarget;
+	const button = document.getElementById('btn-school-email');
+	const schoolEmail = document.getElementById('input-school-email').value.trim();
+	if (!pendingGoogleIdentity) return;
+
+	await withButtonLoading(button, async () => {
+		try {
+			const result = await callGasApi('requestOtp', { idToken: pendingGoogleIdentity, schoolEmail: schoolEmail });
+			if (!result.success) {
+				showToast(result.error || '確認コードを送信できません', 'error');
+				return;
+			}
+			form.classList.add('is-hidden');
+			document.getElementById('form-otp').classList.remove('is-hidden');
+			showToast('確認コードを送信しました');
+		} catch (error) {
+			showToast('確認コードの送信に失敗しました', 'error');
+		}
+	}, '送信中...');
+}
+
+async function handleOtpSubmit(event) {
+	event.preventDefault();
+	const button = document.getElementById('btn-otp');
+	const schoolEmail = document.getElementById('input-school-email').value.trim();
+	const otp = document.getElementById('input-otp').value.trim();
+	if (!pendingGoogleIdentity) return;
+
+	await withButtonLoading(button, async () => {
+		try {
+			const result = await callGasApi('verifyOtp', { idToken: pendingGoogleIdentity, schoolEmail: schoolEmail, otp: otp });
+			if (!result.success) {
+				showToast(result.error || '確認コードを確認できません', 'error');
+				return;
+			}
+			setCurrentIdToken(pendingGoogleIdentity);
+			pendingGoogleIdentity = null;
+			setUserLogin(true);
+			showToast('登録とログインが完了しました');
+			renderHomeView();
+		} catch (error) {
+			showToast('確認に失敗しました', 'error');
+		}
+	}, '確認中...');
+}
+
+function showSchoolEmailPanel() {
+	document.getElementById('google-login-panel').classList.add('is-hidden');
+	document.getElementById('form-school-email').classList.remove('is-hidden');
 }
 
 function handleLogout() {
 	if (confirm('ログアウトしますか？')) {
+		clearCurrentIdToken();
+		pendingGoogleIdentity = null;
 		setUserLogin(false);
 		showToast('ログアウトしました');
 		renderHomeView();

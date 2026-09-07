@@ -9,6 +9,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="src/css/common.css">
   <link rel="stylesheet" href="src/css/home.css">
+  <script id="google-identity-script" src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -19,9 +20,19 @@
         <img src="src/icon.png" alt="Higo-Pella Logo" class="login-logo">
         <div class="login-app-name">Higo-Pella</div>
       </div>
-      <form id="form-login">
-        <input type="password" id="input-password" class="input-text" placeholder="パスワードを入力" required>
-        <button type="submit" id="btn-login" class="btn btn-primary full-width">ログイン</button>
+      <div id="google-login-panel">
+        <p class="login-description">Googleアカウントでログインしてください</p>
+        <div id="google-login-button" class="google-login-button"></div>
+      </div>
+      <form id="form-school-email" class="is-hidden">
+        <p class="login-description">登録確認のため学校メールアドレスを入力してください</p>
+        <input type="email" id="input-school-email" class="input-text" placeholder="学校メールアドレス" autocomplete="email" required>
+        <button type="submit" id="btn-school-email" class="btn btn-primary full-width">確認コード送信</button>
+      </form>
+      <form id="form-otp" class="is-hidden">
+        <p class="login-description">学校メールに届いた6桁の確認コードを入力してください</p>
+        <input type="text" id="input-otp" class="input-text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="6桁の確認コード" required>
+        <button type="submit" id="btn-otp" class="btn btn-primary full-width">確認</button>
       </form>
     </div>
   </div>

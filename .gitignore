@@ -6,6 +6,13 @@
 .github
 .gitignore
 /docs
+docs/reports
+docs/structure.md
+docs/ToDo.md
+docs/spec.md
+docs/authentication.md
+docs/GAS-safety-check-2026-09-02.md
+
 
 #認証情報
 .clasprc.json
@@ -17,3 +24,5 @@ node_modules/
 
 #GAS
 /GAS
+
+

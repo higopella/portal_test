@@ -1,5 +1,4 @@
 const CONFIG = {
-//  GAS_API_URL: "https://script.google.com/macros/s/AKfycbzSrC43yLEMa0WxqpNa7r4ONX17LSAkHzSGCO6Sw8QhebGKQQTlElZVsyFSBk_yFQIFfQ/exec",
   GAS_API_URL: "https://script.google.com/macros/s/AKfycbxLEU_cnLSP1Sb53hwqbz6JZynbcOiwrXkiFTI_Ev540bgndI0y_egVRSLJaKx15cmb/exec",
   STORAGE_KEYS: {
     IS_LOGGED_IN: "higopella_is_logged_in",
@@ -7,6 +6,20 @@ const CONFIG = {
     LAST_ACCESS_TIME: "higopella_last_access_time"
   }
 };
+
+let currentIdToken = '';
+
+function setCurrentIdToken(idToken) {
+  currentIdToken = typeof idToken === 'string' ? idToken : '';
+}
+
+function getCurrentIdToken() {
+  return currentIdToken;
+}
+
+function clearCurrentIdToken() {
+  currentIdToken = '';
+}
 
 function checkUserLogin() {
   return sessionStorage.getItem(CONFIG.STORAGE_KEYS.IS_LOGGED_IN) === "true";

@@ -94,6 +94,16 @@
 			margin-top: 10px;
 			letter-spacing: 0.5px;
 		}
+		.login-description {
+			font-size: 0.9rem;
+			color: var(--text-sub, #64748b);
+			margin-bottom: 14px;
+		}
+		.google-login-button {
+			display: flex;
+			justify-content: center;
+			min-height: 40px;
+		}
 		.input-text {
 			width: 100%;
 			height: 46px;
