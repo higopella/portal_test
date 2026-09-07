@@ -27,12 +27,18 @@
 		}
 		.schedule-view-btn.active { background: var(--primary-light); border-color: var(--primary); color: var(--primary-dark); }
 		.schedule-period-label { min-width: 120px; text-align: center; font-size: 0.9rem; font-weight: bold; }
-		.booking-schedule { display: grid; grid-template-columns: repeat(7, minmax(120px, 1fr)); overflow-x: auto; border: 1px solid var(--border); }
-		.schedule-day { min-height: 180px; padding: 10px; border-right: 1px solid var(--border); }
+		.booking-schedule { display: grid; grid-template-columns: repeat(7, minmax(150px, 1fr)); overflow-x: auto; border: 1px solid var(--border); }
+		.schedule-day { min-height: 1060px; padding: 10px; border-right: 1px solid var(--border); }
 		.schedule-day:last-child { border-right: 0; }
 		.schedule-day-title { font-size: 0.8rem; font-weight: bold; color: var(--text-sub); margin-bottom: 8px; }
-		.schedule-event { margin-bottom: 6px; padding: 6px; border-left: 3px solid var(--primary); background: var(--primary-light); font-size: 0.8rem; word-break: break-word; }
+		.schedule-all-day { display: flex; flex-direction: column; gap: 4px; min-height: 0; margin-bottom: 8px; }
+		.schedule-timeline { position: relative; height: 966px; padding-left: 34px; }
+		.schedule-hour-line { height: 69px; border-top: 1px solid var(--border); color: var(--text-sub); font-size: 0.7rem; margin-left: -34px; padding-left: 2px; }
+		.schedule-event { position: absolute; z-index: 1; padding: 5px; border-left: 3px solid var(--primary); background: var(--primary-light); font-size: 0.75rem; overflow: hidden; word-break: break-word; }
+		.schedule-event-all-day { position: static; width: 100%; }
+		.schedule-event-main { border-left-color: var(--danger); background: #fff1f2; }
 		.schedule-event-time { display: block; color: var(--primary-dark); font-weight: bold; }
+		.schedule-event-main .schedule-event-time { color: #d32f2f; }
 		.schedule-empty { font-size: 0.8rem; color: var(--text-sub); }
 		.tab-nav {
 			display: grid;

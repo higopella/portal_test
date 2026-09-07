@@ -106,26 +106,76 @@ function renderBookingSchedule(events, range) {
 		heading.textContent = `${day.getMonth() + 1}/${day.getDate()} (${['日', '月', '火', '水', '木', '金', '土'][day.getDay()]})`;
 		dayElement.appendChild(heading);
 		const dayEvents = eventsByDate[dateKey] || [];
+		const allDayEvents = dayEvents.filter((event) => event.isAllDay);
+		const timedEvents = dayEvents.filter((event) => !event.isAllDay);
+		const allDayContainer = document.createElement('div');
+		allDayContainer.className = 'schedule-all-day';
+		allDayEvents.forEach((event) => allDayContainer.appendChild(createScheduleEventElement(event, true)));
+		dayElement.appendChild(allDayContainer);
+		const timeline = document.createElement('div');
+		timeline.className = 'schedule-timeline';
+		for (let hour = 7; hour < 21; hour += 1) {
+			const hourLine = document.createElement('div');
+			hourLine.className = 'schedule-hour-line';
+			hourLine.textContent = `${String(hour).padStart(2, '0')}:00`;
+			timeline.appendChild(hourLine);
+		}
+		layoutTimedEvents(timedEvents, timeline);
+		dayElement.appendChild(timeline);
 		if (dayEvents.length === 0) {
 			const empty = document.createElement('div');
 			empty.className = 'schedule-empty';
 			empty.textContent = '予約なし';
-			dayElement.appendChild(empty);
+			timeline.appendChild(empty);
 		}
-		dayEvents.forEach((event) => {
-			const eventElement = document.createElement('div');
-			eventElement.className = 'schedule-event';
-			const time = document.createElement('span');
-			time.className = 'schedule-event-time';
-			time.textContent = `${event.startTime} - ${event.endTime} ${event.room}`;
-			const title = document.createElement('span');
-			title.textContent = event.title;
-			eventElement.appendChild(time);
-			eventElement.appendChild(title);
-			dayElement.appendChild(eventElement);
-		});
 		container.appendChild(dayElement);
 	}
+}
+
+function createScheduleEventElement(event, isAllDay) {
+	const eventElement = document.createElement('div');
+	eventElement.className = `schedule-event${event.room === 'メイン' ? ' schedule-event-main' : ''}${isAllDay ? ' schedule-event-all-day' : ''}`;
+	const time = document.createElement('span');
+	time.className = 'schedule-event-time';
+	time.textContent = isAllDay ? `終日 ${event.room}` : `${event.startTime} - ${event.endTime} ${event.room}`;
+	const title = document.createElement('span');
+	title.textContent = event.title;
+	eventElement.appendChild(time);
+	eventElement.appendChild(title);
+	return eventElement;
+}
+
+function layoutTimedEvents(events, timeline) {
+	const sortedEvents = events.slice().sort((first, second) => first.start.localeCompare(second.start));
+	const groups = [];
+	sortedEvents.forEach((event) => {
+		const start = getMinutesFromTime(event.startTime);
+		const end = getMinutesFromTime(event.endTime);
+		let group = groups.find((candidate) => candidate.some((item) => getMinutesFromTime(item.endTime) > start && end > getMinutesFromTime(item.startTime)));
+		if (!group) {
+			group = [];
+			groups.push(group);
+		}
+		group.push(event);
+	});
+
+	groups.forEach((group) => {
+		group.forEach((event, index) => {
+			const start = getMinutesFromTime(event.startTime);
+			const end = getMinutesFromTime(event.endTime);
+			const eventElement = createScheduleEventElement(event, false);
+			eventElement.style.top = `${(start - 420) * 1.15}px`;
+			eventElement.style.height = `${Math.max((end - start) * 1.15, 30)}px`;
+			eventElement.style.left = `calc(${(index / group.length) * 100}% + 34px)`;
+			eventElement.style.width = `calc(${100 / group.length}% - 38px)`;
+			timeline.appendChild(eventElement);
+		});
+	});
+}
+
+function getMinutesFromTime(value) {
+	const parts = String(value).split(':').map(Number);
+	return parts[0] * 60 + parts[1];
 }
 
 function switchTab(tabKey) {

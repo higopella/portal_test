@@ -205,7 +205,11 @@ async function refreshHomeSchedule() {
 async function fetchHomeSchedule(forceRefresh = false) {
 	const container = document.getElementById('home-schedule');
 	if (!container) return;
-	const today = getLocalDateString(new Date());
+	const todayDate = new Date();
+	const tomorrowDate = new Date(todayDate);
+	tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+	const today = getLocalDateString(todayDate);
+	const tomorrow = getLocalDateString(tomorrowDate);
 	container.textContent = '';
 	const loading = document.createElement('div');
 	loading.className = 'schedule-message';
@@ -213,29 +217,8 @@ async function fetchHomeSchedule(forceRefresh = false) {
 	container.appendChild(loading);
 
 	try {
-		const result = await callGasApi('getScheduleEvents', { startDate: today, endDate: today, forceRefresh: forceRefresh });
-		container.textContent = '';
-		if (!result.success || !result.events || result.events.length === 0) {
-			const empty = document.createElement('div');
-			empty.className = 'schedule-message';
-			empty.textContent = '今日の予約はありません。';
-			container.appendChild(empty);
-			return;
-		}
-
-		result.events.forEach((event) => {
-			const item = document.createElement('div');
-			item.className = 'schedule-item';
-			const time = document.createElement('span');
-			time.className = 'schedule-time';
-			time.textContent = `${event.startTime} - ${event.endTime} ${event.room}`;
-			const title = document.createElement('span');
-			title.className = 'schedule-title';
-			title.textContent = event.title;
-			item.appendChild(time);
-			item.appendChild(title);
-			container.appendChild(item);
-		});
+		const result = await callGasApi('getScheduleEvents', { startDate: today, endDate: tomorrow, forceRefresh: forceRefresh });
+		renderHomeSchedule(result.success ? result.events : [], [todayDate, tomorrowDate]);
 	} catch (error) {
 		container.textContent = '';
 		const message = document.createElement('div');
@@ -243,6 +226,99 @@ async function fetchHomeSchedule(forceRefresh = false) {
 		message.textContent = '予定の取得に失敗しました。';
 		container.appendChild(message);
 	}
+}
+
+function renderHomeSchedule(events, dates) {
+	const container = document.getElementById('home-schedule');
+	const eventsByDate = {};
+	events.forEach((event) => {
+		const date = String(event.start || '').slice(0, 10);
+		if (!eventsByDate[date]) eventsByDate[date] = [];
+		eventsByDate[date].push(event);
+	});
+
+	container.textContent = '';
+	const grid = document.createElement('div');
+	grid.className = 'home-schedule-grid';
+	dates.forEach((date) => {
+		const dateKey = getLocalDateString(date);
+		const day = document.createElement('section');
+		day.className = 'home-schedule-day';
+		const heading = document.createElement('h3');
+		heading.className = 'home-schedule-day-title';
+		heading.textContent = `${date.getMonth() + 1}/${date.getDate()} (${['日', '月', '火', '水', '木', '金', '土'][date.getDay()]})`;
+		day.appendChild(heading);
+
+		const dayEvents = eventsByDate[dateKey] || [];
+		const allDay = document.createElement('div');
+		allDay.className = 'home-schedule-all-day';
+		dayEvents.filter((event) => event.isAllDay).forEach((event) => allDay.appendChild(createHomeScheduleEvent(event, true)));
+		day.appendChild(allDay);
+
+		const timeline = document.createElement('div');
+		timeline.className = 'home-schedule-timeline';
+		for (let hour = 7; hour < 21; hour += 1) {
+			const hourLine = document.createElement('div');
+			hourLine.className = 'home-schedule-hour-line';
+			hourLine.textContent = `${String(hour).padStart(2, '0')}:00`;
+			timeline.appendChild(hourLine);
+		}
+		layoutHomeTimedEvents(dayEvents.filter((event) => !event.isAllDay), timeline);
+		if (dayEvents.length === 0) {
+			const empty = document.createElement('div');
+			empty.className = 'home-schedule-empty';
+			empty.textContent = '予約なし';
+			timeline.appendChild(empty);
+		}
+		day.appendChild(timeline);
+		grid.appendChild(day);
+	});
+	container.appendChild(grid);
+}
+
+function createHomeScheduleEvent(event, isAllDay) {
+	const element = document.createElement('div');
+	element.className = `home-schedule-event${event.room === 'メイン' ? ' home-schedule-event-main' : ''}${isAllDay ? ' home-schedule-event-all-day' : ''}`;
+	const time = document.createElement('span');
+	time.className = 'home-schedule-event-time';
+	time.textContent = isAllDay ? `終日 ${event.room}` : `${event.startTime} - ${event.endTime} ${event.room}`;
+	const title = document.createElement('span');
+	title.textContent = event.title;
+	element.appendChild(time);
+	element.appendChild(title);
+	return element;
+}
+
+function layoutHomeTimedEvents(events, timeline) {
+	const groups = [];
+	events.slice().sort((first, second) => first.start.localeCompare(second.start)).forEach((event) => {
+		const start = getMinutesFromTime(event.startTime);
+		const end = getMinutesFromTime(event.endTime);
+		let group = groups.find((candidate) => candidate.some((item) => getMinutesFromTime(item.endTime) > start && end > getMinutesFromTime(item.startTime)));
+		if (!group) {
+			group = [];
+			groups.push(group);
+		}
+		group.push(event);
+	});
+
+	groups.forEach((group) => {
+		group.forEach((event, index) => {
+			const start = getMinutesFromTime(event.startTime);
+			const end = getMinutesFromTime(event.endTime);
+			const element = createHomeScheduleEvent(event, false);
+			element.style.top = `${(start - 420) * 0.9}px`;
+			element.style.height = `${Math.max((end - start) * 0.9, 30)}px`;
+			element.style.left = `calc(${(index / group.length) * 100}% + 30px)`;
+			element.style.width = `calc(${100 / group.length}% - 34px)`;
+			timeline.appendChild(element);
+		});
+	});
+}
+
+function getMinutesFromTime(value) {
+	const parts = String(value).split(':').map(Number);
+	return parts[0] * 60 + parts[1];
 }
 
 function renderNoticeText(text) {
