@@ -34,11 +34,18 @@
 		.schedule-all-day { display: flex; flex-direction: column; gap: 4px; min-height: 0; margin-bottom: 8px; }
 		.schedule-timeline { position: relative; height: 966px; padding-left: 34px; }
 		.schedule-hour-line { height: 69px; border-top: 1px solid var(--border); color: var(--text-sub); font-size: 0.7rem; margin-left: -34px; padding-left: 2px; }
-		.schedule-event { position: absolute; z-index: 1; padding: 5px; border-left: 3px solid var(--primary); background: var(--primary-light); font-size: 0.75rem; overflow: hidden; word-break: break-word; }
+		.schedule-event { position: absolute; z-index: 1; padding: 3px; border-left: 3px solid var(--primary); background: var(--primary-light); font-size: 0.75rem; overflow: hidden; word-break: break-word; }
 		.schedule-event-all-day { position: static; width: 100%; }
+		.schedule-event-clubroom { border-left-color: var(--primary); background: var(--primary-light); }
+		.schedule-event-equipment { border-left-color: #d4a72c; background: #fff8d6; }
+		.schedule-event-classroom { border-left-color: #5ca66a; background: #e7f6e8; }
 		.schedule-event-main { border-left-color: var(--danger); background: #fff1f2; }
 		.schedule-event-time { display: block; color: var(--primary-dark); font-weight: bold; }
+		.schedule-room { display: block; font-size: 1.1rem; font-weight: 700; line-height: 1.1; }
+		.schedule-event-equipment .schedule-event-time, .schedule-event-equipment .schedule-room { color: #987a1c; }
+		.schedule-event-classroom .schedule-event-time, .schedule-event-classroom .schedule-room { color: #357a43; }
 		.schedule-event-main .schedule-event-time { color: #d32f2f; }
+		.schedule-event-main .schedule-room { color: #d32f2f; }
 		.schedule-empty { font-size: 0.8rem; color: var(--text-sub); }
 		.tab-nav {
 			display: grid;
@@ -118,7 +125,7 @@
 		.delete-booking-button { min-height: 36px; padding: 4px 12px; font-size: 0.85rem; }
 		@media (max-width: 640px) {
 			.schedule-navigation { width: 100%; justify-content: space-between; }
-			.booking-schedule { grid-template-columns: 1fr; overflow: visible; }
+			.booking-schedule { grid-template-columns: 1fr; max-height: 620px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 			.schedule-day { min-height: auto; border-right: 0; border-bottom: 1px solid var(--border); }
 			.schedule-day:last-child { border-bottom: 0; }
 		}

@@ -278,15 +278,26 @@ function renderHomeSchedule(events, dates) {
 
 function createHomeScheduleEvent(event, isAllDay) {
 	const element = document.createElement('div');
-	element.className = `home-schedule-event${event.room === 'メイン' ? ' home-schedule-event-main' : ''}${isAllDay ? ' home-schedule-event-all-day' : ''}`;
+	element.className = `home-schedule-event ${getHomeScheduleRoomClass(event.room)}${isAllDay ? ' home-schedule-event-all-day' : ''}`;
 	const time = document.createElement('span');
 	time.className = 'home-schedule-event-time';
-	time.textContent = isAllDay ? `終日 ${event.room}` : `${event.startTime} - ${event.endTime} ${event.room}`;
+	time.textContent = isAllDay ? '終日' : `${event.startTime} - ${event.endTime}`;
+	const room = document.createElement('span');
+	room.className = 'home-schedule-room';
+	room.textContent = event.room;
 	const title = document.createElement('span');
 	title.textContent = event.title;
 	element.appendChild(time);
+	element.appendChild(room);
 	element.appendChild(title);
 	return element;
+}
+
+function getHomeScheduleRoomClass(room) {
+	if (room === '②') return 'home-schedule-event-equipment';
+	if (room === '③') return 'home-schedule-event-classroom';
+	if (room === 'メイン') return 'home-schedule-event-main';
+	return 'home-schedule-event-clubroom';
 }
 
 function layoutHomeTimedEvents(events, timeline) {
@@ -309,8 +320,8 @@ function layoutHomeTimedEvents(events, timeline) {
 			const element = createHomeScheduleEvent(event, false);
 			element.style.top = `${(start - 420) * 0.9}px`;
 			element.style.height = `${Math.max((end - start) * 0.9, 30)}px`;
-			element.style.left = `calc(${(index / group.length) * 100}% + 30px)`;
-			element.style.width = `calc(${100 / group.length}% - 34px)`;
+			element.style.left = `calc(30px + ${(index / group.length) * 100}% - ${(index / group.length) * 30}px)`;
+			element.style.width = `calc(${100 / group.length}% - ${(30 / group.length) + 2}px)`;
 			timeline.appendChild(element);
 		});
 	});

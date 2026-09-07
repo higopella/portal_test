@@ -134,15 +134,26 @@ function renderBookingSchedule(events, range) {
 
 function createScheduleEventElement(event, isAllDay) {
 	const eventElement = document.createElement('div');
-	eventElement.className = `schedule-event${event.room === 'メイン' ? ' schedule-event-main' : ''}${isAllDay ? ' schedule-event-all-day' : ''}`;
+	eventElement.className = `schedule-event ${getScheduleRoomClass(event.room)}${isAllDay ? ' schedule-event-all-day' : ''}`;
 	const time = document.createElement('span');
 	time.className = 'schedule-event-time';
-	time.textContent = isAllDay ? `終日 ${event.room}` : `${event.startTime} - ${event.endTime} ${event.room}`;
+	time.textContent = isAllDay ? '終日' : `${event.startTime} - ${event.endTime}`;
+	const room = document.createElement('span');
+	room.className = 'schedule-room';
+	room.textContent = event.room;
 	const title = document.createElement('span');
 	title.textContent = event.title;
 	eventElement.appendChild(time);
+	eventElement.appendChild(room);
 	eventElement.appendChild(title);
 	return eventElement;
+}
+
+function getScheduleRoomClass(room) {
+	if (room === '②') return 'schedule-event-equipment';
+	if (room === '③') return 'schedule-event-classroom';
+	if (room === 'メイン') return 'schedule-event-main';
+	return 'schedule-event-clubroom';
 }
 
 function layoutTimedEvents(events, timeline) {
@@ -166,8 +177,8 @@ function layoutTimedEvents(events, timeline) {
 			const eventElement = createScheduleEventElement(event, false);
 			eventElement.style.top = `${(start - 420) * 1.15}px`;
 			eventElement.style.height = `${Math.max((end - start) * 1.15, 30)}px`;
-			eventElement.style.left = `calc(${(index / group.length) * 100}% + 34px)`;
-			eventElement.style.width = `calc(${100 / group.length}% - 38px)`;
+			eventElement.style.left = `calc(34px + ${(index / group.length) * 100}% - ${(index / group.length) * 34}px)`;
+			eventElement.style.width = `calc(${100 / group.length}% - ${(34 / group.length) + 2}px)`;
 			timeline.appendChild(eventElement);
 		});
 	});
