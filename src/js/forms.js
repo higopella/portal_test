@@ -6,7 +6,8 @@ const FORMS = {
 	inquiry: "https://docs.google.com/forms/d/e/1FAIpQLSeWlJzJjoWAmWohyY4kik12qSl0sBAPzBDBTV9VdUyARYeB7g/viewform?usp=header"
 };
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+	if (!await requirePageAuthentication()) return;
 	document.querySelectorAll('.form-tab-btn').forEach((button) => {
 		button.addEventListener('click', () => {
 			switchForm(button.dataset.formKey, button);

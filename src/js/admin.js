@@ -1,11 +1,13 @@
 initCommonLayout('admin');
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+	if (!await requirePageAuthentication()) return;
 	const isAdmin = checkAdminLogin();
 	if (isAdmin) {
 		showDashboard();
 	} else {
-		document.getElementById('admin-login-section').style.display = 'block';
+		showToast('管理者権限が必要です', 'error');
+		window.location.replace('../');
 	}
 });
 

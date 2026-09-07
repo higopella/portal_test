@@ -20,6 +20,7 @@ function renderHomeView() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+	if (getCurrentIdToken()) setUserLogin(true);
 	initializeGoogleLogin();
 
 	const schoolEmailForm = document.getElementById('form-school-email');

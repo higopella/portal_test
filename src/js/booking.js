@@ -1,6 +1,7 @@
 initCommonLayout('booking');
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+	if (!await requirePageAuthentication()) return;
 	const today = new Date().toISOString().split('T')[0];
 	document.getElementById('book-date').value = today;
 	updateEndTimePreview();

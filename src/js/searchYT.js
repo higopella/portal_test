@@ -3,7 +3,8 @@ initCommonLayout('searchYT');
 let allVideos = [];
 let currentType = 'ALL';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+	if (!await requirePageAuthentication()) return;
 	const selectPlaylist = document.getElementById('select-playlist');
 	if (selectPlaylist) {
 		selectPlaylist.addEventListener('change', loadVideos);
