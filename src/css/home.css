@@ -5,7 +5,7 @@
 		}
 		.home-content-grid {
 			display: grid;
-			grid-template-columns: minmax(240px, 0.6fr) minmax(460px, 1.4fr);
+			grid-template-columns: minmax(200px, 0.4fr) minmax(460px, 1.6fr);
 			gap: 16px;
 			align-items: start;
 		}
