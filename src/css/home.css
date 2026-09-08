@@ -138,22 +138,50 @@
 		.notice-message-loading { text-align: center; padding: 14px; }
 		.notice-message-error { color: var(--danger); }
 		.home-schedule {
-			min-height: 780px;
+			min-height: 0;
+			max-height: 620px;
+			overflow-y: auto;
+			-webkit-overflow-scrolling: touch;
 		}
 		.schedule-message { text-align: center; padding: 20px; color: var(--text-sub, #64748b); }
-		.home-schedule-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+		.home-schedule-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 		.home-schedule-day { min-width: 0; padding: 8px; border: 1px solid var(--border, #e2e8f0); }
-		.home-schedule-day-title { font-size: 0.82rem; color: var(--text-sub, #64748b); margin-bottom: 6px; }
+		.home-schedule-day-title {
+			position: sticky;
+			top: 0;
+			z-index: 2;
+			background-color: var(--card, #ffffff);
+			font-size: 0.82rem;
+			color: var(--text-sub, #64748b);
+			margin-bottom: 6px;
+			padding-bottom: 4px;
+		}
 		.home-schedule-all-day { display: flex; flex-direction: column; gap: 4px; min-height: 0; margin-bottom: 6px; }
-		.home-schedule-timeline { position: relative; height: 756px; padding-left: 30px; }
-		.home-schedule-hour-line { height: 54px; border-top: 1px solid var(--border, #e2e8f0); color: var(--text-sub, #64748b); font-size: 0.66rem; margin-left: -30px; padding-left: 2px; }
-		.home-schedule-event { position: absolute; z-index: 1; padding: 3px; border-left: 3px solid var(--primary, #4fc3f7); background-color: var(--primary-light, #e1f5fe); font-size: 0.72rem; line-height: 1.3; overflow: hidden; word-break: break-word; }
+		.home-schedule-timeline { position: relative; padding-left: 34px; }
+		.home-schedule-hour-line { border-top: 1px solid var(--border, #e2e8f0); color: var(--text-sub, #64748b); font-size: 0.66rem; margin-left: -34px; padding-left: 2px; }
+		.home-schedule-event {
+			position: absolute;
+			z-index: 1;
+			display: flex;
+			flex-direction: column;
+			padding: 3px 4px;
+			border: 1px solid rgba(0, 0, 0, 0.1);
+			border-left: 4px solid var(--primary, #4fc3f7);
+			background-color: var(--primary-light, #e1f5fe);
+			font-size: 0.72rem;
+			line-height: 1.3;
+			overflow: hidden;
+			word-break: break-word;
+			cursor: pointer;
+		}
 		.home-schedule-event-all-day { position: static; width: 100%; }
 		.home-schedule-event-clubroom { border-left-color: var(--primary, #4fc3f7); background-color: var(--primary-light, #e1f5fe); }
 		.home-schedule-event-equipment { border-left-color: #d4a72c; background-color: #fff8d6; }
 		.home-schedule-event-classroom { border-left-color: #5ca66a; background-color: #e7f6e8; }
 		.home-schedule-event-main { border-left-color: var(--danger, #ef5350); background-color: #fff1f2; }
 		.home-schedule-event-time { display: block; color: var(--primary-dark, #0288d1); font-weight: bold; }
+		.home-schedule-event-title { display: block; font-weight: 600; }
+		.home-schedule-event-transfer { display: block; color: var(--text-sub, #64748b); }
 		.home-schedule-room { display: block; font-size: 1.05rem; font-weight: 700; line-height: 1.1; }
 		.home-schedule-event-equipment .home-schedule-event-time, .home-schedule-event-equipment .home-schedule-room { color: #987a1c; }
 		.home-schedule-event-classroom .home-schedule-event-time, .home-schedule-event-classroom .home-schedule-room { color: #357a43; }
@@ -170,5 +198,4 @@
 				max-height: 200px;
 			}
 			.home-schedule-grid { grid-template-columns: 1fr; }
-			.home-schedule { min-height: 0; max-height: 620px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 		}

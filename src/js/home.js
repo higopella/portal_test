@@ -129,11 +129,13 @@ async function refreshHomeSchedule() {
 async function fetchHomeSchedule(forceRefresh = false) {
 	const container = document.getElementById('home-schedule');
 	if (!container) return;
-	const todayDate = new Date();
-	const tomorrowDate = new Date(todayDate);
-	tomorrowDate.setDate(tomorrowDate.getDate() + 1);
-	const today = getLocalDateString(todayDate);
-	const tomorrow = getLocalDateString(tomorrowDate);
+	const dates = [0, 1, 2].map((offset) => {
+		const date = new Date();
+		date.setDate(date.getDate() + offset);
+		return date;
+	});
+	const startDate = getLocalDateString(dates[0]);
+	const endDate = getLocalDateString(dates[dates.length - 1]);
 	container.textContent = '';
 	const loading = document.createElement('div');
 	loading.className = 'schedule-message';
@@ -141,8 +143,8 @@ async function fetchHomeSchedule(forceRefresh = false) {
 	container.appendChild(loading);
 
 	try {
-		const result = await callGasApi('getScheduleEvents', { startDate: today, endDate: tomorrow, forceRefresh: forceRefresh });
-		renderHomeSchedule(result.success ? result.events : [], [todayDate, tomorrowDate]);
+		const result = await callGasApi('getScheduleEvents', { startDate, endDate, forceRefresh: forceRefresh });
+		renderHomeSchedule(result.success ? result.events : [], dates);
 	} catch (error) {
 		container.textContent = '';
 		const message = document.createElement('div');
@@ -179,15 +181,8 @@ function renderHomeSchedule(events, dates) {
 		dayEvents.filter((event) => event.isAllDay).forEach((event) => allDay.appendChild(createHomeScheduleEvent(event, true)));
 		day.appendChild(allDay);
 
-		const timeline = document.createElement('div');
-		timeline.className = 'home-schedule-timeline';
-		for (let hour = 7; hour < 21; hour += 1) {
-			const hourLine = document.createElement('div');
-			hourLine.className = 'home-schedule-hour-line';
-			hourLine.textContent = `${String(hour).padStart(2, '0')}:00`;
-			timeline.appendChild(hourLine);
-		}
-		layoutHomeTimedEvents(dayEvents.filter((event) => !event.isAllDay), timeline);
+		const timeline = buildScheduleTimeline('home-schedule-timeline', 'home-schedule-hour-line');
+		layoutScheduleTimedEvents(dayEvents.filter((event) => !event.isAllDay), timeline, createHomeScheduleEvent);
 		if (dayEvents.length === 0) {
 			const empty = document.createElement('div');
 			empty.className = 'home-schedule-empty';
@@ -210,10 +205,18 @@ function createHomeScheduleEvent(event, isAllDay) {
 	room.className = 'home-schedule-room';
 	room.textContent = event.room;
 	const title = document.createElement('span');
+	title.className = 'home-schedule-event-title';
 	title.textContent = event.title;
 	element.appendChild(time);
 	element.appendChild(room);
 	element.appendChild(title);
+	if (event.transferStatus) {
+		const transfer = document.createElement('span');
+		transfer.className = 'home-schedule-event-transfer';
+		transfer.textContent = event.transferStatus;
+		element.appendChild(transfer);
+	}
+	element.addEventListener('click', () => showScheduleEventDetail(event));
 	return element;
 }
 
@@ -222,38 +225,6 @@ function getHomeScheduleRoomClass(room) {
 	if (room === '③') return 'home-schedule-event-classroom';
 	if (room === 'メイン') return 'home-schedule-event-main';
 	return 'home-schedule-event-clubroom';
-}
-
-function layoutHomeTimedEvents(events, timeline) {
-	const groups = [];
-	events.slice().sort((first, second) => first.start.localeCompare(second.start)).forEach((event) => {
-		const start = getMinutesFromTime(event.startTime);
-		const end = getMinutesFromTime(event.endTime);
-		let group = groups.find((candidate) => candidate.some((item) => getMinutesFromTime(item.endTime) > start && end > getMinutesFromTime(item.startTime)));
-		if (!group) {
-			group = [];
-			groups.push(group);
-		}
-		group.push(event);
-	});
-
-	groups.forEach((group) => {
-		group.forEach((event, index) => {
-			const start = getMinutesFromTime(event.startTime);
-			const end = getMinutesFromTime(event.endTime);
-			const element = createHomeScheduleEvent(event, false);
-			element.style.top = `${(start - 420) * 0.9}px`;
-			element.style.height = `${Math.max((end - start) * 0.9, 30)}px`;
-			element.style.left = `calc(30px + ${(index / group.length) * 100}% - ${(index / group.length) * 30}px)`;
-			element.style.width = `calc(${100 / group.length}% - ${(30 / group.length) + 2}px)`;
-			timeline.appendChild(element);
-		});
-	});
-}
-
-function getMinutesFromTime(value) {
-	const parts = String(value).split(':').map(Number);
-	return parts[0] * 60 + parts[1];
 }
 
 function renderNoticeText(text) {
@@ -312,7 +283,7 @@ async function fetchNotices() {
 		container.textContent = '';
 		const error = document.createElement('div');
 		error.className = 'notice-message notice-message-error';
-		error.textContent = 'お知らせの取得に失敗しました。GASのURLをご確認ください。';
+		error.textContent = 'お知らせの取得に失敗しました。再読み込みしてください。';
 		container.appendChild(error);
 	}
 }

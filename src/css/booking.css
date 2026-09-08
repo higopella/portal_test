@@ -27,20 +27,45 @@
 		}
 		.schedule-view-btn.active { background: var(--primary-light); border-color: var(--primary); color: var(--primary-dark); }
 		.schedule-period-label { min-width: 120px; text-align: center; font-size: 0.9rem; font-weight: bold; }
-		.booking-schedule { display: grid; grid-template-columns: repeat(7, minmax(150px, 1fr)); overflow-x: auto; border: 1px solid var(--border); }
-		.schedule-day { min-height: 1060px; padding: 10px; border-right: 1px solid var(--border); }
+		.booking-schedule { display: grid; grid-template-columns: repeat(7, minmax(150px, 1fr)); overflow-x: auto; overflow-y: auto; max-height: 620px; -webkit-overflow-scrolling: touch; border: 1px solid var(--border); }
+		.schedule-day { min-height: 0; padding: 10px; border-right: 1px solid var(--border); }
 		.schedule-day:last-child { border-right: 0; }
-		.schedule-day-title { font-size: 0.8rem; font-weight: bold; color: var(--text-sub); margin-bottom: 8px; }
+		.schedule-day-title {
+			position: sticky;
+			top: 0;
+			z-index: 2;
+			background-color: var(--card);
+			font-size: 0.8rem;
+			font-weight: bold;
+			color: var(--text-sub);
+			margin-bottom: 8px;
+			padding-bottom: 4px;
+		}
 		.schedule-all-day { display: flex; flex-direction: column; gap: 4px; min-height: 0; margin-bottom: 8px; }
-		.schedule-timeline { position: relative; height: 966px; padding-left: 34px; }
-		.schedule-hour-line { height: 69px; border-top: 1px solid var(--border); color: var(--text-sub); font-size: 0.7rem; margin-left: -34px; padding-left: 2px; }
-		.schedule-event { position: absolute; z-index: 1; padding: 3px; border-left: 3px solid var(--primary); background: var(--primary-light); font-size: 0.75rem; overflow: hidden; word-break: break-word; }
+		.schedule-timeline { position: relative; padding-left: 34px; }
+		.schedule-hour-line { border-top: 1px solid var(--border); color: var(--text-sub); font-size: 0.7rem; margin-left: -34px; padding-left: 2px; }
+		.schedule-event {
+			position: absolute;
+			z-index: 1;
+			display: flex;
+			flex-direction: column;
+			padding: 3px 5px;
+			border: 1px solid rgba(0, 0, 0, 0.1);
+			border-left: 4px solid var(--primary);
+			background: var(--primary-light);
+			font-size: 0.75rem;
+			overflow: hidden;
+			word-break: break-word;
+			cursor: pointer;
+		}
 		.schedule-event-all-day { position: static; width: 100%; }
 		.schedule-event-clubroom { border-left-color: var(--primary); background: var(--primary-light); }
 		.schedule-event-equipment { border-left-color: #d4a72c; background: #fff8d6; }
 		.schedule-event-classroom { border-left-color: #5ca66a; background: #e7f6e8; }
 		.schedule-event-main { border-left-color: var(--danger); background: #fff1f2; }
 		.schedule-event-time { display: block; color: var(--primary-dark); font-weight: bold; }
+		.schedule-event-title { display: block; font-weight: 600; }
+		.schedule-event-transfer { display: block; color: var(--text-sub); }
 		.schedule-room { display: block; font-size: 1.1rem; font-weight: 700; line-height: 1.1; }
 		.schedule-event-equipment .schedule-event-time, .schedule-event-equipment .schedule-room { color: #987a1c; }
 		.schedule-event-classroom .schedule-event-time, .schedule-event-classroom .schedule-room { color: #357a43; }

@@ -112,15 +112,8 @@ function renderBookingSchedule(events, range) {
 		allDayContainer.className = 'schedule-all-day';
 		allDayEvents.forEach((event) => allDayContainer.appendChild(createScheduleEventElement(event, true)));
 		dayElement.appendChild(allDayContainer);
-		const timeline = document.createElement('div');
-		timeline.className = 'schedule-timeline';
-		for (let hour = 7; hour < 21; hour += 1) {
-			const hourLine = document.createElement('div');
-			hourLine.className = 'schedule-hour-line';
-			hourLine.textContent = `${String(hour).padStart(2, '0')}:00`;
-			timeline.appendChild(hourLine);
-		}
-		layoutTimedEvents(timedEvents, timeline);
+		const timeline = buildScheduleTimeline('schedule-timeline', 'schedule-hour-line');
+		layoutScheduleTimedEvents(timedEvents, timeline, createScheduleEventElement);
 		dayElement.appendChild(timeline);
 		if (dayEvents.length === 0) {
 			const empty = document.createElement('div');
@@ -142,10 +135,18 @@ function createScheduleEventElement(event, isAllDay) {
 	room.className = 'schedule-room';
 	room.textContent = event.room;
 	const title = document.createElement('span');
+	title.className = 'schedule-event-title';
 	title.textContent = event.title;
 	eventElement.appendChild(time);
 	eventElement.appendChild(room);
 	eventElement.appendChild(title);
+	if (event.transferStatus) {
+		const transfer = document.createElement('span');
+		transfer.className = 'schedule-event-transfer';
+		transfer.textContent = event.transferStatus;
+		eventElement.appendChild(transfer);
+	}
+	eventElement.addEventListener('click', () => showScheduleEventDetail(event));
 	return eventElement;
 }
 
@@ -154,39 +155,6 @@ function getScheduleRoomClass(room) {
 	if (room === '③') return 'schedule-event-classroom';
 	if (room === 'メイン') return 'schedule-event-main';
 	return 'schedule-event-clubroom';
-}
-
-function layoutTimedEvents(events, timeline) {
-	const sortedEvents = events.slice().sort((first, second) => first.start.localeCompare(second.start));
-	const groups = [];
-	sortedEvents.forEach((event) => {
-		const start = getMinutesFromTime(event.startTime);
-		const end = getMinutesFromTime(event.endTime);
-		let group = groups.find((candidate) => candidate.some((item) => getMinutesFromTime(item.endTime) > start && end > getMinutesFromTime(item.startTime)));
-		if (!group) {
-			group = [];
-			groups.push(group);
-		}
-		group.push(event);
-	});
-
-	groups.forEach((group) => {
-		group.forEach((event, index) => {
-			const start = getMinutesFromTime(event.startTime);
-			const end = getMinutesFromTime(event.endTime);
-			const eventElement = createScheduleEventElement(event, false);
-			eventElement.style.top = `${(start - 420) * 1.15}px`;
-			eventElement.style.height = `${Math.max((end - start) * 1.15, 30)}px`;
-			eventElement.style.left = `calc(34px + ${(index / group.length) * 100}% - ${(index / group.length) * 34}px)`;
-			eventElement.style.width = `calc(${100 / group.length}% - ${(34 / group.length) + 2}px)`;
-			timeline.appendChild(eventElement);
-		});
-	});
-}
-
-function getMinutesFromTime(value) {
-	const parts = String(value).split(':').map(Number);
-	return parts[0] * 60 + parts[1];
 }
 
 function switchTab(tabKey) {
