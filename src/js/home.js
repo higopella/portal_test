@@ -182,7 +182,7 @@ function renderHomeSchedule(events, dates) {
 		day.appendChild(allDay);
 
 		const timeline = buildScheduleTimeline('home-schedule-timeline', 'home-schedule-hour-line');
-		layoutScheduleTimedEvents(dayEvents.filter((event) => !event.isAllDay), timeline, createHomeScheduleEvent);
+		layoutScheduleTimedEvents(dayEvents, timeline, createHomeScheduleEvent);
 		if (dayEvents.length === 0) {
 			const empty = document.createElement('div');
 			empty.className = 'home-schedule-empty';

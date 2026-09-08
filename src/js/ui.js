@@ -120,41 +120,23 @@ function getScheduleRoomPriority(room) {
   return Object.prototype.hasOwnProperty.call(SCHEDULE_ROOM_ORDER, room) ? SCHEDULE_ROOM_ORDER[room] : 99;
 }
 
-// 時間が重なるイベントを、まとまり（クラスタ）ごとに検出する
-function buildScheduleOverlapClusters(events) {
-  const sorted = events.slice().sort((a, b) => getScheduleMinutesFromTime(a.startTime) - getScheduleMinutesFromTime(b.startTime));
-  const clusters = [];
-  sorted.forEach((event) => {
+// 使用中の部屋だけを、部室→機材庫→教室→メインの順で固定レーンに配置する
+function layoutScheduleTimedEvents(events, timeline, createEventElement) {
+  const activeRooms = [...new Set(events.map((event) => event.room))]
+    .sort((a, b) => getScheduleRoomPriority(a) - getScheduleRoomPriority(b));
+  const timedEvents = events.filter((event) => !event.isAllDay);
+  const laneCount = Math.max(activeRooms.length, 1);
+
+  timedEvents.forEach((event) => {
+    const laneIndex = activeRooms.indexOf(event.room);
     const start = getScheduleMinutesFromTime(event.startTime);
     const end = getScheduleMinutesFromTime(event.endTime);
-    let cluster = clusters.find((candidate) =>
-      candidate.some((item) => getScheduleMinutesFromTime(item.endTime) > start && end > getScheduleMinutesFromTime(item.startTime))
-    );
-    if (!cluster) {
-      cluster = [];
-      clusters.push(cluster);
-    }
-    cluster.push(event);
-  });
-  return clusters;
-}
-
-// 部室→機材庫→教室→メインの順で左から並べ、時間軸上に配置する
-function layoutScheduleTimedEvents(events, timeline, createEventElement) {
-  const clusters = buildScheduleOverlapClusters(events);
-  clusters.forEach((cluster) => {
-    const ordered = cluster.slice().sort((a, b) => getScheduleRoomPriority(a.room) - getScheduleRoomPriority(b.room));
-    const size = ordered.length;
-    ordered.forEach((event, index) => {
-      const start = getScheduleMinutesFromTime(event.startTime);
-      const end = getScheduleMinutesFromTime(event.endTime);
-      const element = createEventElement(event, false);
-      element.style.top = `${(start - SCHEDULE_DAY_START_MINUTES) * SCHEDULE_PIXELS_PER_MINUTE}px`;
-      element.style.height = `${Math.max((end - start) * SCHEDULE_PIXELS_PER_MINUTE, 20)}px`;
-      element.style.left = `calc(${SCHEDULE_LANE_LABEL_WIDTH}px + ${(index / size) * 100}% - ${(index / size) * SCHEDULE_LANE_LABEL_WIDTH}px)`;
-      element.style.width = `calc(${100 / size}% - ${(SCHEDULE_LANE_LABEL_WIDTH / size) + 2}px)`;
-      timeline.appendChild(element);
-    });
+    const element = createEventElement(event, false);
+    element.style.top = `${(start - SCHEDULE_DAY_START_MINUTES) * SCHEDULE_PIXELS_PER_MINUTE}px`;
+    element.style.height = `${Math.max((end - start) * SCHEDULE_PIXELS_PER_MINUTE, 20)}px`;
+    element.style.left = `calc(${SCHEDULE_LANE_LABEL_WIDTH}px + ${(laneIndex / laneCount) * 100}% - ${(laneIndex / laneCount) * SCHEDULE_LANE_LABEL_WIDTH}px)`;
+    element.style.width = `calc(${100 / laneCount}% - ${(SCHEDULE_LANE_LABEL_WIDTH / laneCount) + 2}px)`;
+    timeline.appendChild(element);
   });
 }
 

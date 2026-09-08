@@ -107,13 +107,12 @@ function renderBookingSchedule(events, range) {
 		dayElement.appendChild(heading);
 		const dayEvents = eventsByDate[dateKey] || [];
 		const allDayEvents = dayEvents.filter((event) => event.isAllDay);
-		const timedEvents = dayEvents.filter((event) => !event.isAllDay);
 		const allDayContainer = document.createElement('div');
 		allDayContainer.className = 'schedule-all-day';
 		allDayEvents.forEach((event) => allDayContainer.appendChild(createScheduleEventElement(event, true)));
 		dayElement.appendChild(allDayContainer);
 		const timeline = buildScheduleTimeline('schedule-timeline', 'schedule-hour-line');
-		layoutScheduleTimedEvents(timedEvents, timeline, createScheduleEventElement);
+		layoutScheduleTimedEvents(dayEvents, timeline, createScheduleEventElement);
 		dayElement.appendChild(timeline);
 		if (dayEvents.length === 0) {
 			const empty = document.createElement('div');
