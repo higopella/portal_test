@@ -182,11 +182,9 @@
 		.home-schedule-event-time { display: block; color: var(--primary-dark, #0288d1); font-weight: bold; }
 		.home-schedule-event-title { display: block; font-weight: 600; }
 		.home-schedule-event-transfer { display: block; color: var(--text-sub, #64748b); }
-		.home-schedule-room { display: block; font-size: 1.05rem; font-weight: 700; line-height: 1.1; }
-		.home-schedule-event-equipment .home-schedule-event-time, .home-schedule-event-equipment .home-schedule-room { color: #987a1c; }
-		.home-schedule-event-classroom .home-schedule-event-time, .home-schedule-event-classroom .home-schedule-room { color: #357a43; }
+		.home-schedule-event-equipment .home-schedule-event-time { color: #987a1c; }
+		.home-schedule-event-classroom .home-schedule-event-time { color: #357a43; }
 		.home-schedule-event-main .home-schedule-event-time { color: #d32f2f; }
-		.home-schedule-event-main .home-schedule-room { color: #d32f2f; }
 		.home-schedule-empty { position: absolute; top: 8px; left: 38px; color: var(--text-sub, #64748b); font-size: 0.78rem; }
 
 		@media (max-width: 760px) {

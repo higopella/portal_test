@@ -131,14 +131,10 @@ function createScheduleEventElement(event, isAllDay) {
 	const time = document.createElement('span');
 	time.className = 'schedule-event-time';
 	time.textContent = isAllDay ? '終日' : `${event.startTime} - ${event.endTime}`;
-	const room = document.createElement('span');
-	room.className = 'schedule-room';
-	room.textContent = event.room;
 	const title = document.createElement('span');
 	title.className = 'schedule-event-title';
 	title.textContent = event.title;
 	eventElement.appendChild(time);
-	eventElement.appendChild(room);
 	eventElement.appendChild(title);
 	if (event.transferStatus) {
 		const transfer = document.createElement('span');

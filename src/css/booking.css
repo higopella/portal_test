@@ -66,11 +66,9 @@
 		.schedule-event-time { display: block; color: var(--primary-dark); font-weight: bold; }
 		.schedule-event-title { display: block; font-weight: 600; }
 		.schedule-event-transfer { display: block; color: var(--text-sub); }
-		.schedule-room { display: block; font-size: 1.1rem; font-weight: 700; line-height: 1.1; }
-		.schedule-event-equipment .schedule-event-time, .schedule-event-equipment .schedule-room { color: #987a1c; }
-		.schedule-event-classroom .schedule-event-time, .schedule-event-classroom .schedule-room { color: #357a43; }
+		.schedule-event-equipment .schedule-event-time { color: #987a1c; }
+		.schedule-event-classroom .schedule-event-time { color: #357a43; }
 		.schedule-event-main .schedule-event-time { color: #d32f2f; }
-		.schedule-event-main .schedule-room { color: #d32f2f; }
 		.schedule-empty { font-size: 0.8rem; color: var(--text-sub); }
 		.tab-nav {
 			display: grid;
