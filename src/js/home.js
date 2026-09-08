@@ -1,7 +1,6 @@
 initCommonLayout('home');
 
 const GOOGLE_OAUTH_CLIENT_ID = '65097864960-vbe2ukqcoi9mpqc9capgtu9mak6vf4qs.apps.googleusercontent.com';
-let pendingGoogleIdentity = null;
 
 function renderHomeView() {
 	const loginSec = document.getElementById('login-section');
@@ -23,12 +22,6 @@ function renderHomeView() {
 document.addEventListener('DOMContentLoaded', () => {
 	if (getCurrentIdToken()) setUserLogin(true);
 	initializeGoogleLogin();
-
-	const schoolEmailForm = document.getElementById('form-school-email');
-	if (schoolEmailForm) schoolEmailForm.addEventListener('submit', handleSchoolEmailSubmit);
-
-	const otpForm = document.getElementById('form-otp');
-	if (otpForm) otpForm.addEventListener('submit', handleOtpSubmit);
 
 	const refreshNoticeBtn = document.getElementById('btn-refresh-notice');
 	if (refreshNoticeBtn) {
@@ -79,8 +72,7 @@ async function handleGoogleCredential(response) {
 			return;
 		}
 		if (result.status === 'unregistered') {
-			pendingGoogleIdentity = response.credential;
-			showSchoolEmailPanel();
+			window.location.assign('signup/');
 			return;
 		}
 		clearCurrentIdToken();
@@ -91,63 +83,9 @@ async function handleGoogleCredential(response) {
 	}
 }
 
-async function handleSchoolEmailSubmit(event) {
-	event.preventDefault();
-	const form = event.currentTarget;
-	const button = document.getElementById('btn-school-email');
-	const schoolEmail = document.getElementById('input-school-email').value.trim();
-	if (!pendingGoogleIdentity) return;
-
-	await withButtonLoading(button, async () => {
-		try {
-			const result = await callGasApi('requestOtp', { idToken: pendingGoogleIdentity, schoolEmail: schoolEmail });
-			if (!result.success) {
-				showToast(result.error || '確認コードを送信できません', 'error');
-				return;
-			}
-			form.classList.add('is-hidden');
-			document.getElementById('form-otp').classList.remove('is-hidden');
-			showToast('確認コードを送信しました');
-		} catch (error) {
-			showToast('確認コードの送信に失敗しました', 'error');
-		}
-	}, '送信中...');
-}
-
-async function handleOtpSubmit(event) {
-	event.preventDefault();
-	const button = document.getElementById('btn-otp');
-	const schoolEmail = document.getElementById('input-school-email').value.trim();
-	const otp = document.getElementById('input-otp').value.trim();
-	if (!pendingGoogleIdentity) return;
-
-	await withButtonLoading(button, async () => {
-		try {
-			const result = await callGasApi('verifyOtp', { idToken: pendingGoogleIdentity, schoolEmail: schoolEmail, otp: otp });
-			if (!result.success) {
-				showToast(result.error || '確認コードを確認できません', 'error');
-				return;
-			}
-			setCurrentIdToken(pendingGoogleIdentity);
-			pendingGoogleIdentity = null;
-			setUserLogin(true);
-			showToast('登録とログインが完了しました');
-			renderHomeView();
-		} catch (error) {
-			showToast('確認に失敗しました', 'error');
-		}
-	}, '確認中...');
-}
-
-function showSchoolEmailPanel() {
-	document.getElementById('google-login-panel').classList.add('is-hidden');
-	document.getElementById('form-school-email').classList.remove('is-hidden');
-}
-
 function handleLogout() {
 	if (confirm('ログアウトしますか？')) {
 		clearCurrentIdToken();
-		pendingGoogleIdentity = null;
 		setUserLogin(false);
 		showToast('ログアウトしました');
 		renderHomeView();

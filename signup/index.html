@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新規登録 - Higo-Pella Portal</title>
+  <link rel="icon" type="image/png" href="../src/icon.png">
+  <link rel="apple-touch-icon" href="../src/icon.png">
+  <link rel="stylesheet" href="../src/css/common.css">
+  <link rel="stylesheet" href="../src/css/signup.css">
+  <script id="google-identity-script" src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+  <main class="signup-container">
+    <section class="card signup-card">
+      <div class="signup-brand">
+        <img src="../src/icon.png" alt="Higo-Pella Logo" class="signup-logo">
+        <h1>新規登録</h1>
+      </div>
+
+      <section id="signup-google-panel">
+        <p class="signup-description">Googleアカウントで認証してください</p>
+        <div id="signup-google-button" class="signup-google-button"></div>
+      </section>
+
+      <form id="signup-profile-form" class="is-hidden">
+        <p class="signup-description">大学メールアドレスとニックネームを入力してください</p>
+        <label class="signup-label" for="signup-school-email">大学メールアドレス</label>
+        <input type="email" id="signup-school-email" class="signup-input" autocomplete="email" required>
+        <label class="signup-label" for="signup-nickname">ニックネーム</label>
+        <input type="text" id="signup-nickname" class="signup-input" autocomplete="nickname" maxlength="40" required>
+        <button type="submit" id="btn-request-otp" class="btn btn-primary signup-submit">パスキーを送信</button>
+      </form>
+
+      <form id="signup-otp-form" class="is-hidden">
+        <p class="signup-description">大学メールに届いた6桁の確認コードを入力してください</p>
+        <label class="signup-label" for="signup-otp">確認コード</label>
+        <input type="text" id="signup-otp" class="signup-input" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
+        <button type="submit" id="btn-verify-otp" class="btn btn-primary signup-submit">登録</button>
+      </form>
+
+      <a href="../" class="signup-back-link">ログインへ戻る</a>
+    </section>
+  </main>
+
+  <script src="../src/js/ui.js"></script>
+  <script src="../src/js/api.js"></script>
+  <script src="../src/js/auth.js"></script>
+  <script src="../src/js/signup.js"></script>
+</body>
+</html>

@@ -114,6 +114,12 @@
 			justify-content: center;
 			min-height: 40px;
 		}
+		.signup-link {
+			display: inline-block;
+			margin-top: 14px;
+			color: var(--primary-dark, #0288d1);
+			font-size: 0.9rem;
+		}
 		.input-text {
 			width: 100%;
 			height: 46px;
