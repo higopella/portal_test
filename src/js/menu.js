@@ -38,7 +38,7 @@ function initCommonLayout(activeKey = "") {
           .join("")}
       </ul>
       <div class="drawer-footer">
-        <button type="button" class="btn btn-danger drawer-logout-button" id="btn-drawer-logout">ログアウト</button>
+        <a href="#" class="drawer-logout-link" id="btn-drawer-logout">ログアウト</a>
       </div>
     </nav>
 
@@ -66,7 +66,8 @@ function initCommonLayout(activeKey = "") {
     drawerOverlay.addEventListener("click", () => toggleDrawerMenu(false));
   }
   if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
+    logoutBtn.addEventListener("click", (e) => {
+      e.preventDefault();
       if (confirm("ログアウトしますか？")) logoutUser();
     });
   }

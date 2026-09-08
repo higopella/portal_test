@@ -224,10 +224,20 @@ body {
 .drawer-footer {
   margin-top: auto;
   padding: 16px 0 12px;
+  border-top: 1px solid var(--border);
 }
 
-.drawer-logout-button {
-  width: 100%;
+.drawer-logout-link {
+  display: block;
+  padding: 10px 14px;
+  color: var(--danger);
+  text-decoration: none;
+  border-radius: var(--radius);
+  font-weight: 500;
+}
+
+.drawer-logout-link:hover {
+  background-color: var(--primary-light);
 }
 
 .btn-scroll-top {
