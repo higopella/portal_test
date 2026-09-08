@@ -104,7 +104,7 @@ function calcNextMeeting() {
 	}
 
 	if (targetDate) {
-		const str = `${targetDate.getMonth() + 1}¥/${targetDate.getDate()}(火) 18:30〜`;
+		const str = `${targetDate.getMonth() + 1}/${targetDate.getDate()}(火) 18:30〜`;
 		document.getElementById('next-meeting-text').textContent = str;
 	}
 }
