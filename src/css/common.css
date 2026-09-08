@@ -221,6 +221,15 @@ body {
   color: var(--primary-dark);
 }
 
+.drawer-footer {
+  margin-top: auto;
+  padding: 16px 0 12px;
+}
+
+.drawer-logout-button {
+  width: 100%;
+}
+
 .btn-scroll-top {
   position: fixed;
   bottom: 24px;

@@ -37,6 +37,9 @@ function initCommonLayout(activeKey = "") {
           )
           .join("")}
       </ul>
+      <div class="drawer-footer">
+        <button type="button" class="btn btn-danger drawer-logout-button" id="btn-drawer-logout">ログアウト</button>
+      </div>
     </nav>
 
     <button type="button" class="btn-scroll-top" id="btn-scroll-top" aria-label="ページ最上部へスクロール">↑</button>
@@ -44,9 +47,14 @@ function initCommonLayout(activeKey = "") {
 
   document.body.insertAdjacentHTML("afterbegin", layoutHtml);
 
+  if (typeof syncDrawerLogoutVisibility === "function") {
+    syncDrawerLogoutVisibility();
+  }
+
   const openDrawerBtn = document.getElementById("btn-open-drawer");
   const closeDrawerBtn = document.getElementById("btn-close-drawer");
   const drawerOverlay = document.getElementById("drawer-overlay");
+  const logoutBtn = document.getElementById("btn-drawer-logout");
 
   if (openDrawerBtn) {
     openDrawerBtn.addEventListener("click", () => toggleDrawerMenu(true));
@@ -56,6 +64,11 @@ function initCommonLayout(activeKey = "") {
   }
   if (drawerOverlay) {
     drawerOverlay.addEventListener("click", () => toggleDrawerMenu(false));
+  }
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      if (confirm("ログアウトしますか？")) logoutUser();
+    });
   }
 
   document.addEventListener("keydown", (e) => {

@@ -31,11 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	const refreshScheduleBtn = document.getElementById('btn-refresh-schedule');
 	if (refreshScheduleBtn) refreshScheduleBtn.addEventListener('click', () => refreshHomeSchedule());
 
-	const logoutBtn = document.querySelector('.logout-button');
-	if (logoutBtn) {
-		logoutBtn.addEventListener('click', handleLogout);
-	}
-
 	renderHomeView();
 });
 window.addEventListener('pageshow', renderHomeView);
@@ -83,15 +78,6 @@ async function handleGoogleCredential(response) {
 	}
 }
 
-function handleLogout() {
-	if (confirm('ログアウトしますか？')) {
-		clearCurrentIdToken();
-		setUserLogin(false);
-		showToast('ログアウトしました');
-		renderHomeView();
-	}
-}
-
 function calcNextMeeting() {
 	const today = new Date();
 	let targetDate = null;
@@ -118,7 +104,7 @@ function calcNextMeeting() {
 	}
 
 	if (targetDate) {
-		const str = `${targetDate.getMonth() + 1}月${targetDate.getDate()}日(火) 18:30〜`;
+		const str = `${targetDate.getMonth() + 1}¥/${targetDate.getDate()}(火) 18:30〜`;
 		document.getElementById('next-meeting-text').textContent = str;
 	}
 }

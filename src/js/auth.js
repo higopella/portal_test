@@ -38,6 +38,7 @@ function setUserLogin(status) {
     sessionStorage.removeItem(CONFIG.STORAGE_KEYS.IS_LOGGED_IN);
     clearCurrentIdToken();
   }
+  syncDrawerLogoutVisibility();
 }
 
 function checkAdminLogin() {
@@ -50,6 +51,18 @@ function setAdminLogin(status) {
     return;
   }
   sessionStorage.removeItem(CONFIG.STORAGE_KEYS.IS_ADMIN);
+}
+
+function logoutUser() {
+  clearCurrentIdToken();
+  setUserLogin(false);
+  setAdminLogin(false);
+  window.location.replace(window.location.pathname.includes('/portal_test/') ? '/portal_test/' : '/');
+}
+
+function syncDrawerLogoutVisibility() {
+  const logoutFooter = document.querySelector('.drawer-footer');
+  if (logoutFooter) logoutFooter.hidden = !checkUserLogin();
 }
 
 async function requirePageAuthentication() {

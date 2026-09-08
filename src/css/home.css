@@ -137,8 +137,6 @@
 		.notice-message { text-align: center; padding: 20px; }
 		.notice-message-loading { text-align: center; padding: 14px; }
 		.notice-message-error { color: var(--danger); }
-		.logout-wrapper { text-align: center; margin-top: 2px; }
-		.logout-button { min-height: 34px; padding: 4px 18px; font-size: 0.85rem; }
 		.home-schedule {
 			min-height: 780px;
 		}
