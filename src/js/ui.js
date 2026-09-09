@@ -156,6 +156,12 @@ function buildScheduleTimeline(className, hourLineClassName, date, showLabels = 
     if (showLabels) hourLine.textContent = String(Math.floor(minutes / 60));
     timeline.appendChild(hourLine);
   }
+  if (showLabels) {
+    const endHour = document.createElement("div");
+    endHour.className = `${hourLineClassName} schedule-time-axis-end-hour`;
+    endHour.textContent = String(SCHEDULE_DAY_END_MINUTES / 60);
+    timeline.appendChild(endHour);
+  }
   if (date && isScheduleToday(date)) {
     const indicator = document.createElement("div");
     indicator.className = "schedule-current-time-line";
@@ -195,7 +201,7 @@ function updateScheduleCurrentTimeIndicators() {
 function scrollScheduleToCurrentTime(container) {
   if (!container || !document.querySelector(".schedule-current-time-line:not([hidden])")) return;
   const indicator = document.querySelector(".schedule-current-time-line:not([hidden])");
-  const target = indicator.offsetTop - container.clientHeight * 0.35;
+  const target = indicator.offsetTop - 8;
   container.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
 }
 

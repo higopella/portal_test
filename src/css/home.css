@@ -222,7 +222,7 @@
 			position: relative;
 			padding: 0;
 			border: 0;
-			border-right: 1px solid var(--border);
+			border-right: 2px solid #b8c6d1;
 			background: var(--card);
 		}
 		.home-schedule-day.is-today {
@@ -280,7 +280,7 @@
 			backdrop-filter: blur(8px);
 		}
 		.schedule-view-tab {
-			min-height: 42px;
+			min-height: 52px;
 			border: 0;
 			border-right: 1px solid var(--border);
 			background: transparent;
@@ -294,8 +294,8 @@
 		.home-schedule-month-day {
 			min-height: 108px;
 			padding: 6px;
-			border-right: 1px solid var(--border);
-			border-bottom: 1px solid var(--border);
+			border-right: 2px solid #b8c6d1;
+			border-bottom: 2px solid #b8c6d1;
 			background: var(--card);
 			overflow: hidden;
 		}
@@ -324,7 +324,7 @@
 		}
 		.home-schedule-weekday-cell {
 			padding: 8px 4px;
-			border-right: 1px solid var(--border);
+			border-right: 2px solid #b8c6d1;
 			text-align: center;
 			font-size: 0.78rem;
 			font-weight: 700;
@@ -355,6 +355,15 @@
 			text-align: center;
 		}
 		.home-schedule-time-axis-hour-line:first-child { border-top: 0; }
+		.home-schedule-time-axis-hour-line.schedule-time-axis-end-hour {
+			position: absolute;
+			top: 1680px;
+			left: 0;
+			right: 0;
+			height: 0;
+			padding-top: 4px;
+			border-top: 0;
+		}
 		.home-calendar > .schedule-toolbar { display: flex; justify-content: center; margin-bottom: 8px; }
 		.home-calendar > .schedule-toolbar .schedule-navigation { display: flex; align-items: center; gap: 6px; }
 		.home-calendar > .schedule-toolbar .schedule-nav-btn {

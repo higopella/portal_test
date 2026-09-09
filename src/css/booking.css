@@ -11,7 +11,7 @@
 			display: flex;
 			justify-content: space-between;
 			gap: 12px;
-			align-items: center;
+			border-right: 2px solid #b8c6d1;
 			margin-bottom: 14px;
 			flex-wrap: wrap;
 		}
@@ -80,8 +80,8 @@
 		.schedule-month-day {
 			min-height: 108px;
 			padding: 6px;
-			border-right: 1px solid var(--border);
-			border-bottom: 1px solid var(--border);
+			border-right: 2px solid #b8c6d1;
+			border-bottom: 2px solid #b8c6d1;
 			background: var(--card);
 			overflow: hidden;
 		}
@@ -110,7 +110,7 @@
 		}
 		.schedule-weekday-cell {
 			padding: 8px 4px;
-			border-right: 1px solid var(--border);
+			border-right: 2px solid #b8c6d1;
 			text-align: center;
 			font-size: 0.78rem;
 			font-weight: 700;
@@ -217,7 +217,7 @@
 			position: relative;
 			min-width: 0;
 			padding: 0;
-			border-right: 1px solid var(--border);
+			border-right: 2px solid #b8c6d1;
 			background: var(--card);
 		}
 		.schedule-day.is-today { background: #eaf8fe; }
@@ -275,6 +275,15 @@
 			text-align: center;
 		}
 		.schedule-time-axis-hour-line:first-child { border-top: 0; }
+		.schedule-time-axis-hour-line.schedule-time-axis-end-hour {
+			position: absolute;
+			top: 1680px;
+			left: 0;
+			right: 0;
+			height: 0;
+			padding-top: 4px;
+			border-top: 0;
+		}
 		.schedule-event { z-index: 10; }
 		.schedule-view-tabs {
 			position: sticky;
@@ -287,7 +296,7 @@
 			backdrop-filter: blur(8px);
 		}
 		.schedule-view-tab {
-			min-height: 42px;
+			min-height: 52px;
 			border: 0;
 			border-right: 1px solid var(--border);
 			background: transparent;
