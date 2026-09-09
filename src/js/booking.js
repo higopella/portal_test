@@ -1,6 +1,6 @@
 initCommonLayout('booking');
 
-let scheduleView = 'three-day';
+let scheduleView = 'week';
 let scheduleAnchorDate = new Date();
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -37,19 +37,8 @@ function getScheduleRange() {
 		const end = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0);
 		return { start, end };
 	}
-	if (scheduleView === 'day') return { start: anchor, end: anchor };
-	if (scheduleView === 'three-day') {
-		const end = new Date(anchor);
-		end.setDate(end.getDate() + 2);
-		return { start: anchor, end };
-	}
-	const weekday = anchor.getDay();
-	const mondayOffset = weekday === 0 ? -6 : 1 - weekday;
-	const start = new Date(anchor);
-	start.setDate(start.getDate() + mondayOffset);
-	const end = new Date(start);
-	end.setDate(end.getDate() + 6);
-	return { start, end };
+	const dates = getScheduleCalendarDates(scheduleView, anchor);
+	return { start: dates[0], end: dates[dates.length - 1] };
 }
 
 function setScheduleView(view) {
@@ -64,7 +53,6 @@ function setScheduleView(view) {
 
 function moveSchedulePeriod(direction) {
 	if (scheduleView === 'month') scheduleAnchorDate.setMonth(scheduleAnchorDate.getMonth() + direction);
-	else if (scheduleView === 'three-day') scheduleAnchorDate.setDate(scheduleAnchorDate.getDate() + direction * 3);
 	else if (scheduleView === 'day') scheduleAnchorDate.setDate(scheduleAnchorDate.getDate() + direction);
 	else scheduleAnchorDate.setDate(scheduleAnchorDate.getDate() + direction * 7);
 	loadBookingSchedule();
@@ -74,8 +62,12 @@ async function loadBookingSchedule(forceRefresh = false) {
 	const container = document.getElementById('booking-schedule');
 	const button = document.getElementById('btn-refresh-schedule');
 	const range = getScheduleRange();
-	const startDate = getLocalDateString(range.start);
-	const endDate = getLocalDateString(range.end);
+	const dates = getScheduleCalendarDates(scheduleView, scheduleAnchorDate);
+	const requestRange = scheduleView === 'month'
+		? { start: new Date(scheduleAnchorDate.getFullYear(), scheduleAnchorDate.getMonth(), 1), end: new Date(scheduleAnchorDate.getFullYear(), scheduleAnchorDate.getMonth() + 1, 0) }
+		: { start: dates[0], end: dates[dates.length - 1] };
+	const startDate = getLocalDateString(requestRange.start);
+	const endDate = getLocalDateString(requestRange.end);
 	document.getElementById('schedule-period-label').textContent = scheduleView === 'month'
 		? `${range.start.getFullYear()}年${range.start.getMonth() + 1}月`
 		: scheduleView === 'day'
@@ -91,7 +83,7 @@ async function loadBookingSchedule(forceRefresh = false) {
 	if (forceRefresh) button.disabled = true;
 	try {
 		const result = await callGasApi('getScheduleEvents', { startDate, endDate, forceRefresh });
-		renderBookingSchedule(result.success ? result.events : [], range);
+		renderBookingSchedule(result.success ? result.events : [], dates);
 	} catch (error) {
 		container.textContent = '';
 		const message = document.createElement('div');
@@ -103,42 +95,9 @@ async function loadBookingSchedule(forceRefresh = false) {
 	}
 }
 
-function renderBookingSchedule(events, range) {
+function renderBookingSchedule(events, dates) {
 	const container = document.getElementById('booking-schedule');
-	const eventsByDate = {};
-	events.forEach((event) => {
-		const date = String(event.start || '').slice(0, 10);
-		if (!eventsByDate[date]) eventsByDate[date] = [];
-		eventsByDate[date].push(event);
-	});
-	container.textContent = '';
-	for (const day = new Date(range.start); day <= range.end; day.setDate(day.getDate() + 1)) {
-		const dateKey = getLocalDateString(day);
-		const dayElement = document.createElement('div');
-		dayElement.className = `schedule-day${isScheduleToday(day) ? ' is-today' : ''}`;
-		const heading = document.createElement('div');
-		heading.className = 'schedule-day-title';
-		heading.textContent = `${day.getMonth() + 1}/${day.getDate()} (${['日', '月', '火', '水', '木', '金', '土'][day.getDay()]})`;
-		dayElement.appendChild(heading);
-		const dayEvents = eventsByDate[dateKey] || [];
-		const allDayEvents = dayEvents.filter((event) => event.isAllDay);
-		const allDayContainer = document.createElement('div');
-		allDayContainer.className = 'schedule-all-day';
-		allDayEvents.forEach((event) => allDayContainer.appendChild(createScheduleEventElement(event, true)));
-		dayElement.appendChild(allDayContainer);
-		const timeline = buildScheduleTimeline('schedule-timeline', 'schedule-hour-line', day);
-		layoutScheduleTimedEvents(dayEvents, timeline, createScheduleEventElement);
-		dayElement.appendChild(timeline);
-		if (dayEvents.length === 0) {
-			const empty = document.createElement('div');
-			empty.className = 'schedule-empty';
-			empty.textContent = '予約なし';
-			timeline.appendChild(empty);
-		}
-		container.appendChild(dayElement);
-	}
-	startScheduleCurrentTimeUpdates();
-	requestAnimationFrame(() => scrollScheduleToCurrentTime(container));
+	renderScheduleCalendar(container, events, dates, scheduleView, createScheduleEventElement, 'schedule');
 }
 
 function createScheduleEventElement(event, isAllDay) {

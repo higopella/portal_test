@@ -190,6 +190,122 @@ function startScheduleCurrentTimeUpdates() {
   window.scheduleCurrentTimeTimer = setInterval(updateScheduleCurrentTimeIndicators, 60 * 1000);
 }
 
+function getScheduleCalendarDates(view, anchorDate) {
+  const anchor = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
+  if (view === "month") {
+    const first = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
+    const firstDay = first.getDay();
+    const start = new Date(first);
+    start.setDate(start.getDate() - firstDay);
+    const dates = [];
+    for (let index = 0; index < 42; index += 1) {
+      const date = new Date(start);
+      date.setDate(start.getDate() + index);
+      dates.push(date);
+    }
+    return dates;
+  }
+  if (view === "day") return [anchor];
+  const start = new Date(anchor);
+  start.setDate(start.getDate() - start.getDay());
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(start);
+    date.setDate(start.getDate() + index);
+    return date;
+  });
+}
+
+function formatScheduleDate(date, includeYear = false) {
+  const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
+  const year = includeYear ? `${date.getFullYear()}/` : "";
+  return `${year}${date.getMonth() + 1}/${date.getDate()} (${weekdays[date.getDay()]})`;
+}
+
+function formatSchedulePeriod(view, dates) {
+  if (view === "month") {
+    return `${dates[14].getFullYear()}年${dates[14].getMonth() + 1}月`;
+  }
+  if (view === "day") return formatScheduleDate(dates[0], true);
+  return `${formatScheduleDate(dates[0])} - ${formatScheduleDate(dates[6])}`;
+}
+
+function createScheduleMonthEvent(event, createEventElement) {
+  const element = createEventElement(event, true);
+  element.classList.add("schedule-month-event");
+  element.style.position = "static";
+  element.style.width = "100%";
+  element.style.height = "auto";
+  element.style.left = "auto";
+  element.style.top = "auto";
+  return element;
+}
+
+function renderScheduleCalendar(container, events, dates, view, createEventElement, className) {
+  const eventsByDate = {};
+  events.forEach((event) => {
+    const date = String(event.start || "").slice(0, 10);
+    if (!eventsByDate[date]) eventsByDate[date] = [];
+    eventsByDate[date].push(event);
+  });
+  container.textContent = "";
+  container.dataset.scheduleView = view;
+  const grid = document.createElement("div");
+  grid.className = `${className}-grid`;
+
+  if (view === "month") {
+    dates.forEach((date) => {
+      const cell = document.createElement("section");
+      cell.className = `${className}-month-day${isScheduleToday(date) ? " is-today" : ""}`;
+      if (date.getMonth() !== dates[14].getMonth()) cell.classList.add("is-outside-month");
+      const heading = document.createElement("div");
+      heading.className = `${className}-month-day-title`;
+      heading.textContent = String(date.getDate());
+      cell.appendChild(heading);
+      (eventsByDate[getScheduleDateString(date)] || []).forEach((event) => {
+        cell.appendChild(createScheduleMonthEvent(event, createEventElement));
+      });
+      grid.appendChild(cell);
+    });
+    container.appendChild(grid);
+    return;
+  }
+
+  dates.forEach((date) => {
+    const day = document.createElement("section");
+    day.className = `${className}-day${isScheduleToday(date) ? " is-today" : ""}`;
+    const heading = document.createElement("div");
+    heading.className = `${className}-day-title`;
+    heading.textContent = formatScheduleDate(date);
+    day.appendChild(heading);
+    const dayEvents = eventsByDate[getScheduleDateString(date)] || [];
+    const allDay = document.createElement("div");
+    allDay.className = `${className}-all-day`;
+    dayEvents.filter((event) => event.isAllDay).forEach((event) => {
+      allDay.appendChild(createEventElement(event, true));
+    });
+    day.appendChild(allDay);
+    const timeline = buildScheduleTimeline(`${className}-timeline`, `${className}-hour-line`, date);
+    layoutScheduleTimedEvents(dayEvents, timeline, createEventElement);
+    if (dayEvents.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = `${className}-empty`;
+      empty.textContent = "予約なし";
+      timeline.appendChild(empty);
+    }
+    day.appendChild(timeline);
+    grid.appendChild(day);
+  });
+  container.appendChild(grid);
+  startScheduleCurrentTimeUpdates();
+  requestAnimationFrame(() => scrollScheduleToCurrentTime(container));
+}
+
+function getScheduleDateString(date) {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
 function showScheduleEventDetail(event) {
   const body = document.createElement("div");
   const rows = [
