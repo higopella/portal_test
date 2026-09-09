@@ -206,9 +206,9 @@
 			background: #fbfdff;
 		}
 		.home-schedule-grid {
-			grid-template-columns: repeat(7, minmax(150px, 1fr));
+			grid-template-columns: repeat(7, minmax(170px, 1fr));
 			gap: 0;
-			min-width: 1050px;
+			min-width: 1190px;
 		}
 		.home-schedule[data-schedule-view="month"] .home-schedule-grid {
 			grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -245,15 +245,15 @@
 		}
 		.home-schedule-timeline {
 			position: relative;
-			padding-left: 34px;
-			background-image: linear-gradient(to right, transparent 0, transparent 33px, rgba(226, 232, 240, 0.55) 33px, rgba(226, 232, 240, 0.55) 34px);
+			padding-left: 0;
+			background-image: none;
 		}
 		.home-schedule-hour-line {
 			position: relative;
-			margin-left: -34px;
-			padding-left: 7px;
+			margin-left: 0;
+			padding-left: 0;
 			border-top: 1px solid #dbe3ea;
-			color: var(--text-sub);
+			color: transparent;
 			font-size: 0.72rem;
 			line-height: 1;
 		}
@@ -330,8 +330,31 @@
 			font-weight: 700;
 			color: var(--text-sub);
 		}
-		.home-schedule-day:not(:first-child) .home-schedule-hour-line { color: transparent; }
-		.home-schedule-day:not(:first-child) .home-schedule-hour-line::before { content: none; }
+		.home-schedule-scroll-layout {
+			display: grid;
+			grid-template-columns: 34px max-content;
+			min-width: max-content;
+		}
+		.home-schedule-time-axis {
+			position: sticky;
+			left: 0;
+			z-index: 13;
+			width: 34px;
+			background: #f1f4f6;
+			border-right: 1px solid var(--border);
+		}
+		.home-schedule-time-axis-header { height: 44px; background: var(--card); border-bottom: 1px solid var(--border); }
+		.home-schedule-time-axis-timeline { position: relative; height: 1680px; }
+		.home-schedule-time-axis-hour-line {
+			height: 120px;
+			padding-top: 4px;
+			border-top: 1px solid #dbe3ea;
+			color: var(--text-sub);
+			font-size: 0.72rem;
+			line-height: 1;
+			text-align: center;
+		}
+		.home-schedule-time-axis-hour-line:first-child { border-top: 0; }
 		.home-calendar > .schedule-toolbar { display: flex; justify-content: center; margin-bottom: 8px; }
 		.home-calendar > .schedule-toolbar .schedule-navigation { display: flex; align-items: center; gap: 6px; }
 		.home-calendar > .schedule-toolbar .schedule-nav-btn {

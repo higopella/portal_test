@@ -72,8 +72,8 @@
 		.schedule-empty { font-size: 0.8rem; color: var(--text-sub); }
 		.schedule-grid {
 			display: grid;
-			grid-template-columns: repeat(7, minmax(150px, 1fr));
-			min-width: 1050px;
+			grid-template-columns: repeat(7, minmax(170px, 1fr));
+			min-width: 1190px;
 		}
 		.booking-schedule[data-schedule-view="month"] .schedule-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); min-width: 0; }
 		.booking-schedule[data-schedule-view="day"] .schedule-grid { grid-template-columns: minmax(340px, 1fr); min-width: 340px; }
@@ -237,18 +237,44 @@
 		}
 		.schedule-timeline {
 			position: relative;
-			padding-left: 34px;
-			background-image: linear-gradient(to right, transparent 0, transparent 33px, rgba(226, 232, 240, 0.55) 33px, rgba(226, 232, 240, 0.55) 34px);
+			padding-left: 0;
+			background-image: none;
 		}
 		.schedule-hour-line {
 			position: relative;
-			margin-left: -34px;
-			padding-left: 7px;
+			margin-left: 0;
+			padding-left: 0;
 			border-top: 1px solid #dbe3ea;
+			color: transparent;
 			font-size: 0.72rem;
 			line-height: 1;
 		}
 		.schedule-hour-line:first-child { border-top: 0; }
+		.schedule-scroll-layout {
+			display: grid;
+			grid-template-columns: 34px max-content;
+			min-width: max-content;
+		}
+		.schedule-time-axis {
+			position: sticky;
+			left: 0;
+			z-index: 13;
+			width: 34px;
+			background: #f1f4f6;
+			border-right: 1px solid var(--border);
+		}
+		.schedule-time-axis-header { height: 44px; background: var(--card); border-bottom: 1px solid var(--border); }
+		.schedule-time-axis-timeline { position: relative; height: 1680px; }
+		.schedule-time-axis-hour-line {
+			height: 120px;
+			padding-top: 4px;
+			border-top: 1px solid #dbe3ea;
+			color: var(--text-sub);
+			font-size: 0.72rem;
+			line-height: 1;
+			text-align: center;
+		}
+		.schedule-time-axis-hour-line:first-child { border-top: 0; }
 		.schedule-event { z-index: 10; }
 		.schedule-view-tabs {
 			position: sticky;

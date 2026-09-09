@@ -139,13 +139,13 @@ function layoutScheduleTimedEvents(events, timeline, createEventElement) {
     const element = createEventElement(event, false);
     element.style.top = `${(start - SCHEDULE_DAY_START_MINUTES) * SCHEDULE_PIXELS_PER_MINUTE}px`;
     element.style.height = `${Math.max((end - start) * SCHEDULE_PIXELS_PER_MINUTE, 20)}px`;
-    element.style.left = `calc(${SCHEDULE_LANE_LABEL_WIDTH}px + ${(laneIndex / laneCount) * 100}% - ${(laneIndex / laneCount) * SCHEDULE_LANE_LABEL_WIDTH}px)`;
-    element.style.width = `calc(${100 / laneCount}% - ${(SCHEDULE_LANE_LABEL_WIDTH / laneCount) + 2}px)`;
+    element.style.left = `${(laneIndex / laneCount) * 100}%`;
+    element.style.width = `calc(${100 / laneCount}% - 2px)`;
     timeline.appendChild(element);
   });
 }
 
-function buildScheduleTimeline(className, hourLineClassName, date) {
+function buildScheduleTimeline(className, hourLineClassName, date, showLabels = false) {
   const timeline = document.createElement("div");
   timeline.className = className;
   timeline.style.height = `${(SCHEDULE_DAY_END_MINUTES - SCHEDULE_DAY_START_MINUTES) * SCHEDULE_PIXELS_PER_MINUTE}px`;
@@ -153,7 +153,7 @@ function buildScheduleTimeline(className, hourLineClassName, date) {
     const hourLine = document.createElement("div");
     hourLine.className = hourLineClassName;
     hourLine.style.height = `${60 * SCHEDULE_PIXELS_PER_MINUTE}px`;
-    hourLine.textContent = String(Math.floor(minutes / 60));
+    if (showLabels) hourLine.textContent = String(Math.floor(minutes / 60));
     timeline.appendChild(hourLine);
   }
   if (date && isScheduleToday(date)) {
@@ -163,6 +163,16 @@ function buildScheduleTimeline(className, hourLineClassName, date) {
     timeline.appendChild(indicator);
   }
   return timeline;
+}
+
+function buildScheduleTimeAxis(className) {
+  const axis = document.createElement("div");
+  axis.className = `${className}-time-axis`;
+  const header = document.createElement("div");
+  header.className = `${className}-time-axis-header`;
+  axis.appendChild(header);
+  axis.appendChild(buildScheduleTimeline(`${className}-time-axis-timeline`, `${className}-time-axis-hour-line`, null, true));
+  return axis;
 }
 
 function isScheduleToday(date) {
@@ -285,6 +295,10 @@ function renderScheduleCalendar(container, events, dates, view, createEventEleme
     return;
   }
 
+  const scrollLayout = document.createElement("div");
+  scrollLayout.className = `${className}-scroll-layout`;
+  const timeAxis = buildScheduleTimeAxis(className);
+  scrollLayout.appendChild(timeAxis);
   dates.forEach((date) => {
     const day = document.createElement("section");
     day.className = `${className}-day${isScheduleToday(date) ? " is-today" : ""}`;
@@ -310,7 +324,8 @@ function renderScheduleCalendar(container, events, dates, view, createEventEleme
     day.appendChild(timeline);
     grid.appendChild(day);
   });
-  container.appendChild(grid);
+  scrollLayout.appendChild(grid);
+  container.appendChild(scrollLayout);
   startScheduleCurrentTimeUpdates();
   requestAnimationFrame(() => scrollScheduleToCurrentTime(container));
 }
