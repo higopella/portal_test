@@ -75,6 +75,7 @@
 			grid-template-columns: repeat(7, minmax(150px, 1fr));
 			min-width: 1050px;
 		}
+		.booking-schedule[data-schedule-view="month"] .schedule-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); min-width: 0; }
 		.booking-schedule[data-schedule-view="day"] .schedule-grid { grid-template-columns: minmax(340px, 1fr); min-width: 340px; }
 		.schedule-month-day {
 			min-height: 108px;
@@ -98,6 +99,24 @@
 		}
 		.schedule-month-day .schedule-event-time,
 		.schedule-month-day .schedule-event-transfer { display: none; }
+		.schedule-weekday-row {
+			position: sticky;
+			top: 0;
+			z-index: 14;
+			display: grid;
+			grid-template-columns: repeat(7, minmax(0, 1fr));
+			background: var(--card);
+			border-bottom: 1px solid var(--border);
+		}
+		.schedule-weekday-cell {
+			padding: 8px 4px;
+			border-right: 1px solid var(--border);
+			text-align: center;
+			font-size: 0.78rem;
+			font-weight: 700;
+			color: var(--text-sub);
+		}
+		.schedule-day:not(:first-child) .schedule-hour-line { color: transparent; }
 		.tab-nav {
 			display: grid;
 			grid-template-columns: 1fr 1fr;
@@ -189,10 +208,7 @@
 			overflow: auto;
 			background: #fbfdff;
 		}
-		.booking-schedule[data-schedule-view="month"] {
-			grid-template-columns: repeat(7, minmax(170px, 1fr));
-			min-width: 1190px;
-		}
+		.booking-schedule[data-schedule-view="month"] { min-width: 0; }
 		.booking-schedule[data-schedule-view="day"] {
 			grid-template-columns: minmax(340px, 1fr);
 			min-width: 340px;
@@ -204,7 +220,7 @@
 			border-right: 1px solid var(--border);
 			background: var(--card);
 		}
-		.schedule-day.is-today { background: rgba(79, 195, 247, 0.07); }
+		.schedule-day.is-today { background: #eaf8fe; }
 		.schedule-day-title {
 			position: sticky;
 			top: 0;
@@ -216,7 +232,7 @@
 			border-bottom: 1px solid var(--border);
 		}
 		.schedule-day.is-today .schedule-day-title {
-			background: rgba(79, 195, 247, 0.18);
+			background: #c9effc;
 			color: var(--primary-dark);
 		}
 		.schedule-timeline {
@@ -256,6 +272,10 @@
 		}
 		.schedule-view-tab:last-child { border-right: 0; }
 		.schedule-view-tab.active { background: var(--primary-light); color: var(--primary-dark); }
+		@media (max-width: 640px) {
+			.booking-schedule { padding-bottom: 8px; }
+			.schedule-view-tabs { margin-bottom: 8px; }
+		}
 		@media (min-width: 761px) {
 			.home-schedule .schedule-view-tabs,
 			.schedule-view-tabs { display: none; }

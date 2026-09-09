@@ -120,17 +120,22 @@ function getScheduleRoomPriority(room) {
   return Object.prototype.hasOwnProperty.call(SCHEDULE_ROOM_ORDER, room) ? SCHEDULE_ROOM_ORDER[room] : 99;
 }
 
-// 使用中の部屋だけを、部室→機材庫→教室→メインの順で固定レーンに配置する
+// 時間帯ごとの重なりだけでレーンを決め、空いている時間帯は予約枠を広げる
 function layoutScheduleTimedEvents(events, timeline, createEventElement) {
-  const activeRooms = [...new Set(events.map((event) => event.room))]
-    .sort((a, b) => getScheduleRoomPriority(a) - getScheduleRoomPriority(b));
   const timedEvents = events.filter((event) => !event.isAllDay);
-  const laneCount = Math.max(activeRooms.length, 1);
-
   timedEvents.forEach((event) => {
-    const laneIndex = activeRooms.indexOf(event.room);
     const start = getScheduleMinutesFromTime(event.startTime);
     const end = getScheduleMinutesFromTime(event.endTime);
+    const overlappingRooms = [...new Set(timedEvents
+      .filter((candidate) => {
+        const candidateStart = getScheduleMinutesFromTime(candidate.startTime);
+        const candidateEnd = getScheduleMinutesFromTime(candidate.endTime);
+        return candidateEnd > start && end > candidateStart;
+      })
+      .map((candidate) => candidate.room))]
+      .sort((a, b) => getScheduleRoomPriority(a) - getScheduleRoomPriority(b));
+    const laneIndex = overlappingRooms.indexOf(event.room);
+    const laneCount = Math.max(overlappingRooms.length, 1);
     const element = createEventElement(event, false);
     element.style.top = `${(start - SCHEDULE_DAY_START_MINUTES) * SCHEDULE_PIXELS_PER_MINUTE}px`;
     element.style.height = `${Math.max((end - start) * SCHEDULE_PIXELS_PER_MINUTE, 20)}px`;
@@ -226,7 +231,7 @@ function formatSchedulePeriod(view, dates) {
     return `${dates[14].getFullYear()}年${dates[14].getMonth() + 1}月`;
   }
   if (view === "day") return formatScheduleDate(dates[0], true);
-  return `${formatScheduleDate(dates[0])} - ${formatScheduleDate(dates[6])}`;
+  return `${dates[0].getMonth() + 1}/${dates[0].getDate()}-${dates[6].getMonth() + 1}/${dates[6].getDate()}`;
 }
 
 function createScheduleMonthEvent(event, createEventElement) {
@@ -253,6 +258,16 @@ function renderScheduleCalendar(container, events, dates, view, createEventEleme
   grid.className = `${className}-grid`;
 
   if (view === "month") {
+    const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
+    const weekdayRow = document.createElement("div");
+    weekdayRow.className = `${className}-weekday-row`;
+    weekdays.forEach((weekday) => {
+      const weekdayCell = document.createElement("div");
+      weekdayCell.className = `${className}-weekday-cell`;
+      weekdayCell.textContent = weekday;
+      weekdayRow.appendChild(weekdayCell);
+    });
+    container.appendChild(weekdayRow);
     dates.forEach((date) => {
       const cell = document.createElement("section");
       cell.className = `${className}-month-day${isScheduleToday(date) ? " is-today" : ""}`;

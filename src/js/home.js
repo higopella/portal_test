@@ -190,13 +190,9 @@ function renderHomeSchedule(events, dates) {
 function createHomeScheduleEvent(event, isAllDay) {
 	const element = document.createElement('div');
 	element.className = `home-schedule-event ${getHomeScheduleRoomClass(event.room)}${isAllDay ? ' home-schedule-event-all-day' : ''}`;
-	const time = document.createElement('span');
-	time.className = 'home-schedule-event-time';
-	time.textContent = isAllDay ? '終日' : `${event.startTime} - ${event.endTime}`;
 	const title = document.createElement('span');
 	title.className = 'home-schedule-event-title';
 	title.textContent = event.title;
-	element.appendChild(time);
 	element.appendChild(title);
 	if (event.transferStatus) {
 		const transfer = document.createElement('span');

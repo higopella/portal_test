@@ -206,13 +206,13 @@
 			background: #fbfdff;
 		}
 		.home-schedule-grid {
-			grid-template-columns: repeat(3, minmax(250px, 1fr));
+			grid-template-columns: repeat(7, minmax(150px, 1fr));
 			gap: 0;
-			min-width: 760px;
+			min-width: 1050px;
 		}
 		.home-schedule[data-schedule-view="month"] .home-schedule-grid {
-			grid-template-columns: repeat(7, minmax(170px, 1fr));
-			min-width: 1190px;
+			grid-template-columns: repeat(7, minmax(0, 1fr));
+			min-width: 0;
 		}
 		.home-schedule[data-schedule-view="day"] .home-schedule-grid {
 			grid-template-columns: minmax(340px, 1fr);
@@ -313,6 +313,25 @@
 		}
 		.home-schedule-month-day .schedule-month-event-time,
 		.home-schedule-month-day .schedule-month-event-transfer { display: none; }
+		.home-schedule-weekday-row {
+			position: sticky;
+			top: 0;
+			z-index: 14;
+			display: grid;
+			grid-template-columns: repeat(7, minmax(0, 1fr));
+			background: var(--card);
+			border-bottom: 1px solid var(--border);
+		}
+		.home-schedule-weekday-cell {
+			padding: 8px 4px;
+			border-right: 1px solid var(--border);
+			text-align: center;
+			font-size: 0.78rem;
+			font-weight: 700;
+			color: var(--text-sub);
+		}
+		.home-schedule-day:not(:first-child) .home-schedule-hour-line { color: transparent; }
+		.home-schedule-day:not(:first-child) .home-schedule-hour-line::before { content: none; }
 		.home-calendar > .schedule-toolbar { display: flex; justify-content: center; margin-bottom: 8px; }
 		.home-calendar > .schedule-toolbar .schedule-navigation { display: flex; align-items: center; gap: 6px; }
 		.home-calendar > .schedule-toolbar .schedule-nav-btn {
@@ -323,4 +342,8 @@
 			background: var(--card);
 			color: var(--text);
 			cursor: pointer;
+		}
+		@media (max-width: 760px) {
+			.home-schedule { padding-bottom: 8px; }
+			.schedule-view-tabs { margin-bottom: 8px; }
 		}

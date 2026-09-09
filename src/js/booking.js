@@ -72,7 +72,7 @@ async function loadBookingSchedule(forceRefresh = false) {
 		? `${range.start.getFullYear()}年${range.start.getMonth() + 1}月`
 		: scheduleView === 'day'
 			? `${range.start.getMonth() + 1}/${range.start.getDate()}`
-			: `${range.start.getMonth() + 1}/${range.start.getDate()} - ${range.end.getMonth() + 1}/${range.end.getDate()}`;
+			: `${range.start.getMonth() + 1}/${range.start.getDate()}-${range.end.getMonth() + 1}/${range.end.getDate()}`;
 	container.textContent = '';
 	container.dataset.scheduleView = scheduleView;
 	const loading = document.createElement('div');
@@ -103,13 +103,9 @@ function renderBookingSchedule(events, dates) {
 function createScheduleEventElement(event, isAllDay) {
 	const eventElement = document.createElement('div');
 	eventElement.className = `schedule-event ${getScheduleRoomClass(event.room)}${isAllDay ? ' schedule-event-all-day' : ''}`;
-	const time = document.createElement('span');
-	time.className = 'schedule-event-time';
-	time.textContent = isAllDay ? '終日' : `${event.startTime} - ${event.endTime}`;
 	const title = document.createElement('span');
 	title.className = 'schedule-event-title';
 	title.textContent = event.title;
-	eventElement.appendChild(time);
 	eventElement.appendChild(title);
 	if (event.transferStatus) {
 		const transfer = document.createElement('span');
