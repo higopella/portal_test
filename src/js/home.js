@@ -1,6 +1,8 @@
 initCommonLayout('home');
 
 const GOOGLE_OAUTH_CLIENT_ID = '65097864960-vbe2ukqcoi9mpqc9capgtu9mak6vf4qs.apps.googleusercontent.com';
+let homeScheduleView = 'three-day';
+let homeScheduleAnchorDate = new Date();
 
 function renderHomeView() {
 	const loginSec = document.getElementById('login-section');
@@ -30,6 +32,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const refreshScheduleBtn = document.getElementById('btn-refresh-schedule');
 	if (refreshScheduleBtn) refreshScheduleBtn.addEventListener('click', () => refreshHomeSchedule());
+	document.querySelectorAll('[data-schedule-view]').forEach((button) => {
+		button.addEventListener('click', () => setHomeScheduleView(button.dataset.scheduleView));
+	});
 
 	renderHomeView();
 });
@@ -129,11 +134,7 @@ async function refreshHomeSchedule() {
 async function fetchHomeSchedule(forceRefresh = false) {
 	const container = document.getElementById('home-schedule');
 	if (!container) return;
-	const dates = [0, 1, 2].map((offset) => {
-		const date = new Date();
-		date.setDate(date.getDate() + offset);
-		return date;
-	});
+	const dates = getHomeScheduleDates();
 	const startDate = getLocalDateString(dates[0]);
 	const endDate = getLocalDateString(dates[dates.length - 1]);
 	container.textContent = '';
@@ -154,6 +155,32 @@ async function fetchHomeSchedule(forceRefresh = false) {
 	}
 }
 
+function getHomeScheduleDates() {
+	const anchor = new Date(homeScheduleAnchorDate.getFullYear(), homeScheduleAnchorDate.getMonth(), homeScheduleAnchorDate.getDate());
+	if (homeScheduleView === 'month') {
+		const dates = [];
+		const lastDay = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0).getDate();
+		for (let day = 1; day <= lastDay; day += 1) dates.push(new Date(anchor.getFullYear(), anchor.getMonth(), day));
+		return dates;
+	}
+	if (homeScheduleView === 'day') return [anchor];
+	return [0, 1, 2].map((offset) => {
+		const date = new Date(anchor);
+		date.setDate(date.getDate() + offset);
+		return date;
+	});
+}
+
+function setHomeScheduleView(view) {
+	homeScheduleView = view;
+	const container = document.getElementById('home-schedule');
+	if (container) container.dataset.scheduleView = view;
+	document.querySelectorAll('[data-schedule-view]').forEach((button) => {
+		button.classList.toggle('active', button.dataset.scheduleView === view);
+	});
+	fetchHomeSchedule();
+}
+
 function renderHomeSchedule(events, dates) {
 	const container = document.getElementById('home-schedule');
 	const eventsByDate = {};
@@ -164,12 +191,13 @@ function renderHomeSchedule(events, dates) {
 	});
 
 	container.textContent = '';
+	container.dataset.scheduleView = homeScheduleView;
 	const grid = document.createElement('div');
 	grid.className = 'home-schedule-grid';
 	dates.forEach((date) => {
 		const dateKey = getLocalDateString(date);
 		const day = document.createElement('section');
-		day.className = 'home-schedule-day';
+		day.className = `home-schedule-day${isScheduleToday(date) ? ' is-today' : ''}`;
 		const heading = document.createElement('h3');
 		heading.className = 'home-schedule-day-title';
 		heading.textContent = `${date.getMonth() + 1}/${date.getDate()} (${['日', '月', '火', '水', '木', '金', '土'][date.getDay()]})`;
@@ -181,7 +209,7 @@ function renderHomeSchedule(events, dates) {
 		dayEvents.filter((event) => event.isAllDay).forEach((event) => allDay.appendChild(createHomeScheduleEvent(event, true)));
 		day.appendChild(allDay);
 
-		const timeline = buildScheduleTimeline('home-schedule-timeline', 'home-schedule-hour-line');
+		const timeline = buildScheduleTimeline('home-schedule-timeline', 'home-schedule-hour-line', date);
 		layoutScheduleTimedEvents(dayEvents, timeline, createHomeScheduleEvent);
 		if (dayEvents.length === 0) {
 			const empty = document.createElement('div');
@@ -193,6 +221,8 @@ function renderHomeSchedule(events, dates) {
 		grid.appendChild(day);
 	});
 	container.appendChild(grid);
+	startScheduleCurrentTimeUpdates();
+	requestAnimationFrame(() => scrollScheduleToCurrentTime(container));
 }
 
 function createHomeScheduleEvent(event, isAllDay) {

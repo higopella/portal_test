@@ -1,6 +1,6 @@
 initCommonLayout('booking');
 
-let scheduleView = 'week';
+let scheduleView = 'three-day';
 let scheduleAnchorDate = new Date();
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -13,8 +13,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 	document.getElementById('form-search').addEventListener('submit', (event) => { event.preventDefault(); handleSearch(); });
 	document.getElementById('book-start-time').addEventListener('change', updateEndTimePreview);
 	document.getElementById('book-duration').addEventListener('change', updateEndTimePreview);
-	document.getElementById('schedule-view-week').addEventListener('click', () => setScheduleView('week'));
-	document.getElementById('schedule-view-month').addEventListener('click', () => setScheduleView('month'));
+	document.querySelectorAll('[data-schedule-view]').forEach((button) => {
+		button.addEventListener('click', () => setScheduleView(button.dataset.scheduleView));
+	});
 	document.getElementById('schedule-prev').addEventListener('click', () => moveSchedulePeriod(-1));
 	document.getElementById('schedule-next').addEventListener('click', () => moveSchedulePeriod(1));
 	document.getElementById('btn-refresh-schedule').addEventListener('click', () => loadBookingSchedule(true));
@@ -36,6 +37,12 @@ function getScheduleRange() {
 		const end = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0);
 		return { start, end };
 	}
+	if (scheduleView === 'day') return { start: anchor, end: anchor };
+	if (scheduleView === 'three-day') {
+		const end = new Date(anchor);
+		end.setDate(end.getDate() + 2);
+		return { start: anchor, end };
+	}
 	const weekday = anchor.getDay();
 	const mondayOffset = weekday === 0 ? -6 : 1 - weekday;
 	const start = new Date(anchor);
@@ -47,13 +54,18 @@ function getScheduleRange() {
 
 function setScheduleView(view) {
 	scheduleView = view;
-	document.getElementById('schedule-view-week').classList.toggle('active', view === 'week');
-	document.getElementById('schedule-view-month').classList.toggle('active', view === 'month');
+	const container = document.getElementById('booking-schedule');
+	if (container) container.dataset.scheduleView = view;
+	document.querySelectorAll('[data-schedule-view]').forEach((button) => {
+		button.classList.toggle('active', button.dataset.scheduleView === view);
+	});
 	loadBookingSchedule();
 }
 
 function moveSchedulePeriod(direction) {
 	if (scheduleView === 'month') scheduleAnchorDate.setMonth(scheduleAnchorDate.getMonth() + direction);
+	else if (scheduleView === 'three-day') scheduleAnchorDate.setDate(scheduleAnchorDate.getDate() + direction * 3);
+	else if (scheduleView === 'day') scheduleAnchorDate.setDate(scheduleAnchorDate.getDate() + direction);
 	else scheduleAnchorDate.setDate(scheduleAnchorDate.getDate() + direction * 7);
 	loadBookingSchedule();
 }
@@ -66,8 +78,11 @@ async function loadBookingSchedule(forceRefresh = false) {
 	const endDate = getLocalDateString(range.end);
 	document.getElementById('schedule-period-label').textContent = scheduleView === 'month'
 		? `${range.start.getFullYear()}年${range.start.getMonth() + 1}月`
-		: `${range.start.getMonth() + 1}/${range.start.getDate()} - ${range.end.getMonth() + 1}/${range.end.getDate()}`;
+		: scheduleView === 'day'
+			? `${range.start.getMonth() + 1}/${range.start.getDate()}`
+			: `${range.start.getMonth() + 1}/${range.start.getDate()} - ${range.end.getMonth() + 1}/${range.end.getDate()}`;
 	container.textContent = '';
+	container.dataset.scheduleView = scheduleView;
 	const loading = document.createElement('div');
 	loading.className = 'schedule-message';
 	loading.textContent = '読み込み中...';
@@ -100,7 +115,7 @@ function renderBookingSchedule(events, range) {
 	for (const day = new Date(range.start); day <= range.end; day.setDate(day.getDate() + 1)) {
 		const dateKey = getLocalDateString(day);
 		const dayElement = document.createElement('div');
-		dayElement.className = 'schedule-day';
+		dayElement.className = `schedule-day${isScheduleToday(day) ? ' is-today' : ''}`;
 		const heading = document.createElement('div');
 		heading.className = 'schedule-day-title';
 		heading.textContent = `${day.getMonth() + 1}/${day.getDate()} (${['日', '月', '火', '水', '木', '金', '土'][day.getDay()]})`;
@@ -111,7 +126,7 @@ function renderBookingSchedule(events, range) {
 		allDayContainer.className = 'schedule-all-day';
 		allDayEvents.forEach((event) => allDayContainer.appendChild(createScheduleEventElement(event, true)));
 		dayElement.appendChild(allDayContainer);
-		const timeline = buildScheduleTimeline('schedule-timeline', 'schedule-hour-line');
+		const timeline = buildScheduleTimeline('schedule-timeline', 'schedule-hour-line', day);
 		layoutScheduleTimedEvents(dayEvents, timeline, createScheduleEventElement);
 		dayElement.appendChild(timeline);
 		if (dayEvents.length === 0) {
@@ -122,6 +137,8 @@ function renderBookingSchedule(events, range) {
 		}
 		container.appendChild(dayElement);
 	}
+	startScheduleCurrentTimeUpdates();
+	requestAnimationFrame(() => scrollScheduleToCurrentTime(container));
 }
 
 function createScheduleEventElement(event, isAllDay) {

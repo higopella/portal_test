@@ -140,7 +140,7 @@ function layoutScheduleTimedEvents(events, timeline, createEventElement) {
   });
 }
 
-function buildScheduleTimeline(className, hourLineClassName) {
+function buildScheduleTimeline(className, hourLineClassName, date) {
   const timeline = document.createElement("div");
   timeline.className = className;
   timeline.style.height = `${(SCHEDULE_DAY_END_MINUTES - SCHEDULE_DAY_START_MINUTES) * SCHEDULE_PIXELS_PER_MINUTE}px`;
@@ -148,10 +148,46 @@ function buildScheduleTimeline(className, hourLineClassName) {
     const hourLine = document.createElement("div");
     hourLine.className = hourLineClassName;
     hourLine.style.height = `${60 * SCHEDULE_PIXELS_PER_MINUTE}px`;
-    hourLine.textContent = `${String(Math.floor(minutes / 60)).padStart(2, "0")}:00`;
+    hourLine.textContent = String(Math.floor(minutes / 60));
     timeline.appendChild(hourLine);
   }
+  if (date && isScheduleToday(date)) {
+    const indicator = document.createElement("div");
+    indicator.className = "schedule-current-time-line";
+    indicator.setAttribute("aria-hidden", "true");
+    timeline.appendChild(indicator);
+  }
   return timeline;
+}
+
+function isScheduleToday(date) {
+  const today = new Date();
+  return date.getFullYear() === today.getFullYear() &&
+    date.getMonth() === today.getMonth() &&
+    date.getDate() === today.getDate();
+}
+
+function updateScheduleCurrentTimeIndicators() {
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const isVisible = currentMinutes >= SCHEDULE_DAY_START_MINUTES && currentMinutes <= SCHEDULE_DAY_END_MINUTES;
+  document.querySelectorAll(".schedule-current-time-line").forEach((indicator) => {
+    indicator.style.top = `${(currentMinutes - SCHEDULE_DAY_START_MINUTES) * SCHEDULE_PIXELS_PER_MINUTE}px`;
+    indicator.hidden = !isVisible;
+  });
+}
+
+function scrollScheduleToCurrentTime(container) {
+  if (!container || !document.querySelector(".schedule-current-time-line:not([hidden])")) return;
+  const indicator = document.querySelector(".schedule-current-time-line:not([hidden])");
+  const target = indicator.offsetTop - container.clientHeight * 0.35;
+  container.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
+}
+
+function startScheduleCurrentTimeUpdates() {
+  updateScheduleCurrentTimeIndicators();
+  if (window.scheduleCurrentTimeTimer) clearInterval(window.scheduleCurrentTimeTimer);
+  window.scheduleCurrentTimeTimer = setInterval(updateScheduleCurrentTimeIndicators, 60 * 1000);
 }
 
 function showScheduleEventDetail(event) {
