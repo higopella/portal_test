@@ -205,6 +205,17 @@ function scrollScheduleToCurrentTime(container) {
   container.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
 }
 
+function scrollScheduleToToday(container, className) {
+  if (!container || container.dataset.scheduleView !== "week") return;
+  const todayColumn = container.querySelector(`.${className}-day.is-today`);
+  if (!todayColumn) return;
+  const containerRect = container.getBoundingClientRect();
+  const columnRect = todayColumn.getBoundingClientRect();
+  const target = container.scrollLeft + columnRect.left - containerRect.left -
+    (container.clientWidth - todayColumn.clientWidth) / 2;
+  container.scrollLeft = Math.max(0, target);
+}
+
 function startScheduleCurrentTimeUpdates() {
   updateScheduleCurrentTimeIndicators();
   if (window.scheduleCurrentTimeTimer) clearInterval(window.scheduleCurrentTimeTimer);
@@ -333,7 +344,10 @@ function renderScheduleCalendar(container, events, dates, view, createEventEleme
   scrollLayout.appendChild(grid);
   container.appendChild(scrollLayout);
   startScheduleCurrentTimeUpdates();
-  requestAnimationFrame(() => scrollScheduleToCurrentTime(container));
+  requestAnimationFrame(() => {
+    scrollScheduleToToday(container, className);
+    scrollScheduleToCurrentTime(container);
+  });
 }
 
 function getScheduleDateString(date) {
