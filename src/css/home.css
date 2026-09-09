@@ -379,3 +379,15 @@
 			.home-schedule { padding-bottom: 8px; }
 			.schedule-view-tabs { margin-bottom: 8px; }
 		}
+		@media (min-width: 761px) {
+			.home-schedule[data-schedule-view="day"] .home-schedule-scroll-layout {
+				grid-template-columns: 34px minmax(0, 1fr);
+				width: 100%;
+				min-width: 0;
+			}
+			.home-schedule[data-schedule-view="day"] .home-schedule-grid {
+				width: 100%;
+				min-width: 0;
+				grid-template-columns: minmax(0, 1fr);
+			}
+		}
