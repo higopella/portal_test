@@ -287,7 +287,7 @@
 		.schedule-event { z-index: 10; }
 		.schedule-view-tabs {
 			position: sticky;
-			bottom: 0;
+			bottom: calc(12px + env(safe-area-inset-bottom));
 			z-index: 30;
 			display: inline-flex;
 			align-items: center;
@@ -327,7 +327,7 @@
 		.schedule-toolbar > .schedule-today-btn { margin-right: auto; }
 		@media (max-width: 640px) {
 			.booking-schedule { padding-bottom: 8px; }
-			.schedule-view-tabs { margin: 0 0 12px 8px; }
+			.schedule-view-tabs { margin-left: 8px; }
 			.schedule-view-tab { min-width: 78px; min-height: 52px; }
 		}
 		@media (min-width: 761px) {

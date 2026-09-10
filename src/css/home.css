@@ -271,7 +271,7 @@
 		.home-schedule-event { z-index: 10; }
 		.schedule-view-tabs {
 			position: sticky;
-			bottom: 0;
+			bottom: calc(12px + env(safe-area-inset-bottom));
 			z-index: 30;
 			display: inline-flex;
 			align-items: center;
@@ -394,10 +394,29 @@
 		}
 		@media (max-width: 760px) {
 			.home-schedule { padding-bottom: 8px; }
-			.schedule-view-tabs { margin: 0 0 12px 8px; }
+			.schedule-view-tabs { margin-left: 8px; }
 			.schedule-view-tab { min-width: 78px; min-height: 52px; }
 		}
 		@media (min-width: 761px) {
+			.home-calendar { position: relative; }
+			.home-calendar > .schedule-toolbar {
+				min-height: 38px;
+			}
+			.home-calendar > .schedule-toolbar .schedule-navigation {
+				margin-left: 228px;
+			}
+			.home-calendar > .schedule-view-tabs {
+				position: absolute;
+				top: 66px;
+				left: 78px;
+				display: inline-flex;
+				margin: 0;
+				box-shadow: none;
+			}
+			.home-calendar > .schedule-view-tabs .schedule-view-tab {
+				min-width: 48px;
+				min-height: 34px;
+			}
 			.home-schedule[data-schedule-view="day"] .home-schedule-scroll-layout {
 				grid-template-columns: 34px minmax(0, 1fr);
 				width: 100%;
