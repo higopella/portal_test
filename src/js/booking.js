@@ -16,10 +16,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 	document.querySelectorAll('[data-schedule-view]').forEach((button) => {
 		button.addEventListener('click', () => setScheduleView(button.dataset.scheduleView));
 	});
+	document.getElementById('schedule-today')?.addEventListener('click', moveScheduleToToday);
 	document.getElementById('schedule-prev').addEventListener('click', () => moveSchedulePeriod(-1));
 	document.getElementById('schedule-next').addEventListener('click', () => moveSchedulePeriod(1));
 	document.getElementById('btn-refresh-schedule').addEventListener('click', () => loadBookingSchedule(true));
 	updateEndTimePreview();
+	updateBookingScheduleViewIndicators();
 	loadBookingSchedule();
 });
 
@@ -48,6 +50,22 @@ function setScheduleView(view) {
 	document.querySelectorAll('[data-schedule-view]').forEach((button) => {
 		button.classList.toggle('active', button.dataset.scheduleView === view);
 	});
+	updateBookingScheduleViewIndicators();
+	loadBookingSchedule();
+}
+
+function updateBookingScheduleViewIndicators() {
+	document.querySelectorAll('.schedule-view-controls, .schedule-view-tabs').forEach((group) => {
+		const activeButton = group.querySelector('[data-schedule-view].active');
+		const indicator = group.querySelector('.schedule-view-indicator');
+		if (!activeButton || !indicator) return;
+		indicator.style.width = `${activeButton.offsetWidth}px`;
+		indicator.style.transform = `translateX(${activeButton.offsetLeft}px)`;
+	});
+}
+
+function moveScheduleToToday() {
+	scheduleAnchorDate = new Date();
 	loadBookingSchedule();
 }
 

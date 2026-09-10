@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const refreshScheduleBtn = document.getElementById('btn-refresh-schedule');
 	if (refreshScheduleBtn) refreshScheduleBtn.addEventListener('click', () => refreshHomeSchedule());
+	document.getElementById('home-schedule-today')?.addEventListener('click', moveHomeScheduleToToday);
 	document.querySelectorAll('[data-schedule-view]').forEach((button) => {
 		button.addEventListener('click', () => setHomeScheduleView(button.dataset.scheduleView));
 	});
@@ -39,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	document.getElementById('home-schedule-next')?.addEventListener('click', () => moveHomeSchedulePeriod(1));
 
 	renderHomeView();
+	requestAnimationFrame(updateScheduleViewIndicator);
 });
 window.addEventListener('pageshow', renderHomeView);
 
@@ -171,6 +173,20 @@ function setHomeScheduleView(view) {
 	document.querySelectorAll('[data-schedule-view]').forEach((button) => {
 		button.classList.toggle('active', button.dataset.scheduleView === view);
 	});
+	updateScheduleViewIndicator();
+	fetchHomeSchedule();
+}
+
+function updateScheduleViewIndicator() {
+	const activeButton = document.querySelector('.home-calendar [data-schedule-view].active');
+	const indicator = document.querySelector('.home-calendar .schedule-view-indicator');
+	if (!activeButton || !indicator) return;
+	indicator.style.width = `${activeButton.offsetWidth}px`;
+	indicator.style.transform = `translateX(${activeButton.offsetLeft}px)`;
+}
+
+function moveHomeScheduleToToday() {
+	homeScheduleAnchorDate = new Date();
 	fetchHomeSchedule();
 }
 
