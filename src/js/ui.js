@@ -166,6 +166,10 @@ function buildScheduleTimeline(className, hourLineClassName, date, showLabels = 
     const indicator = document.createElement("div");
     indicator.className = "schedule-current-time-line";
     indicator.setAttribute("aria-hidden", "true");
+    const label = document.createElement("span");
+    label.className = "schedule-current-time-label";
+    label.textContent = "☆now!!";
+    indicator.appendChild(label);
     timeline.appendChild(indicator);
   }
   return timeline;
