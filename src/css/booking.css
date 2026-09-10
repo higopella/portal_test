@@ -303,8 +303,6 @@
 			isolation: isolate;
 		}
 		.schedule-view-tab {
-			position: relative;
-			z-index: 1;
 			min-width: 72px;
 			min-height: 46px;
 			border: 0;
@@ -315,19 +313,7 @@
 			font-weight: 600;
 			cursor: pointer;
 		}
-		.schedule-view-tab.active { color: var(--primary-dark); }
-		.schedule-view-controls { position: relative; }
-		.schedule-view-indicator {
-			position: absolute;
-			top: 3px;
-			bottom: 3px;
-			left: 0;
-			z-index: 0;
-			border-radius: 6px;
-			background: var(--primary-light);
-			transition: transform 220ms ease, width 220ms ease;
-			pointer-events: none;
-		}
+		.schedule-view-tab.active { background: var(--primary-light); color: var(--primary-dark); }
 		.schedule-today-btn {
 			min-height: 34px;
 			padding: 4px 12px;
