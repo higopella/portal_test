@@ -165,10 +165,11 @@ function buildScheduleTimeline(className, hourLineClassName, date, showLabels = 
   if (date && isScheduleToday(date)) {
     const indicator = document.createElement("div");
     indicator.className = "schedule-current-time-line";
+    if (date.getDay() === 0) indicator.classList.add("is-sunday");
     indicator.setAttribute("aria-hidden", "true");
     const label = document.createElement("span");
     label.className = "schedule-current-time-label";
-    label.textContent = "☆now!!";
+    label.textContent = "☆now!";
     indicator.appendChild(label);
     timeline.appendChild(indicator);
   }

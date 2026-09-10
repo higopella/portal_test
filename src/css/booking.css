@@ -262,16 +262,14 @@
 		.schedule-current-time-label {
 			position: absolute;
 			bottom: 4px;
-			left: 4px;
-			padding: 1px 4px;
-			border-radius: 4px;
-			background: #ef4444;
-			color: #ffffff;
+			right: calc(100% + 4px);
+			color: #ef4444;
 			font-size: 0.68rem;
 			font-weight: 700;
 			line-height: 1.2;
 			white-space: nowrap;
 		}
+		.schedule-current-time-line.is-sunday .schedule-current-time-label { left: 4px; right: auto; }
 		.schedule-scroll-layout {
 			display: grid;
 			grid-template-columns: 34px max-content;
