@@ -1,4 +1,6 @@
 const SCHEDULE_TEMPLATE_URL = "src/calendar.html";
+const SCHEDULE_CACHE_PAST_DAYS = 10;
+const SCHEDULE_CACHE_FUTURE_DAYS = 90;
 
 function getScheduleTemplateUrl() {
   const host = document.querySelector("[data-schedule-calendar]");
@@ -12,8 +14,9 @@ function getScheduleBookingUrl() {
 function getScheduleDeviceCacheRange(range) {
   const today = new Date();
   const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  start.setDate(start.getDate() - SCHEDULE_CACHE_PAST_DAYS);
   const end = new Date(start);
-  end.setDate(end.getDate() + 30);
+  end.setDate(end.getDate() + SCHEDULE_CACHE_PAST_DAYS + SCHEDULE_CACHE_FUTURE_DAYS);
   if (range.end >= start && range.start <= end) return { start, end };
   return range;
 }
