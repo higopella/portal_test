@@ -195,7 +195,7 @@ function renderHomeSchedule(events, dates) {
 
 function createHomeScheduleEvent(event, isAllDay) {
 	const element = document.createElement('div');
-	element.className = `home-schedule-event ${getHomeScheduleRoomClass(event.room)}${isAllDay ? ' home-schedule-event-all-day' : ''}`;
+	element.className = `home-schedule-event schedule-event ${getHomeScheduleRoomClass(event.room)}${isAllDay ? ' home-schedule-event-all-day schedule-event-all-day' : ''}`;
 	const title = document.createElement('span');
 	title.className = 'home-schedule-event-title';
 	title.textContent = event.title;
@@ -211,10 +211,10 @@ function createHomeScheduleEvent(event, isAllDay) {
 }
 
 function getHomeScheduleRoomClass(room) {
-	if (room === '②') return 'home-schedule-event-equipment';
-	if (room === '③') return 'home-schedule-event-classroom';
-	if (room === 'メイン') return 'home-schedule-event-main';
-	return 'home-schedule-event-clubroom';
+	if (room === '②') return 'home-schedule-event-equipment schedule-event-equipment';
+	if (room === '③') return 'home-schedule-event-classroom schedule-event-classroom';
+	if (room === 'メイン') return 'home-schedule-event-main schedule-event-main';
+	return 'home-schedule-event-clubroom schedule-event-clubroom';
 }
 
 function renderNoticeText(text) {

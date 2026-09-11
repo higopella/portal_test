@@ -108,8 +108,8 @@ const SCHEDULE_PIXELS_PER_MINUTE = 2;
 const SCHEDULE_DAY_START_MINUTES = 7 * 60;
 const SCHEDULE_DAY_END_MINUTES = 21 * 60;
 const SCHEDULE_LANE_LABEL_WIDTH = 34;
-const SCHEDULE_ROOM_ORDER = { "①": 0, "②": 1, "③": 2, "メイン": 3 };
-const SCHEDULE_ROOM_NAMES = { "①": "部室", "②": "機材庫", "③": "教室", "メイン": "メイン" };
+const SCHEDULE_ROOM_ORDER = { "①": 0, "②": 1, "③": 2, "Main": 3 };
+const SCHEDULE_ROOM_NAMES = { "①": "部室", "②": "機材庫", "③": "教室", "Main": "メイン" };
 
 function getScheduleMinutesFromTime(value) {
   const parts = String(value).split(":").map(Number);
@@ -287,25 +287,25 @@ function renderScheduleCalendar(container, events, dates, view, createEventEleme
   container.textContent = "";
   container.dataset.scheduleView = view;
   const grid = document.createElement("div");
-  grid.className = `${className}-grid`;
+  grid.className = `${className}-grid schedule-grid`;
 
   if (view === "month") {
     const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
     const weekdayRow = document.createElement("div");
-    weekdayRow.className = `${className}-weekday-row`;
+    weekdayRow.className = `${className}-weekday-row schedule-weekday-row`;
     weekdays.forEach((weekday) => {
       const weekdayCell = document.createElement("div");
-      weekdayCell.className = `${className}-weekday-cell`;
+      weekdayCell.className = `${className}-weekday-cell schedule-weekday-cell`;
       weekdayCell.textContent = weekday;
       weekdayRow.appendChild(weekdayCell);
     });
     container.appendChild(weekdayRow);
     dates.forEach((date) => {
       const cell = document.createElement("section");
-      cell.className = `${className}-month-day${isScheduleToday(date) ? " is-today" : ""}`;
+      cell.className = `${className}-month-day schedule-month-day${isScheduleToday(date) ? " is-today" : ""}`;
       if (date.getMonth() !== dates[14].getMonth()) cell.classList.add("is-outside-month");
       const heading = document.createElement("div");
-      heading.className = `${className}-month-day-title`;
+      heading.className = `${className}-month-day-title schedule-month-day-title`;
       heading.textContent = String(date.getDate());
       cell.appendChild(heading);
       (eventsByDate[getScheduleDateString(date)] || []).forEach((event) => {
@@ -318,24 +318,24 @@ function renderScheduleCalendar(container, events, dates, view, createEventEleme
   }
 
   const scrollLayout = document.createElement("div");
-  scrollLayout.className = `${className}-scroll-layout`;
+  scrollLayout.className = `${className}-scroll-layout schedule-scroll-layout`;
   const timeAxis = buildScheduleTimeAxis(className);
   scrollLayout.appendChild(timeAxis);
   dates.forEach((date) => {
     const day = document.createElement("section");
-    day.className = `${className}-day${isScheduleToday(date) ? " is-today" : ""}`;
+    day.className = `${className}-day schedule-day${isScheduleToday(date) ? " is-today" : ""}`;
     const heading = document.createElement("div");
-    heading.className = `${className}-day-title`;
+    heading.className = `${className}-day-title schedule-day-title`;
     heading.textContent = formatScheduleDate(date);
     day.appendChild(heading);
     const dayEvents = eventsByDate[getScheduleDateString(date)] || [];
     const allDay = document.createElement("div");
-    allDay.className = `${className}-all-day`;
+    allDay.className = `${className}-all-day schedule-all-day`;
     dayEvents.filter((event) => event.isAllDay).forEach((event) => {
       allDay.appendChild(createEventElement(event, true));
     });
     day.appendChild(allDay);
-    const timeline = buildScheduleTimeline(`${className}-timeline`, `${className}-hour-line`, date);
+    const timeline = buildScheduleTimeline(`${className}-timeline schedule-timeline`, `${className}-hour-line schedule-hour-line`, date);
     layoutScheduleTimedEvents(dayEvents, timeline, createEventElement);
     if (dayEvents.length === 0) {
       const empty = document.createElement("div");
