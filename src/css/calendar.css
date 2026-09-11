@@ -418,6 +418,31 @@
 }
 
 @media (max-width: 760px) {
+  .schedule-toolbar {
+    flex-wrap: nowrap;
+  }
+
+  .schedule-toolbar > .schedule-today-btn {
+    flex-shrink: 0;
+  }
+
+  .schedule-toolbar .schedule-navigation {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .schedule-toolbar .schedule-period-label {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .schedule-toolbar > .schedule-booking-link {
+    flex-shrink: 0;
+  }
+
   .schedule-view-controls {
     display: none;
   }

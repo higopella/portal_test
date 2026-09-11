@@ -6,7 +6,7 @@ function getScheduleTemplateUrl() {
 }
 
 function getScheduleBookingUrl() {
-  return window.location.pathname.includes("/booking/") ? "#booking-form" : "booking/";
+  return window.location.pathname.includes("/booking/") ? "#" : "booking/";
 }
 
 async function initScheduleCalendar({ host, loadEvents, createEventElement, onRendered }) {

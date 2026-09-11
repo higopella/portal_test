@@ -116,11 +116,14 @@
 		.duration-preset:hover,
 		.duration-preset:focus-visible { border-color: var(--primary); background: var(--primary-light); }
 		.booking-form-error {
+			position: sticky;
+			top: var(--header-height);
+			z-index: 23;
+			background: #fff1f2;
 			margin-bottom: 14px;
 			padding: 8px 10px;
 			border: 1px solid var(--danger);
 			border-radius: var(--radius);
-			background: #fff1f2;
 			color: var(--danger);
 			font-size: 0.85rem;
 		}
@@ -147,7 +150,8 @@
 		.search-message-error { color: var(--danger); }
 		.delete-booking-button { min-height: 36px; padding: 4px 12px; font-size: 0.85rem; }
 		@media (max-width: 640px) {
-			.schedule-navigation { width: 100%; justify-content: space-between; }
+			.schedule-toolbar { flex-wrap: nowrap; }
+			.schedule-navigation { width: auto; justify-content: initial; }
 		}
 
 		.schedule-toolbar > .schedule-today-btn { margin-right: auto; }

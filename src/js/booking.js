@@ -8,11 +8,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 	document.getElementById('form-search').addEventListener('submit', (event) => { event.preventDefault(); handleSearch(); });
 	document.getElementById('book-start-time').addEventListener('change', updateEndTimePreview);
 	document.getElementById('book-duration').addEventListener('change', updateEndTimePreview);
+	document.getElementById('book-start-time').addEventListener('input', validateBookingInputs);
+	document.getElementById('book-duration').addEventListener('input', validateBookingInputs);
+	document.getElementById('book-room').addEventListener('change', validateBookingInputs);
 	document.getElementById('book-date').addEventListener('change', loadAvailableTimeSlots);
+	document.getElementById('book-date').addEventListener('change', validateBookingInputs);
 	document.querySelectorAll('[data-duration]').forEach((button) => {
 		button.addEventListener('click', () => {
 			document.getElementById('book-duration').value = button.dataset.duration;
 			updateEndTimePreview();
+			validateBookingInputs();
 		});
 	});
 	updateEndTimePreview();
@@ -44,7 +49,6 @@ async function initializeBookingScheduleCalendar() {
 		event.preventDefault();
 		switchTab('create');
 		document.getElementById('panel-create').scrollIntoView({ behavior: 'smooth', block: 'start' });
-		document.getElementById('book-date').focus({ preventScroll: true });
 	});
 }
 
@@ -113,6 +117,33 @@ function showBookingError(message) {
 	error.hidden = !message;
 }
 
+function getBookingValidationError() {
+	const date = document.getElementById('book-date').value;
+	const startTime = document.getElementById('book-start-time').value;
+	const duration = Number(document.getElementById('book-duration').value);
+	if (date && startTime) {
+		const startDateTime = new Date(`${date.replace(/-/g, '/')} ${startTime}:00`);
+		if (startDateTime <= new Date()) return '過去の日時は予約できません';
+		const maxDate = new Date();
+		maxDate.setMonth(maxDate.getMonth() + 1);
+		maxDate.setHours(23, 59, 59, 999);
+		if (startDateTime > maxDate) return '1ヶ月より先の予約はできません';
+	}
+	if (startTime && getTimeMinutes(startTime) < 7 * 60) return '開始時間は7:00以降にしてください';
+	if (duration && (!Number.isInteger(duration) || duration < 1 || duration > 120)) return '利用分数は1〜120分で入力してください';
+	if (startTime && Number.isInteger(duration)) {
+		if (getTimeMinutes(startTime) + duration > 21 * 60) return '終了時間は21:00までにしてください';
+		if (getTimeMinutes(startTime) >= 18 * 60 && duration > 90) return '18:00以降は最大90分までです';
+	}
+	return '';
+}
+
+function validateBookingInputs() {
+	const hasInput = ['book-date', 'book-start-time', 'book-duration', 'book-room']
+		.some((id) => document.getElementById(id).value);
+	if (hasInput) showBookingError(getBookingValidationError());
+}
+
 function getTimeMinutes(value) {
 	const [hours, minutes] = value.split(':').map(Number);
 	return hours * 60 + minutes;
@@ -151,11 +182,12 @@ async function loadAvailableTimeSlots() {
 		const result = await callGasApi('getScheduleEvents', { startDate: date, endDate: date });
 		if (!result.success) throw new Error(result.error);
 		container.textContent = '';
+		const roomLabels = { '①': '部室', '②': '機材庫', '③': '教室' };
 		['①', '②', '③'].forEach((room) => {
 			const row = document.createElement('div');
 			row.className = 'available-time-row';
 			const label = document.createElement('span');
-			label.textContent = `場所${room}`;
+			label.textContent = roomLabels[room];
 			const value = document.createElement('span');
 			value.textContent = buildAvailableSlots(result.events || [], room).join('、') || '空きなし';
 			row.append(label, value);
