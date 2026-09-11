@@ -99,17 +99,32 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, onRe
       loading.textContent = "読み込み中...";
       container.appendChild(loading);
     }
-    const networkPromise = loadScheduleRangeInChunks(loadEvents, fetchRange.start, fetchRange.end, true);
+    const displayDayCount = Math.floor((range.end - range.start) / 86400000) + 1;
+    const networkPromise = displayDayCount <= 31
+      ? loadEvents(range.start, range.end, true)
+      : loadScheduleRangeInChunks(loadEvents, range.start, range.end, true);
     try {
       const events = await withScheduleRefreshTimeout(networkPromise);
+      renderEvents(events || [], dates);
       await writeScheduleDeviceCache({
         version: SCHEDULE_DEVICE_CACHE_VERSION,
-        startDate: getScheduleDateString(fetchRange.start),
-        endDate: getScheduleDateString(fetchRange.end),
+        startDate: getScheduleDateString(range.start),
+        endDate: getScheduleDateString(range.end),
         fetchedAt: Date.now(),
         events: events || []
       });
-      renderEvents(events || [], dates);
+
+      if (fetchRange.start.getTime() !== range.start.getTime() || fetchRange.end.getTime() !== range.end.getTime()) {
+        loadScheduleRangeInChunks(loadEvents, fetchRange.start, fetchRange.end, true)
+          .then((cachedEvents) => writeScheduleDeviceCache({
+            version: SCHEDULE_DEVICE_CACHE_VERSION,
+            startDate: getScheduleDateString(fetchRange.start),
+            endDate: getScheduleDateString(fetchRange.end),
+            fetchedAt: Date.now(),
+            events: cachedEvents
+          }))
+          .catch((error) => console.warn("[カレンダー拡張キャッシュ取得失敗]", error));
+      }
     } catch (error) {
       if (!hasCachedEvents) {
         container.textContent = "";
