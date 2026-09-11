@@ -7,25 +7,6 @@
 			padding: 20px;
 		}
 		.schedule-card { padding: 16px; }
-		.schedule-toolbar {
-			display: flex;
-			justify-content: space-between;
-			gap: 12px;
-			margin-bottom: 14px;
-			flex-wrap: wrap;
-		}
-		.schedule-view-controls, .schedule-navigation { display: flex; align-items: center; gap: 6px; }
-		.schedule-view-btn, .schedule-nav-btn {
-			min-height: 36px;
-			padding: 6px 10px;
-			border: 1px solid var(--border);
-			border-radius: var(--radius);
-			background: var(--card);
-			color: var(--text);
-			cursor: pointer;
-		}
-		.schedule-view-btn.active { background: var(--primary-light); border-color: var(--primary); color: var(--primary-dark); }
-		.schedule-period-label { min-width: 120px; text-align: center; font-size: 0.9rem; font-weight: bold; }
 		.tab-nav {
 			display: grid;
 			grid-template-columns: 1fr 1fr;
@@ -81,7 +62,7 @@
 			text-align: center;
 		}
 		.available-time-slots {
-			width: min(100%, 560px);
+			width: 100%;
 			padding: 8px 10px;
 			border: 1px solid var(--border);
 			border-radius: var(--radius);
@@ -149,13 +130,3 @@
 		.search-message { text-align: center; color: var(--text-sub); padding: 10px; }
 		.search-message-error { color: var(--danger); }
 		.delete-booking-button { min-height: 36px; padding: 4px 12px; font-size: 0.85rem; }
-		@media (max-width: 640px) {
-			.schedule-toolbar { flex-wrap: nowrap; }
-			.schedule-navigation { width: auto; justify-content: initial; }
-		}
-
-		.schedule-toolbar > .schedule-today-btn { margin-right: auto; }
-		@media (max-width: 640px) {
-		}
-		@media (min-width: 761px) {
-		}

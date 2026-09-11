@@ -48,7 +48,9 @@ async function initializeBookingScheduleCalendar() {
 	host.querySelector('.schedule-booking-link')?.addEventListener('click', (event) => {
 		event.preventDefault();
 		switchTab('create');
-		document.getElementById('panel-create').scrollIntoView({ behavior: 'smooth', block: 'start' });
+		const panel = document.getElementById('panel-create');
+		const targetTop = panel.getBoundingClientRect().top + window.scrollY - parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-height'), 10);
+		window.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
 	});
 }
 
@@ -121,6 +123,12 @@ function getBookingValidationError() {
 	const date = document.getElementById('book-date').value;
 	const startTime = document.getElementById('book-start-time').value;
 	const duration = Number(document.getElementById('book-duration').value);
+	if (date) {
+		const selectedDate = new Date(`${date}T00:00:00`);
+		const today = new Date();
+		today.setHours(0, 0, 0, 0);
+		if (selectedDate < today) return '過去の日付は予約できません';
+	}
 	if (date && startTime) {
 		const startDateTime = new Date(`${date.replace(/-/g, '/')} ${startTime}:00`);
 		if (startDateTime <= new Date()) return '過去の日時は予約できません';
