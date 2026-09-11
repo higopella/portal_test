@@ -74,7 +74,10 @@ function initCommonLayout(activeKey = "") {
     });
   }
   if (siteRefreshBtn) {
-    siteRefreshBtn.addEventListener("click", () => window.location.reload());
+    siteRefreshBtn.addEventListener("click", async () => {
+      await clearScheduleDeviceCache();
+      window.location.reload();
+    });
   }
 
   document.addEventListener("keydown", (e) => {

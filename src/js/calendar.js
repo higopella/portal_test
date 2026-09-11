@@ -9,6 +9,15 @@ function getScheduleBookingUrl() {
   return window.location.pathname.includes("/booking/") ? "#" : "booking/";
 }
 
+function getScheduleDeviceCacheRange(range) {
+  const today = new Date();
+  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const end = new Date(start);
+  end.setDate(end.getDate() + 30);
+  if (range.end >= start && range.start <= end) return { start, end };
+  return range;
+}
+
 async function initScheduleCalendar({ host, loadEvents, createEventElement, onRendered }) {
   if (!host) return null;
   const templateResponse = await fetch(getScheduleTemplateUrl(), { cache: "no-cache" });
@@ -17,6 +26,7 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, onRe
 
   const container = host.querySelector("[data-schedule-container]");
   const periodLabel = host.querySelector("[data-schedule-period]");
+  const cacheStatus = host.querySelector("[data-schedule-cache-status]");
   const bookingLink = host.querySelector(".schedule-booking-link");
   if (bookingLink) bookingLink.href = getScheduleBookingUrl();
 
@@ -33,29 +43,63 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, onRe
     return { start: dates[0], end: dates[dates.length - 1] };
   };
 
+  const renderEvents = (events, dates) => {
+    const requestedStart = getScheduleDateString(dates[0]);
+    const requestedEnd = getScheduleDateString(dates[dates.length - 1]);
+    const visibleEvents = events.filter((event) => {
+      const eventDate = String(event.start || "").slice(0, 10);
+      return eventDate >= requestedStart && eventDate <= requestedEnd;
+    });
+    renderScheduleCalendar(container, visibleEvents, dates, state.view, createEventElement, "schedule");
+    periodLabel.textContent = formatSchedulePeriod(state.view, dates);
+    host.querySelectorAll("[data-schedule-view]").forEach((button) => {
+      button.classList.toggle("active", button.dataset.scheduleView === state.view);
+    });
+    onRendered?.(state, dates);
+  };
+
+  const updateCacheStatus = (message) => {
+    if (cacheStatus) cacheStatus.textContent = message;
+  };
+
   async function refresh(forceRefresh = false) {
     const dates = getDates();
     const range = getRequestRange();
-    container.textContent = "";
-    const loading = document.createElement("div");
-    loading.className = "schedule-message";
-    loading.textContent = "読み込み中...";
-    container.appendChild(loading);
-    try {
-      const events = await loadEvents(range.start, range.end, forceRefresh);
-      renderScheduleCalendar(container, events || [], dates, state.view, createEventElement, "schedule");
-      periodLabel.textContent = formatSchedulePeriod(state.view, dates);
-      host.querySelectorAll("[data-schedule-view]").forEach((button) => {
-        button.classList.toggle("active", button.dataset.scheduleView === state.view);
-      });
-      onRendered?.(state, dates);
-    } catch (error) {
+    const fetchRange = getScheduleDeviceCacheRange(range);
+    const cached = forceRefresh ? null : await readScheduleDeviceCache();
+    const hasCachedEvents = cached && cached.startDate <= getScheduleDateString(fetchRange.start) &&
+      cached.endDate >= getScheduleDateString(fetchRange.end);
+    if (hasCachedEvents) {
+      renderEvents(cached.events, dates);
+      updateCacheStatus(`最終更新: ${new Date(cached.fetchedAt).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}`);
+    } else {
       container.textContent = "";
-      const message = document.createElement("div");
-      message.className = "schedule-message schedule-message-error";
-      message.textContent = "予定の取得に失敗しました。";
-      container.appendChild(message);
-      throw error;
+      const loading = document.createElement("div");
+      loading.className = "schedule-message";
+      loading.textContent = "読み込み中...";
+      container.appendChild(loading);
+    }
+    updateCacheStatus(hasCachedEvents ? "更新中..." : "読み込み中...");
+    const networkPromise = loadEvents(fetchRange.start, fetchRange.end, true);
+    try {
+      const events = await withScheduleRefreshTimeout(networkPromise);
+      await writeScheduleDeviceCache({
+        startDate: getScheduleDateString(fetchRange.start),
+        endDate: getScheduleDateString(fetchRange.end),
+        fetchedAt: Date.now(),
+        events: events || []
+      });
+      renderEvents(events || [], dates);
+      updateCacheStatus(`最終更新: ${new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}`);
+    } catch (error) {
+      if (!hasCachedEvents) {
+        container.textContent = "";
+        const message = document.createElement("div");
+        message.className = "schedule-message schedule-message-error";
+        message.textContent = "予定の取得に失敗しました。";
+        container.appendChild(message);
+      }
+      updateCacheStatus(hasCachedEvents ? "最新情報を取得できませんでした" : "取得失敗");
     }
   }
 

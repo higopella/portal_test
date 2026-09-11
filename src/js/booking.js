@@ -257,6 +257,7 @@ async function handleAddBooking() {
 	await withButtonLoading(btn, async () => {
 		const res = await callGasApi('addEventToCalendar', payloadData);
 		if (res.success) {
+			await clearScheduleDeviceCache();
 			showToast('予約が完了しました');
 			document.getElementById('form-booking').reset();
 			updateEndTimePreview();
@@ -316,6 +317,7 @@ async function handleDeleteBooking(eventId, buttonEl) {
 	await withButtonLoading(buttonEl, async () => {
 		const res = await callGasApi('deleteEventById', { eventId });
 		if (res.success) {
+			await clearScheduleDeviceCache();
 			showToast('予約を削除しました');
 			const card = buttonEl.closest('.event-card');
 			if (card) card.remove();
