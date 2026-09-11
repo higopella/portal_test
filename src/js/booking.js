@@ -1,7 +1,6 @@
 initCommonLayout('booking');
 
-let scheduleView = 'week';
-let scheduleAnchorDate = new Date();
+let bookingScheduleController = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
 	if (!await requirePageAuthentication()) return;
@@ -13,15 +12,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 	document.getElementById('form-search').addEventListener('submit', (event) => { event.preventDefault(); handleSearch(); });
 	document.getElementById('book-start-time').addEventListener('change', updateEndTimePreview);
 	document.getElementById('book-duration').addEventListener('change', updateEndTimePreview);
-	document.querySelectorAll('[data-schedule-view]').forEach((button) => {
-		button.addEventListener('click', () => setScheduleView(button.dataset.scheduleView));
-	});
-	document.getElementById('schedule-today')?.addEventListener('click', moveScheduleToToday);
-	document.getElementById('schedule-prev').addEventListener('click', () => moveSchedulePeriod(-1));
-	document.getElementById('schedule-next').addEventListener('click', () => moveSchedulePeriod(1));
-	document.getElementById('btn-refresh-schedule').addEventListener('click', () => loadBookingSchedule(true));
 	updateEndTimePreview();
-	loadBookingSchedule();
+	initializeBookingScheduleCalendar();
 });
 
 function getLocalDateString(date) {
@@ -31,79 +23,20 @@ function getLocalDateString(date) {
 	return `${year}-${month}-${day}`;
 }
 
-function getScheduleRange() {
-	const anchor = new Date(scheduleAnchorDate.getFullYear(), scheduleAnchorDate.getMonth(), scheduleAnchorDate.getDate());
-	if (scheduleView === 'month') {
-		const start = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
-		const end = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0);
-		return { start, end };
-	}
-	const dates = getScheduleCalendarDates(scheduleView, anchor);
-	return { start: dates[0], end: dates[dates.length - 1] };
-}
-
-function setScheduleView(view) {
-	scheduleView = view;
-	const container = document.getElementById('booking-schedule');
-	if (container) container.dataset.scheduleView = view;
-	document.querySelectorAll('[data-schedule-view]').forEach((button) => {
-		button.classList.toggle('active', button.dataset.scheduleView === view);
+async function initializeBookingScheduleCalendar() {
+	const host = document.querySelector('[data-schedule-calendar]');
+	bookingScheduleController = await initScheduleCalendar({
+		host,
+		loadEvents: async (start, end, forceRefresh) => {
+			const result = await callGasApi('getScheduleEvents', {
+				startDate: getLocalDateString(start),
+				endDate: getLocalDateString(end),
+				forceRefresh
+			});
+			return result.success ? result.events : [];
+		},
+		createEventElement: createScheduleEventElement
 	});
-	loadBookingSchedule();
-}
-
-function moveScheduleToToday() {
-	scheduleAnchorDate = new Date();
-	loadBookingSchedule();
-}
-
-function moveSchedulePeriod(direction) {
-	if (scheduleView === 'month') scheduleAnchorDate.setMonth(scheduleAnchorDate.getMonth() + direction);
-	else if (scheduleView === 'day') scheduleAnchorDate.setDate(scheduleAnchorDate.getDate() + direction);
-	else scheduleAnchorDate.setDate(scheduleAnchorDate.getDate() + direction * 7);
-	loadBookingSchedule();
-}
-
-async function loadBookingSchedule(forceRefresh = false) {
-	const container = document.getElementById('booking-schedule');
-	const button = document.getElementById('btn-refresh-schedule');
-	const range = getScheduleRange();
-	const dates = getScheduleCalendarDates(scheduleView, scheduleAnchorDate);
-	const requestRange = scheduleView === 'month'
-		? { start: new Date(scheduleAnchorDate.getFullYear(), scheduleAnchorDate.getMonth(), 1), end: new Date(scheduleAnchorDate.getFullYear(), scheduleAnchorDate.getMonth() + 1, 0) }
-		: { start: dates[0], end: dates[dates.length - 1] };
-	const startDate = getLocalDateString(requestRange.start);
-	const endDate = getLocalDateString(requestRange.end);
-	document.getElementById('schedule-period-label').textContent = scheduleView === 'month'
-		? `${range.start.getFullYear()}年${range.start.getMonth() + 1}月`
-		: scheduleView === 'day'
-			? `${range.start.getMonth() + 1}/${range.start.getDate()}`
-			: `${range.start.getMonth() + 1}/${range.start.getDate()}-${range.end.getMonth() + 1}/${range.end.getDate()}`;
-	container.textContent = '';
-	container.dataset.scheduleView = scheduleView;
-	const loading = document.createElement('div');
-	loading.className = 'schedule-message';
-	loading.textContent = '読み込み中...';
-	container.appendChild(loading);
-
-	if (forceRefresh) button.disabled = true;
-	try {
-		const result = await callGasApi('getScheduleEvents', { startDate, endDate, forceRefresh });
-		renderBookingSchedule(result.success ? result.events : [], dates);
-	} catch (error) {
-		container.textContent = '';
-		const message = document.createElement('div');
-		message.className = 'schedule-message search-message-error';
-		message.textContent = '予定の取得に失敗しました。';
-		container.appendChild(message);
-	} finally {
-		if (forceRefresh) button.disabled = false;
-	}
-}
-
-function renderBookingSchedule(events, dates) {
-	const container = document.getElementById('booking-schedule');
-	renderScheduleCalendar(container, events, dates, scheduleView, createScheduleEventElement, 'schedule');
 }
 
 function createScheduleEventElement(event, isAllDay) {

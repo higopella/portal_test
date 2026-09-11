@@ -310,6 +310,42 @@
   backdrop-filter: blur(8px);
 }
 
+.schedule-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.schedule-view-controls,
+.schedule-navigation {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.schedule-view-controls {
+  order: 2;
+}
+
+.schedule-navigation {
+  order: 3;
+}
+
+.schedule-toolbar > .schedule-today-btn {
+  margin-right: 0;
+  order: 1;
+}
+
+.schedule-toolbar > .schedule-booking-link {
+  order: 5;
+}
+
+.schedule-toolbar > #btn-refresh-schedule {
+  order: 4;
+}
+
 .schedule-view-tab {
   min-width: 72px;
   min-height: 46px;
@@ -379,6 +415,10 @@
 }
 
 @media (max-width: 760px) {
+  .schedule-view-controls {
+    display: none;
+  }
+
   .schedule-calendar {
     padding-bottom: 8px;
   }

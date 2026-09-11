@@ -1,8 +1,7 @@
 initCommonLayout('home');
 
 const GOOGLE_OAUTH_CLIENT_ID = '65097864960-vbe2ukqcoi9mpqc9capgtu9mak6vf4qs.apps.googleusercontent.com';
-let homeScheduleView = 'week';
-let homeScheduleAnchorDate = new Date();
+let homeScheduleController = null;
 
 function renderHomeView() {
 	const loginSec = document.getElementById('login-section');
@@ -14,7 +13,7 @@ function renderHomeView() {
 		mainSec.style.display = 'flex';
 		calcNextMeeting();
 		fetchNotices();
-		fetchHomeSchedule();
+		initializeHomeScheduleCalendar();
 	} else {
 		loginSec.style.display = 'block';
 		mainSec.style.display = 'none';
@@ -32,13 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const refreshScheduleBtn = document.getElementById('btn-refresh-schedule');
 	if (refreshScheduleBtn) refreshScheduleBtn.addEventListener('click', () => refreshHomeSchedule());
-	document.getElementById('home-schedule-today')?.addEventListener('click', moveHomeScheduleToToday);
-	document.querySelectorAll('[data-schedule-view]').forEach((button) => {
-		button.addEventListener('click', () => setHomeScheduleView(button.dataset.scheduleView));
-	});
-	document.getElementById('home-schedule-prev')?.addEventListener('click', () => moveHomeSchedulePeriod(-1));
-	document.getElementById('home-schedule-next')?.addEventListener('click', () => moveHomeSchedulePeriod(1));
-
 	renderHomeView();
 });
 window.addEventListener('pageshow', renderHomeView);
@@ -131,66 +123,27 @@ function getLocalDateString(date) {
 
 async function refreshHomeSchedule() {
 	const button = document.getElementById('btn-refresh-schedule');
-	await withButtonLoading(button, () => fetchHomeSchedule(true), '更新中');
+	await withButtonLoading(button, () => homeScheduleController?.refresh(true), '更新中');
 }
 
-async function fetchHomeSchedule(forceRefresh = false) {
-	const container = document.getElementById('home-schedule');
-	if (!container) return;
-	const dates = getHomeScheduleDates();
-	const requestDates = homeScheduleView === 'month'
-		? [new Date(homeScheduleAnchorDate.getFullYear(), homeScheduleAnchorDate.getMonth(), 1), new Date(homeScheduleAnchorDate.getFullYear(), homeScheduleAnchorDate.getMonth() + 1, 0)]
-		: dates;
-	const startDate = getLocalDateString(requestDates[0]);
-	const endDate = getLocalDateString(requestDates[requestDates.length - 1]);
-	container.textContent = '';
-	const loading = document.createElement('div');
-	loading.className = 'schedule-message';
-	loading.textContent = '読み込み中...';
-	container.appendChild(loading);
-
-	try {
-		const result = await callGasApi('getScheduleEvents', { startDate, endDate, forceRefresh: forceRefresh });
-		renderHomeSchedule(result.success ? result.events : [], dates);
-	} catch (error) {
-		container.textContent = '';
-		const message = document.createElement('div');
-		message.className = 'schedule-message notice-message-error';
-		message.textContent = '予定の取得に失敗しました。';
-		container.appendChild(message);
+async function initializeHomeScheduleCalendar() {
+	if (homeScheduleController) {
+		await homeScheduleController.refresh();
+		return;
 	}
-}
-
-function getHomeScheduleDates() {
-	return getScheduleCalendarDates(homeScheduleView, homeScheduleAnchorDate);
-}
-
-function setHomeScheduleView(view) {
-	homeScheduleView = view;
-	const container = document.getElementById('home-schedule');
-	if (container) container.dataset.scheduleView = view;
-	document.querySelectorAll('[data-schedule-view]').forEach((button) => {
-		button.classList.toggle('active', button.dataset.scheduleView === view);
+	const host = document.querySelector('[data-schedule-calendar]');
+	homeScheduleController = await initScheduleCalendar({
+		host,
+		loadEvents: async (start, end, forceRefresh) => {
+			const result = await callGasApi('getScheduleEvents', {
+				startDate: getLocalDateString(start),
+				endDate: getLocalDateString(end),
+				forceRefresh
+			});
+			return result.success ? result.events : [];
+		},
+		createEventElement: createHomeScheduleEvent
 	});
-	fetchHomeSchedule();
-}
-
-function moveHomeScheduleToToday() {
-	homeScheduleAnchorDate = new Date();
-	fetchHomeSchedule();
-}
-
-function moveHomeSchedulePeriod(direction) {
-	if (homeScheduleView === 'month') homeScheduleAnchorDate.setMonth(homeScheduleAnchorDate.getMonth() + direction);
-	else if (homeScheduleView === 'day') homeScheduleAnchorDate.setDate(homeScheduleAnchorDate.getDate() + direction);
-	else homeScheduleAnchorDate.setDate(homeScheduleAnchorDate.getDate() + direction * 7);
-	fetchHomeSchedule();
-}
-
-function renderHomeSchedule(events, dates) {
-	const container = document.getElementById('home-schedule');
-	renderScheduleCalendar(container, events, dates, homeScheduleView, createHomeScheduleEvent, 'home-schedule');
-	document.getElementById('home-schedule-period-label').textContent = formatSchedulePeriod(homeScheduleView, dates);
 }
 
 function createHomeScheduleEvent(event, isAllDay) {

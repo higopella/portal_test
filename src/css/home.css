@@ -192,32 +192,4 @@
 			.home-calendar > .schedule-toolbar {
 				min-height: 38px;
 			}
-			.home-calendar > .schedule-toolbar .schedule-navigation {
-				margin-left: 228px;
-			}
-			.home-calendar > .schedule-view-tabs {
-				position: absolute;
-				top: 66px;
-				left: 78px;
-				display: inline-flex;
-				height: 34px;
-				margin: 0;
-				padding: 2px;
-				box-shadow: none;
-			}
-			.home-calendar > .schedule-view-tabs .schedule-view-tab {
-				min-width: 48px;
-				min-height: 28px;
-				height: 28px;
-			}
-			.home-schedule[data-schedule-view="day"] .home-schedule-scroll-layout {
-				grid-template-columns: 34px minmax(0, 1fr);
-				width: 100%;
-				min-width: 0;
-			}
-			.home-schedule[data-schedule-view="day"] .home-schedule-grid {
-				width: 100%;
-				min-width: 0;
-				grid-template-columns: minmax(0, 1fr);
-			}
 		}
