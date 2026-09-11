@@ -80,6 +80,50 @@
 			display: block;
 			text-align: center;
 		}
+		.available-time-slots {
+			width: min(100%, 560px);
+			padding: 8px 10px;
+			border: 1px solid var(--border);
+			border-radius: var(--radius);
+			background: var(--primary-light);
+			color: var(--text-sub);
+			font-size: 0.82rem;
+			line-height: 1.5;
+		}
+		.available-time-row {
+			display: grid;
+			grid-template-columns: 64px 1fr;
+			gap: 8px;
+		}
+		.available-time-row + .available-time-row { margin-top: 3px; }
+		.available-time-row span:first-child { font-weight: 700; color: var(--primary-dark); }
+		.duration-presets {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 4px;
+			margin-top: 4px;
+		}
+		.duration-preset {
+			min-height: 30px;
+			padding: 3px 8px;
+			border: 1px solid var(--border);
+			border-radius: var(--radius);
+			background: var(--card);
+			color: var(--text);
+			font-size: 0.78rem;
+			cursor: pointer;
+		}
+		.duration-preset:hover,
+		.duration-preset:focus-visible { border-color: var(--primary); background: var(--primary-light); }
+		.booking-form-error {
+			margin-bottom: 14px;
+			padding: 8px 10px;
+			border: 1px solid var(--danger);
+			border-radius: var(--radius);
+			background: #fff1f2;
+			color: var(--danger);
+			font-size: 0.85rem;
+		}
 		.event-card {
 			display: flex;
 			justify-content: space-between;

@@ -2,14 +2,19 @@ initCommonLayout('booking');
 
 document.addEventListener('DOMContentLoaded', async () => {
 	if (!await requirePageAuthentication()) return;
-	const today = getLocalDateString(new Date());
-	document.getElementById('book-date').value = today;
 	document.getElementById('tab-btn-create').addEventListener('click', () => switchTab('create'));
 	document.getElementById('tab-btn-search').addEventListener('click', () => switchTab('search'));
 	document.getElementById('form-booking').addEventListener('submit', (event) => { event.preventDefault(); handleAddBooking(); });
 	document.getElementById('form-search').addEventListener('submit', (event) => { event.preventDefault(); handleSearch(); });
 	document.getElementById('book-start-time').addEventListener('change', updateEndTimePreview);
 	document.getElementById('book-duration').addEventListener('change', updateEndTimePreview);
+	document.getElementById('book-date').addEventListener('change', loadAvailableTimeSlots);
+	document.querySelectorAll('[data-duration]').forEach((button) => {
+		button.addEventListener('click', () => {
+			document.getElementById('book-duration').value = button.dataset.duration;
+			updateEndTimePreview();
+		});
+	});
 	updateEndTimePreview();
 	initializeBookingScheduleCalendar();
 });
@@ -34,6 +39,12 @@ async function initializeBookingScheduleCalendar() {
 			return result.success ? result.events : [];
 		},
 		createEventElement: createScheduleEventElement
+	});
+	host.querySelector('.schedule-booking-link')?.addEventListener('click', (event) => {
+		event.preventDefault();
+		switchTab('create');
+		document.getElementById('panel-create').scrollIntoView({ behavior: 'smooth', block: 'start' });
+		document.getElementById('book-date').focus({ preventScroll: true });
 	});
 }
 
@@ -71,11 +82,11 @@ function switchTab(tabKey) {
 
 function updateEndTimePreview() {
 	const timeVal = document.getElementById('book-start-time').value;
-	const durationVal = parseInt(document.getElementById('book-duration').value, 10);
+	const durationVal = Number(document.getElementById('book-duration').value);
 	const previewEl = document.getElementById('end-time-preview');
 
-	if (!timeVal) {
-		previewEl.textContent = '開始時刻を選択してください';
+	if (!timeVal || !Number.isInteger(durationVal) || durationVal < 1) {
+		previewEl.textContent = '開始時間と利用分数を入力してください';
 		return;
 	}
 
@@ -90,20 +101,94 @@ function updateEndTimePreview() {
 	previewEl.textContent = `終了予定: ${endHours}:${endMinutes}`;
 }
 
+function showBookingError(message) {
+	let error = document.getElementById('booking-form-error');
+	if (!error) {
+		error = document.createElement('div');
+		error.id = 'booking-form-error';
+		error.className = 'booking-form-error';
+		document.getElementById('form-booking').prepend(error);
+	}
+	error.textContent = message;
+	error.hidden = !message;
+}
+
+function getTimeMinutes(value) {
+	const [hours, minutes] = value.split(':').map(Number);
+	return hours * 60 + minutes;
+}
+
+function formatTimeMinutes(minutes) {
+	return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+}
+
+function buildAvailableSlots(events, room) {
+	const occupied = events
+		.filter((event) => event.room === room && !event.isAllDay)
+		.map((event) => [getTimeMinutes(event.startTime), getTimeMinutes(event.endTime)])
+		.sort((a, b) => a[0] - b[0]);
+	const slots = [];
+	let cursor = 7 * 60;
+	occupied.forEach(([start, end]) => {
+		if (start > cursor) slots.push([cursor, start]);
+		cursor = Math.max(cursor, end);
+	});
+	if (cursor < 21 * 60) slots.push([cursor, 21 * 60]);
+	return slots.map(([start, end]) => `${formatTimeMinutes(start)}〜${formatTimeMinutes(end)}`);
+}
+
+async function loadAvailableTimeSlots() {
+	const date = document.getElementById('book-date').value;
+	const container = document.getElementById('available-time-slots');
+	if (!date) {
+		container.hidden = true;
+		container.textContent = '';
+		return;
+	}
+	container.hidden = false;
+	container.textContent = '空き時間を確認中...';
+	try {
+		const result = await callGasApi('getScheduleEvents', { startDate: date, endDate: date });
+		if (!result.success) throw new Error(result.error);
+		container.textContent = '';
+		['①', '②', '③'].forEach((room) => {
+			const row = document.createElement('div');
+			row.className = 'available-time-row';
+			const label = document.createElement('span');
+			label.textContent = `場所${room}`;
+			const value = document.createElement('span');
+			value.textContent = buildAvailableSlots(result.events || [], room).join('、') || '空きなし';
+			row.append(label, value);
+			container.appendChild(row);
+		});
+	} catch (error) {
+		container.textContent = '空き時間を取得できませんでした';
+	}
+}
+
 async function handleAddBooking() {
 	const date = document.getElementById('book-date').value;
 	const room = document.getElementById('book-room').value;
 	const startTime = document.getElementById('book-start-time').value;
-	const duration = parseInt(document.getElementById('book-duration').value, 10);
+	const duration = Number(document.getElementById('book-duration').value);
 	const bandName = document.getElementById('book-band-name').value.trim();
 	const repName = document.getElementById('book-rep-name').value.trim();
 	const transferStatus = document.getElementById('book-transfer').value;
 	const btn = document.getElementById('btn-submit-booking');
+	showBookingError('');
+	if (!date || !startTime || !room || !bandName || !repName || !transferStatus || !Number.isInteger(duration)) {
+		showBookingError('必須項目を入力してください');
+		return;
+	}
+	if (duration < 1 || duration > 120) {
+		showBookingError('利用分数は1〜120分で入力してください');
+		return;
+	}
 
 	const startDateTime = new Date(`${date.replace(/-/g, '/')} ${startTime}:00`);
 	const now = new Date();
 	if (startDateTime <= now) {
-		showToast('過去の日時は予約できません', 'error');
+		showBookingError('過去の日時は予約できません');
 		return;
 	}
 
@@ -111,7 +196,7 @@ async function handleAddBooking() {
 	maxDate.setMonth(maxDate.getMonth() + 1);
 	maxDate.setHours(23, 59, 59, 999);
 	if (startDateTime > maxDate) {
-		showToast('1ヶ月より先の予約はできません', 'error');
+		showBookingError('1ヶ月より先の予約はできません');
 		return;
 	}
 
@@ -119,7 +204,11 @@ async function handleAddBooking() {
 	const limit18 = new Date(startDateTime);
 	limit18.setHours(18, 0, 0, 0);
 	if (endDateTime > limit18 && duration > 90) {
-		showToast('18:00を超える予約は最大90分までです', 'error');
+		showBookingError('18:00を超える予約は最大90分までです');
+		return;
+	}
+	if (getTimeMinutes(startTime) < 7 * 60 || getTimeMinutes(startTime) + duration > 21 * 60) {
+		showBookingError('予約は7:00〜21:00の範囲で入力してください');
 		return;
 	}
 
@@ -130,10 +219,10 @@ async function handleAddBooking() {
 		if (res.success) {
 			showToast('予約が完了しました');
 			document.getElementById('form-booking').reset();
-			document.getElementById('book-date').value = new Date().toISOString().split('T')[0];
 			updateEndTimePreview();
+			document.getElementById('available-time-slots').hidden = true;
 		} else {
-			showToast(res.error || '予約に失敗しました', 'error');
+			showBookingError(res.error || '予約に失敗しました');
 		}
 	}, '予約中...');
 }
@@ -145,11 +234,6 @@ async function handleSearch() {
 	const resultsContainer = document.getElementById('search-results');
 
 	await withButtonLoading(btn, async () => {
-		resultsContainer.textContent = '';
-		const loading = document.createElement('div');
-		loading.className = 'search-message';
-		loading.textContent = '検索中...';
-		resultsContainer.appendChild(loading);
 		const res = await callGasApi('findEvents', { date, bandName });
 
 		if (!res.success || !res.events || res.events.length === 0) {

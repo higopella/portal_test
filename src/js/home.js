@@ -24,11 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	if (getCurrentIdToken()) setUserLogin(true);
 	initializeGoogleLogin();
 
-	const refreshNoticeBtn = document.getElementById('btn-refresh-notice');
-	if (refreshNoticeBtn) {
-		refreshNoticeBtn.addEventListener('click', refreshNotices);
-	}
-
 	renderHomeView();
 });
 window.addEventListener('pageshow', renderHomeView);
@@ -105,11 +100,6 @@ function calcNextMeeting() {
 		const str = `${targetDate.getMonth() + 1}/${targetDate.getDate()}(火) 18:30〜`;
 		document.getElementById('next-meeting-text').textContent = str;
 	}
-}
-
-async function refreshNotices() {
-	const btn = document.getElementById('btn-refresh-notice');
-	await withButtonLoading(btn, fetchNotices, '更新中');
 }
 
 function getLocalDateString(date) {

@@ -127,8 +127,12 @@ body {
 }
 
 .site-refresh-button {
+  position: absolute;
+  top: 11px;
+  right: 16px;
+  z-index: 1;
+  flex-shrink: 0;
   min-height: 34px;
-  margin-left: auto;
   padding: 4px 12px;
   border: 1px solid var(--primary-dark);
   border-radius: var(--radius);

@@ -20,11 +20,11 @@
     <div class="card">
       <div class="tab-nav">
         <button type="button" class="tab-btn active" id="tab-btn-create">新規予約</button>
-        <button type="button" class="tab-btn" id="tab-btn-search">検索・削除</button>
+        <button type="button" class="tab-btn" id="tab-btn-search">予約削除</button>
       </div>
 
       <!-- 新規予約 -->
-      <section id="panel-create">
+      <section id="panel-create" aria-labelledby="tab-btn-create">
         <form id="form-booking">
           <div class="form-group">
             <label class="form-label" for="book-date">練習日</label>
@@ -32,33 +32,39 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="book-room">練習場所</label>
-            <select id="book-room" class="form-control" required>
-              <option value="①">部室①</option>
-              <option value="②">機材庫②</option>
-              <option value="③">教室③</option>
-            </select>
+            <div id="available-time-slots" class="available-time-slots" hidden></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="book-start-time">開始時間</label>
+            <input type="time" id="book-start-time" class="form-control" step="60" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="end-time-preview">終了時間</label>
+            <div id="end-time-preview" class="end-time-preview">開始時間と利用分数を入力してください</div>
           </div>
 
           <div class="booking-time-grid">
             <div class="form-group">
-              <label class="form-label" for="book-start-time">開始時刻</label>
-              <input type="time" id="book-start-time" class="form-control" required>
+              <label class="form-label" for="book-duration">利用分数</label>
+              <input type="number" id="book-duration" class="form-control" min="1" max="120" step="1" inputmode="numeric" required>
+              <div class="duration-presets" aria-label="利用分数の候補">
+                <button type="button" class="duration-preset" data-duration="30">30分</button>
+                <button type="button" class="duration-preset" data-duration="60">60分</button>
+                <button type="button" class="duration-preset" data-duration="90">90分</button>
+                <button type="button" class="duration-preset" data-duration="120">120分</button>
+              </div>
             </div>
             <div class="form-group">
-              <label class="form-label" for="book-duration">利用分数</label>
-              <select id="book-duration" class="form-control" required>
-                <option value="30">30分</option>
-                <option value="60" selected>60分</option>
-                <option value="90">90分</option>
-                <option value="120">120分</option>
-              </select>
+              <label class="form-label" for="book-room">練習場所</label>
+            <select id="book-room" class="form-control" required>
+              <option value="" selected disabled>選択してください</option>
+              <option value="①">部室①</option>
+              <option value="②">機材庫②</option>
+              <option value="③">教室③</option>
+            </select>
             </div>
-          </div>
-
-          <div class="form-group">
-            <span class="form-label">終了予定時刻</span>
-            <div id="end-time-preview" class="end-time-preview">開始時刻を選択してください</div>
           </div>
 
           <div class="form-group">
@@ -73,23 +79,13 @@
 
           <div class="form-group">
             <label class="form-label" for="book-transfer">譲ります情報</label>
-            <select id="book-transfer" class="form-control">
-              <option value="">-- 選択してください --</option>
+            <select id="book-transfer" class="form-control" required>
+              <option value="" selected disabled>選択してください</option>
               <option value="いつでも">いつでも譲ります</option>
               <option value="前半">前半譲ります</option>
               <option value="後半">後半譲ります</option>
             </select>
           </div>
-
-          <div class="form-group">
-                    <label>譲ります情報</label>
-                    <select id="transferStatus" required>
-                        <option value="" disabled selected>-- 選択してください --</option>
-                        <option value="いつでも譲ります">いつでも譲ります</option>
-                        <option value="前半譲ります">前半譲ります</option>
-                        <option value="後半譲ります">後半譲ります</option>
-                    </select>
-          
 
           <!-- スマホ対応のフルワイド予約ボタン -->
           <button type="submit" id="btn-submit-booking" class="btn btn-primary full-width-booking-button">予約</button>
