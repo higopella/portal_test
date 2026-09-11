@@ -417,17 +417,6 @@
   text-align: center;
 }
 
-.schedule-cache-status {
-  flex: 0 1 auto;
-  max-width: 110px;
-  overflow: hidden;
-  color: var(--text-sub);
-  font-size: 0.68rem;
-  line-height: 1.2;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 @media (max-width: 760px) {
   .schedule-toolbar {
     flex-wrap: nowrap;
@@ -452,10 +441,6 @@
 
   .schedule-toolbar > .schedule-booking-link {
     flex-shrink: 0;
-  }
-
-  .schedule-cache-status {
-    max-width: 72px;
   }
 
   .schedule-view-controls {

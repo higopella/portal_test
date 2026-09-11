@@ -123,7 +123,8 @@ async function initializeHomeScheduleCalendar() {
 				endDate: getLocalDateString(end),
 				forceRefresh
 			});
-			return result.success ? result.events : [];
+			if (!result.success) throw new Error(result.error || '予定の取得に失敗しました');
+			return result.events;
 		},
 		createEventElement: createHomeScheduleEvent
 	});
