@@ -265,7 +265,7 @@
 			right: 0;
 			height: 2px;
 			background: #ef4444;
-			z-index: 9;
+			z-index: 20;
 			pointer-events: none;
 		}
 		.schedule-current-time-label {
