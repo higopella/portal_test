@@ -162,7 +162,9 @@
   top: 50%;
   right: calc(100% + 4px);
   bottom: auto;
+  z-index: 21;
   transform: translateY(-50%);
+  background: #ffffff;
   color: #ef4444;
   font-size: 0.68rem;
   font-weight: 700;
@@ -311,10 +313,15 @@
 }
 
 .schedule-toolbar {
+  position: sticky;
+  top: var(--header-height);
+  z-index: 24;
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 8px;
+  padding: 8px 0;
+  background: var(--card);
   flex-wrap: wrap;
 }
 
@@ -340,10 +347,6 @@
 
 .schedule-toolbar > .schedule-booking-link {
   order: 5;
-}
-
-.schedule-toolbar > #btn-refresh-schedule {
-  order: 4;
 }
 
 .schedule-view-tab {

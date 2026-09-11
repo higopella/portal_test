@@ -77,8 +77,6 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, onRe
     moveScheduleAnchorDate(state, 1);
     refresh();
   });
-  host.querySelector('[data-schedule-action="refresh"]')?.addEventListener("click", () => refresh(true));
-
   await refresh();
   return { refresh, state };
 }

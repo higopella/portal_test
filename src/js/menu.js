@@ -20,6 +20,7 @@ function initCommonLayout(activeKey = "") {
       <a href="${basePath}" class="site-logo">
         <span>Higo-Pella Portal</span>
       </a>
+      <button type="button" class="site-refresh-button" id="btn-site-refresh" aria-label="ページを更新">更新</button>
     </header>
 
     <div class="drawer-overlay" id="drawer-overlay"></div>
@@ -55,6 +56,7 @@ function initCommonLayout(activeKey = "") {
   const closeDrawerBtn = document.getElementById("btn-close-drawer");
   const drawerOverlay = document.getElementById("drawer-overlay");
   const logoutBtn = document.getElementById("btn-drawer-logout");
+  const siteRefreshBtn = document.getElementById("btn-site-refresh");
 
   if (openDrawerBtn) {
     openDrawerBtn.addEventListener("click", () => toggleDrawerMenu(true));
@@ -70,6 +72,9 @@ function initCommonLayout(activeKey = "") {
       e.preventDefault();
       if (confirm("ログアウトしますか？")) logoutUser();
     });
+  }
+  if (siteRefreshBtn) {
+    siteRefreshBtn.addEventListener("click", () => window.location.reload());
   }
 
   document.addEventListener("keydown", (e) => {

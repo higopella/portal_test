@@ -29,8 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		refreshNoticeBtn.addEventListener('click', refreshNotices);
 	}
 
-	const refreshScheduleBtn = document.getElementById('btn-refresh-schedule');
-	if (refreshScheduleBtn) refreshScheduleBtn.addEventListener('click', () => refreshHomeSchedule());
 	renderHomeView();
 });
 window.addEventListener('pageshow', renderHomeView);
@@ -119,11 +117,6 @@ function getLocalDateString(date) {
 	const month = String(date.getMonth() + 1).padStart(2, '0');
 	const day = String(date.getDate()).padStart(2, '0');
 	return `${year}-${month}-${day}`;
-}
-
-async function refreshHomeSchedule() {
-	const button = document.getElementById('btn-refresh-schedule');
-	await withButtonLoading(button, () => homeScheduleController?.refresh(true), '更新中');
 }
 
 async function initializeHomeScheduleCalendar() {

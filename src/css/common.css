@@ -126,6 +126,24 @@ body {
   align-items: center;
 }
 
+.site-refresh-button {
+  min-height: 34px;
+  margin-left: auto;
+  padding: 4px 12px;
+  border: 1px solid var(--primary-dark);
+  border-radius: var(--radius);
+  background: var(--primary);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.site-refresh-button:hover,
+.site-refresh-button:focus-visible {
+  background: var(--primary-dark);
+}
+
 .btn-menu {
   background: none;
   border: none;

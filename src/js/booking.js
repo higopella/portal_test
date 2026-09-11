@@ -1,7 +1,5 @@
 initCommonLayout('booking');
 
-let bookingScheduleController = null;
-
 document.addEventListener('DOMContentLoaded', async () => {
 	if (!await requirePageAuthentication()) return;
 	const today = getLocalDateString(new Date());
@@ -25,7 +23,7 @@ function getLocalDateString(date) {
 
 async function initializeBookingScheduleCalendar() {
 	const host = document.querySelector('[data-schedule-calendar]');
-	bookingScheduleController = await initScheduleCalendar({
+	await initScheduleCalendar({
 		host,
 		loadEvents: async (start, end, forceRefresh) => {
 			const result = await callGasApi('getScheduleEvents', {
