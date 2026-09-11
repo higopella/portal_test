@@ -149,6 +149,11 @@
 			.booking-layout > .schedule-card {
 				display: flex;
 				flex-direction: column;
+				padding-top: 0;
+			}
+			.booking-layout > .schedule-card .schedule-toolbar {
+				top: 0;
+				padding-top: 0;
 			}
 			.booking-layout > .schedule-card [data-schedule-calendar],
 			.booking-layout > .schedule-card .schedule-calendar {
