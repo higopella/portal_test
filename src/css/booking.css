@@ -130,3 +130,35 @@
 		.search-message { text-align: center; color: var(--text-sub); padding: 10px; }
 		.search-message-error { color: var(--danger); }
 		.delete-booking-button { min-height: 36px; padding: 4px 12px; font-size: 0.85rem; }
+		@media (min-width: 761px) {
+			.booking-layout {
+				display: grid;
+				width: min(100%, 1440px);
+				max-width: 1440px;
+				height: calc(100vh - var(--header-height));
+				grid-template-columns: minmax(0, 1.45fr) minmax(340px, 0.85fr);
+				align-items: stretch;
+				overflow: hidden;
+			}
+			.booking-layout > .schedule-card,
+			.booking-layout > .booking-form-card {
+				min-width: 0;
+				min-height: 0;
+				overflow: auto;
+			}
+			.booking-layout > .schedule-card {
+				display: flex;
+				flex-direction: column;
+			}
+			.booking-layout > .schedule-card [data-schedule-calendar],
+			.booking-layout > .schedule-card .schedule-calendar {
+				min-height: 0;
+			}
+			.booking-layout > .schedule-card [data-schedule-container] {
+				max-height: none;
+				height: calc(100vh - var(--header-height) - 64px);
+			}
+			.booking-layout > .booking-form-card {
+				overflow-y: auto;
+			}
+		}
