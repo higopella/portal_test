@@ -77,6 +77,7 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, onRe
     const windowStart = getScheduleDateString(cacheWindow.start);
     const windowEnd = getScheduleDateString(cacheWindow.end);
     const hasCachedEvents = cached && cached.version === SCHEDULE_DEVICE_CACHE_VERSION &&
+      Array.isArray(cached.events) &&
       cached.windowStart === windowStart && cached.windowEnd === windowEnd;
     if (requestId !== latestRequestId) return;
     if (hasCachedEvents) {
