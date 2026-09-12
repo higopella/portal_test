@@ -1,7 +1,7 @@
 initCommonLayout('home');
 
 const GOOGLE_OAUTH_CLIENT_ID = '65097864960-vbe2ukqcoi9mpqc9capgtu9mak6vf4qs.apps.googleusercontent.com';
-let homeScheduleController = null;
+let homeScheduleControllers = [];
 let noticeRequestId = 0;
 
 function renderHomeView() {
@@ -16,9 +16,10 @@ function renderHomeView() {
 		fetchNotices();
 		initializeHomeScheduleCalendar();
 	} else if (!getCurrentIdToken()) {
-		loginSec.style.display = 'block';
+		loginSec.style.display = 'flex';
 		mainSec.style.display = 'none';
 		setLoginStatus('Googleログインをお待ちください。');
+		initializeHomeScheduleCalendar();
 	}
 }
 
@@ -143,24 +144,26 @@ function getLocalDateString(date) {
 }
 
 async function initializeHomeScheduleCalendar() {
-	if (homeScheduleController) {
-		await homeScheduleController.refresh();
+	if (homeScheduleControllers.length > 0) {
+		await Promise.all(homeScheduleControllers.map(c => c ? c.refresh() : null));
 		return;
 	}
-	const host = document.querySelector('[data-schedule-calendar]');
-	homeScheduleController = await initScheduleCalendar({
-		host,
-		loadEvents: async (start, end, forceRefresh) => {
-			const result = await callGasApi('getScheduleEvents', {
-				startDate: getLocalDateString(start),
-				endDate: getLocalDateString(end),
-				forceRefresh
-			});
-			if (!result.success) throw new Error(result.error || '予定の取得に失敗しました');
-			return result.events;
-		},
-		createEventElement: createHomeScheduleEvent
-	});
+	const hosts = document.querySelectorAll('[data-schedule-calendar]');
+	homeScheduleControllers = await Promise.all(
+		Array.from(hosts).map(host => initScheduleCalendar({
+			host,
+			loadEvents: async (start, end, forceRefresh) => {
+				const result = await callGasApi('getScheduleEvents', {
+					startDate: getLocalDateString(start),
+					endDate: getLocalDateString(end),
+					forceRefresh
+				});
+				if (!result.success) throw new Error(result.error || '予定の取得に失敗しました');
+				return result.events;
+			},
+			createEventElement: createHomeScheduleEvent
+		}))
+	);
 }
 
 function createHomeScheduleEvent(event, isAllDay) {

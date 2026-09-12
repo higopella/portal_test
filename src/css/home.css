@@ -3,11 +3,13 @@
 			padding: 12px 14px;
 			gap: 10px;
 		}
-		.home-content-grid {
+		.home-content-grid,
+		.login-content-grid {
 			display: grid;
 			grid-template-columns: minmax(260px, 0.6fr) minmax(460px, 1.4fr);
 			gap: 10px;
 			align-items: start;
+			width: 100%;
 		}
 		.card {
 			padding: 14px;
@@ -81,7 +83,7 @@
 		.notice-body .highlight { color: var(--primary-dark, #0288d1); font-weight: bold; }
 		.login-container {
 			max-width: 360px;
-			margin: 40px auto 20px;
+			margin: 0 auto;
 			width: 100%;
 			text-align: center;
 		}
@@ -146,7 +148,8 @@
 		.notice-message-loading { text-align: center; padding: 14px; }
 		.notice-message-error { color: var(--danger); }
 		@media (max-width: 760px) {
-			.home-content-grid {
+			.home-content-grid,
+			.login-content-grid {
 				grid-template-columns: 1fr;
 				gap: 10px;
 			}
