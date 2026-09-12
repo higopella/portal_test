@@ -171,7 +171,7 @@ async function fetchLogs() {
 			tbody.textContent = '';
 			const row = document.createElement('tr');
 			const cell = document.createElement('td');
-			cell.colSpan = 7;
+			cell.colSpan = 8;
 			cell.className = 'table-message';
 			cell.textContent = 'ログはありません';
 			row.appendChild(cell);
@@ -182,7 +182,7 @@ async function fetchLogs() {
 		tbody.textContent = '';
 		res.logs.forEach((rowData) => {
 			const row = document.createElement('tr');
-			for (let i = 0; i < 7; i += 1) {
+			for (let i = 0; i < 8; i += 1) {
 				const cell = document.createElement('td');
 				cell.textContent = rowData[i] ?? '';
 				row.appendChild(cell);
@@ -193,7 +193,7 @@ async function fetchLogs() {
 		tbody.textContent = '';
 		const row = document.createElement('tr');
 		const cell = document.createElement('td');
-		cell.colSpan = 7;
+		cell.colSpan = 8;
 		cell.className = 'table-message table-message-error';
 		cell.textContent = '取得失敗';
 		row.appendChild(cell);
