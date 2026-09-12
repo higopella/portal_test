@@ -13,7 +13,7 @@ function getScheduleBookingUrl() {
 async function initScheduleCalendar({ host, loadEvents, createEventElement, defaultView = "week", onRendered }) {
   if (!host) return null;
   const templateResponse = await fetch(getScheduleTemplateUrl(), { cache: "no-cache" });
-  if (!templateResponse.ok) throw new Error("カレンダーテンプレートを読み込めませんでした");
+  if (!templateResponse.ok) throw new Error("カレンダーテンプレートを読み込めませんでした。再読み込みしてください");
   host.innerHTML = await templateResponse.text();
 
   const container = host.querySelector("[data-schedule-container]");
