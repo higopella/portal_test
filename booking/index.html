@@ -18,8 +18,13 @@
     </section>
 
     <div class="card booking-form-card">
+      <div class="tab-nav">
+        <button type="button" class="tab-btn active" id="tab-btn-create">新規予約</button>
+        <button type="button" class="tab-btn" id="tab-btn-search">予約削除</button>
+      </div>
+
       <!-- 新規予約 -->
-      <section id="panel-create">
+      <section id="panel-create" aria-labelledby="tab-btn-create">
         <form id="form-booking">
           <div class="form-group">
             <label class="form-label" for="book-date">練習日</label>
@@ -85,6 +90,23 @@
           <!-- スマホ対応のフルワイド予約ボタン -->
           <button type="submit" id="btn-submit-booking" class="btn btn-primary full-width-booking-button">予約</button>
         </form>
+      </section>
+
+      <!-- 検索・削除 -->
+      <section id="panel-search" class="search-panel-hidden">
+        <form id="form-search" class="search-form">
+          <div class="form-group">
+            <label class="form-label" for="search-date">練習日</label>
+            <input type="date" id="search-date" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="search-band-name">バンド名</label>
+            <input type="text" id="search-band-name" class="form-control" placeholder="バンド名で絞り込み">
+          </div>
+          <button type="submit" id="btn-search-booking" class="btn btn-primary full-width-search-button">検索</button>
+        </form>
+
+        <div id="search-results"></div>
       </section>
     </div>
 

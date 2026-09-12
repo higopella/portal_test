@@ -7,6 +7,29 @@
 			padding: 20px;
 		}
 		.schedule-card { padding: 16px; }
+		.tab-nav {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 8px;
+			margin-bottom: 16px;
+			scroll-margin-top: calc(var(--header-height) + 8px);
+		}
+		.tab-btn {
+			height: 44px;
+			background-color: var(--bg);
+			border: 1px solid var(--border);
+			font-size: 0.95rem;
+			font-weight: bold;
+			color: var(--text-sub);
+			cursor: pointer;
+			border-radius: var(--radius);
+			touch-action: manipulation;
+		}
+		.tab-btn.active {
+			background-color: var(--primary-light);
+			border-color: var(--primary);
+			color: var(--primary-dark);
+		}
 		#panel-create {
 			scroll-margin-top: calc(var(--header-height) + 8px);
 		}
@@ -103,6 +126,12 @@
 		.event-time { font-size: 0.85rem; color: var(--text-sub); }
 		.booking-time-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 		.full-width-booking-button { width: 100%; margin-top: 8px; }
+		.search-panel-hidden { display: none; }
+		.search-form { margin-bottom: 20px; }
+		.full-width-search-button { width: 100%; }
+		.search-message { text-align: center; color: var(--text-sub); padding: 10px; }
+		.search-message-error { color: var(--danger); }
+		.delete-booking-button { min-height: 36px; padding: 4px 12px; font-size: 0.85rem; }
 		.calendar-heading { margin-bottom: 12px; font-size: 1rem; color: var(--primary-dark); }
 		.calendar-frame { border: 0; width: 100%; min-width: 650px; height: 500px; }
 		@media (min-width: 761px) {

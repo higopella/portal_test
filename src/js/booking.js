@@ -9,7 +9,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const isAuthenticated = await requirePageAuthentication();
 	resolveAuthentication(isAuthenticated);
 	if (!isAuthenticated) return;
+	document.getElementById('tab-btn-create').addEventListener('click', () => switchTab('create'));
+	document.getElementById('tab-btn-search').addEventListener('click', () => switchTab('search'));
 	document.getElementById('form-booking').addEventListener('submit', (event) => { event.preventDefault(); handleAddBooking(); });
+	document.getElementById('form-search').addEventListener('submit', (event) => { event.preventDefault(); handleSearch(); });
 	document.getElementById('book-start-time').addEventListener('change', updateEndTimePreview);
 	document.getElementById('book-duration').addEventListener('change', updateEndTimePreview);
 	document.getElementById('book-start-time').addEventListener('input', validateBookingInputs);
@@ -53,9 +56,12 @@ async function initializeBookingScheduleCalendar(authenticationReady) {
 	});
 	host.querySelector('.schedule-booking-link')?.addEventListener('click', (event) => {
 		event.preventDefault();
+		switchTab('create');
 		const panel = document.getElementById('panel-create');
+		const tabNav = document.querySelector('.booking-form-card .tab-nav');
+		const target = window.matchMedia('(max-width: 760px)').matches && tabNav ? tabNav : panel;
 		const headerHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-height'), 10) || 0;
-		const targetTop = panel.getBoundingClientRect().top + window.scrollY - headerHeight - 8;
+		const targetTop = target.getBoundingClientRect().top + window.scrollY - headerHeight - 8;
 		window.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
 	});
 }
@@ -82,6 +88,14 @@ function getScheduleRoomClass(room) {
 	if (room === '③') return 'schedule-event-classroom';
 	if (room === 'メイン') return 'schedule-event-main';
 	return 'schedule-event-clubroom';
+}
+
+function switchTab(tabKey) {
+	const isCreate = tabKey === 'create';
+	document.getElementById('panel-create').style.display = isCreate ? 'block' : 'none';
+	document.getElementById('panel-search').style.display = isCreate ? 'none' : 'block';
+	document.getElementById('tab-btn-create').classList.toggle('active', isCreate);
+	document.getElementById('tab-btn-search').classList.toggle('active', !isCreate);
 }
 
 function updateEndTimePreview() {
@@ -264,4 +278,63 @@ async function handleAddBooking() {
 			showBookingError(res.error || '予約に失敗しました');
 		}
 	}, '予約中...');
+}
+
+async function handleSearch() {
+	const date = document.getElementById('search-date').value;
+	const bandName = document.getElementById('search-band-name').value.trim();
+	const btn = document.getElementById('btn-search-booking');
+	const resultsContainer = document.getElementById('search-results');
+
+	await withButtonLoading(btn, async () => {
+		const res = await callGasApi('findEvents', { date, bandName });
+
+		if (!res.success || !res.events || res.events.length === 0) {
+			resultsContainer.textContent = '';
+			const empty = document.createElement('div');
+			empty.className = 'search-message';
+			empty.textContent = '該当する予約が見つかりません';
+			resultsContainer.appendChild(empty);
+			return;
+		}
+
+		resultsContainer.textContent = '';
+		res.events.forEach((ev) => {
+			const card = document.createElement('div');
+			card.className = 'event-card';
+			const info = document.createElement('div');
+			const title = document.createElement('div');
+			title.className = 'event-title';
+			title.textContent = ev.title;
+			const time = document.createElement('div');
+			time.className = 'event-time';
+			time.textContent = `${ev.startStr} (${ev.duration}分)`;
+			const deleteBtn = document.createElement('button');
+			deleteBtn.type = 'button';
+			deleteBtn.className = 'btn btn-danger delete-booking-button';
+			deleteBtn.textContent = '削除';
+			deleteBtn.addEventListener('click', () => handleDeleteBooking(ev.id, deleteBtn));
+			info.appendChild(title);
+			info.appendChild(time);
+			card.appendChild(info);
+			card.appendChild(deleteBtn);
+			resultsContainer.appendChild(card);
+		});
+	}, '検索中...');
+}
+
+async function handleDeleteBooking(eventId, buttonEl) {
+	if (!confirm('本当にこの予約を削除しますか？')) return;
+
+	await withButtonLoading(buttonEl, async () => {
+		const res = await callGasApi('deleteEventById', { eventId });
+		if (res.success) {
+			await clearScheduleDeviceCache();
+			showToast('予約を削除しました');
+			const card = buttonEl.closest('.event-card');
+			if (card) card.remove();
+		} else {
+			showToast(res.error || '削除に失敗しました', 'error');
+		}
+	}, '削除中...');
 }
