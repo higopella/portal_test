@@ -1,7 +1,14 @@
 initCommonLayout('booking');
 
 document.addEventListener('DOMContentLoaded', async () => {
-	if (!await requirePageAuthentication()) return;
+	let resolveAuthentication;
+	const authenticationReady = new Promise((resolve) => {
+		resolveAuthentication = resolve;
+	});
+	const calendarReady = initializeBookingScheduleCalendar(authenticationReady);
+	const isAuthenticated = await requirePageAuthentication();
+	resolveAuthentication(isAuthenticated);
+	if (!isAuthenticated) return;
 	document.getElementById('tab-btn-create').addEventListener('click', () => switchTab('create'));
 	document.getElementById('tab-btn-search').addEventListener('click', () => switchTab('search'));
 	document.getElementById('form-booking').addEventListener('submit', (event) => { event.preventDefault(); handleAddBooking(); });
@@ -21,7 +28,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 		});
 	});
 	updateEndTimePreview();
-	initializeBookingScheduleCalendar();
+	await calendarReady;
 });
 
 function getLocalDateString(date) {
@@ -31,11 +38,12 @@ function getLocalDateString(date) {
 	return `${year}-${month}-${day}`;
 }
 
-async function initializeBookingScheduleCalendar() {
+async function initializeBookingScheduleCalendar(authenticationReady) {
 	const host = document.querySelector('[data-schedule-calendar]');
 	await initScheduleCalendar({
 		host,
 		loadEvents: async (start, end, forceRefresh) => {
+			if (!await authenticationReady) throw new Error('認証が必要です');
 			const result = await callGasApi('getScheduleEvents', {
 				startDate: getLocalDateString(start),
 				endDate: getLocalDateString(end),
