@@ -76,6 +76,7 @@ function initCommonLayout(activeKey = "") {
   if (siteRefreshBtn) {
     siteRefreshBtn.addEventListener("click", async () => {
       await clearScheduleDeviceCache();
+      if (typeof clearNoticeDeviceCache === "function") await clearNoticeDeviceCache();
       window.location.reload();
     });
   }

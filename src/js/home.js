@@ -2,6 +2,7 @@ initCommonLayout('home');
 
 const GOOGLE_OAUTH_CLIENT_ID = '65097864960-vbe2ukqcoi9mpqc9capgtu9mak6vf4qs.apps.googleusercontent.com';
 let homeScheduleController = null;
+let noticeRequestId = 0;
 
 function renderHomeView() {
 	const loginSec = document.getElementById('login-section');
@@ -175,19 +176,39 @@ function renderNoticeText(text) {
 
 async function fetchNotices() {
 	const container = document.getElementById('notice-container');
+	const requestId = ++noticeRequestId;
+	const cached = await readNoticeDeviceCache();
+	if (requestId !== noticeRequestId) return;
+	if (cached && cached.version === NOTICE_DEVICE_CACHE_VERSION && Array.isArray(cached.notices)) {
+		renderNotices(cached.notices, container);
+	}
 	try {
-		const res = await callGasApi('getNotice');
-		if (!res.success || !res.notices || res.notices.length === 0) {
-			container.textContent = '';
-			const empty = document.createElement('div');
-			empty.className = 'notice-message';
-			empty.textContent = '現在お知らせはありません。';
-			container.appendChild(empty);
-			return;
-		}
-
+		const res = await withNoticeRefreshTimeout(callGasApi('getNotice'));
+		if (requestId !== noticeRequestId) return;
+		if (!res.success) throw new Error(res.error || 'お知らせの取得に失敗しました');
+		await writeNoticeDeviceCache(res.notices || []);
+		renderNotices(res.notices || [], container);
+	} catch (e) {
+		if (requestId !== noticeRequestId) return;
+		if (cached && cached.version === NOTICE_DEVICE_CACHE_VERSION) return;
 		container.textContent = '';
-		res.notices.forEach((item) => {
+		const error = document.createElement('div');
+		error.className = 'notice-message notice-message-error';
+		error.textContent = 'お知らせの取得に失敗しました。再読み込みしてください。';
+		container.appendChild(error);
+	}
+}
+
+function renderNotices(notices, container) {
+	container.textContent = '';
+	if (notices.length === 0) {
+		const empty = document.createElement('div');
+		empty.className = 'notice-message';
+		empty.textContent = '現在お知らせはありません。';
+		container.appendChild(empty);
+		return;
+	}
+	notices.forEach((item) => {
 			const notice = document.createElement('div');
 			notice.className = `notice-item${item.isPinned ? ' is-pinned' : ''}`;
 			const header = document.createElement('div');
@@ -205,12 +226,5 @@ async function fetchNotices() {
 			notice.appendChild(header);
 			notice.appendChild(body);
 			container.appendChild(notice);
-		});
-	} catch (e) {
-		container.textContent = '';
-		const error = document.createElement('div');
-		error.className = 'notice-message notice-message-error';
-		error.textContent = 'お知らせの取得に失敗しました。再読み込みしてください。';
-		container.appendChild(error);
-	}
+	});
 }

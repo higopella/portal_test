@@ -70,6 +70,7 @@ async function handleAddNotice() {
 	await withButtonLoading(btn, async () => {
 		const res = await callGasApi('updateNotice', { text, isPinned });
 		if (res.success) {
+			await clearNoticeDeviceCache();
 			showToast('お知らせを追加しました');
 			document.getElementById('form-add-notice').reset();
 			fetchAdminNotices();
@@ -139,6 +140,7 @@ async function handleTogglePin(timeStr, btn) {
 	await withButtonLoading(btn, async () => {
 		const res = await callGasApi('toggleNoticePin', { time: timeStr });
 		if (res.success) {
+			await clearNoticeDeviceCache();
 			showToast('固定状態を切り替えました');
 			fetchAdminNotices();
 		} else {
@@ -152,6 +154,7 @@ async function handleDeleteNotice(timeStr, btn) {
 	await withButtonLoading(btn, async () => {
 		const res = await callGasApi('deleteNotice', { time: timeStr });
 		if (res.success) {
+			await clearNoticeDeviceCache();
 			showToast('削除しました');
 			fetchAdminNotices();
 		} else {
