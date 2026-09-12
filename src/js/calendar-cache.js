@@ -1,7 +1,7 @@
 const SCHEDULE_DEVICE_CACHE_DB = "higo-pella-schedule";
 const SCHEDULE_DEVICE_CACHE_STORE = "snapshots";
-const SCHEDULE_DEVICE_CACHE_KEY = "current-window";
-const SCHEDULE_DEVICE_CACHE_VERSION = 3;
+const SCHEDULE_DEVICE_CACHE_KEY_PREFIX = "range:";
+const SCHEDULE_DEVICE_CACHE_VERSION = 4;
 const SCHEDULE_REFRESH_TIMEOUT_MS = 10000;
 
 function openScheduleDeviceCache() {
@@ -15,13 +15,13 @@ function openScheduleDeviceCache() {
   });
 }
 
-async function readScheduleDeviceCache() {
+async function readScheduleDeviceCache(cacheKey) {
   try {
     const database = await openScheduleDeviceCache();
     return await new Promise((resolve, reject) => {
       const request = database.transaction(SCHEDULE_DEVICE_CACHE_STORE, "readonly")
         .objectStore(SCHEDULE_DEVICE_CACHE_STORE)
-        .get(SCHEDULE_DEVICE_CACHE_KEY);
+        .get(`${SCHEDULE_DEVICE_CACHE_KEY_PREFIX}${cacheKey}`);
       request.onsuccess = () => resolve(request.result || null);
       request.onerror = () => reject(request.error);
     });
@@ -31,12 +31,15 @@ async function readScheduleDeviceCache() {
   }
 }
 
-async function writeScheduleDeviceCache(record) {
+async function writeScheduleDeviceCache(cacheKey, record) {
   try {
     const database = await openScheduleDeviceCache();
     await new Promise((resolve, reject) => {
       const transaction = database.transaction(SCHEDULE_DEVICE_CACHE_STORE, "readwrite");
-      transaction.objectStore(SCHEDULE_DEVICE_CACHE_STORE).put(record, SCHEDULE_DEVICE_CACHE_KEY);
+      transaction.objectStore(SCHEDULE_DEVICE_CACHE_STORE).put(
+        record,
+        `${SCHEDULE_DEVICE_CACHE_KEY_PREFIX}${cacheKey}`
+      );
       transaction.oncomplete = resolve;
       transaction.onerror = () => reject(transaction.error);
     });
@@ -50,7 +53,7 @@ async function clearScheduleDeviceCache() {
     const database = await openScheduleDeviceCache();
     await new Promise((resolve, reject) => {
       const transaction = database.transaction(SCHEDULE_DEVICE_CACHE_STORE, "readwrite");
-      transaction.objectStore(SCHEDULE_DEVICE_CACHE_STORE).delete(SCHEDULE_DEVICE_CACHE_KEY);
+      transaction.objectStore(SCHEDULE_DEVICE_CACHE_STORE).clear();
       transaction.oncomplete = resolve;
       transaction.onerror = () => reject(transaction.error);
     });

@@ -55,6 +55,7 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, onRe
   if (bookingLink) bookingLink.href = getScheduleBookingUrl();
 
   const state = { view: "week", anchorDate: new Date() };
+  let latestRequestId = 0;
   const getDates = () => getScheduleCalendarDates(state.view, state.anchorDate);
   const getRequestRange = () => {
     if (state.view === "month") {
@@ -83,13 +84,16 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, onRe
   };
 
   async function refresh(forceRefresh = false) {
+    const requestId = ++latestRequestId;
     const dates = getDates();
     const range = getRequestRange();
     const fetchRange = getScheduleDeviceCacheRange(range);
-    const cached = forceRefresh ? null : await readScheduleDeviceCache();
+    const rangeKey = `${getScheduleDateString(range.start)}:${getScheduleDateString(range.end)}`;
+    const cached = forceRefresh ? null : await readScheduleDeviceCache(rangeKey);
     const hasCachedEvents = cached && cached.version === SCHEDULE_DEVICE_CACHE_VERSION &&
-      cached.startDate <= getScheduleDateString(fetchRange.start) &&
-      cached.endDate >= getScheduleDateString(fetchRange.end);
+      cached.startDate === getScheduleDateString(range.start) &&
+      cached.endDate === getScheduleDateString(range.end);
+    if (requestId !== latestRequestId) return;
     if (hasCachedEvents) {
       renderEvents(cached.events, dates);
     } else {
@@ -105,8 +109,9 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, onRe
       : loadScheduleRangeInChunks(loadEvents, range.start, range.end, true);
     try {
       const events = await withScheduleRefreshTimeout(networkPromise);
+      if (requestId !== latestRequestId) return;
       renderEvents(events || [], dates);
-      await writeScheduleDeviceCache({
+      await writeScheduleDeviceCache(rangeKey, {
         version: SCHEDULE_DEVICE_CACHE_VERSION,
         startDate: getScheduleDateString(range.start),
         endDate: getScheduleDateString(range.end),
@@ -116,16 +121,20 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, onRe
 
       if (fetchRange.start.getTime() !== range.start.getTime() || fetchRange.end.getTime() !== range.end.getTime()) {
         loadScheduleRangeInChunks(loadEvents, fetchRange.start, fetchRange.end, true)
-          .then((cachedEvents) => writeScheduleDeviceCache({
+          .then((cachedEvents) => writeScheduleDeviceCache(
+            `${getScheduleDateString(fetchRange.start)}:${getScheduleDateString(fetchRange.end)}`,
+            {
             version: SCHEDULE_DEVICE_CACHE_VERSION,
             startDate: getScheduleDateString(fetchRange.start),
             endDate: getScheduleDateString(fetchRange.end),
             fetchedAt: Date.now(),
             events: cachedEvents
-          }))
+            }
+          ))
           .catch((error) => console.warn("[カレンダー拡張キャッシュ取得失敗]", error));
       }
     } catch (error) {
+      if (requestId !== latestRequestId) return;
       if (!hasCachedEvents) {
         container.textContent = "";
         const message = document.createElement("div");
