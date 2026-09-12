@@ -77,8 +77,7 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, onRe
     const windowStart = getScheduleDateString(cacheWindow.start);
     const windowEnd = getScheduleDateString(cacheWindow.end);
     const hasCachedEvents = cached && cached.version === SCHEDULE_DEVICE_CACHE_VERSION &&
-      Array.isArray(cached.events) &&
-      cached.windowStart === windowStart && cached.windowEnd === windowEnd;
+      Array.isArray(cached.events);
     if (requestId !== latestRequestId) return;
     if (hasCachedEvents) {
       renderEvents(cached.events, dates);
@@ -89,15 +88,12 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, onRe
       loading.textContent = "読み込み中...";
       container.appendChild(loading);
     }
-    const networkRange = hasCachedEvents ? range : cacheWindow;
-    const networkPromise = loadEvents(networkRange.start, networkRange.end, true);
+    const networkPromise = loadEvents(range.start, range.end, true);
     try {
-      const events = await withScheduleRefreshTimeout(networkPromise);
+      const activeEvents = await withScheduleRefreshTimeout(networkPromise);
       if (requestId !== latestRequestId) return;
-      const allEvents = hasCachedEvents && networkRange !== cacheWindow
-        ? mergeScheduleEvents(cached.events, events)
-        : events || [];
-      renderEvents(allEvents, dates);
+      const mergedEvents = mergeScheduleEvents(cached?.events || [], activeEvents);
+      renderEvents(mergedEvents, dates);
       await writeScheduleDeviceCache({
         version: SCHEDULE_DEVICE_CACHE_VERSION,
         sessionId: cacheSessionId,
@@ -105,8 +101,28 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, onRe
         windowStart,
         windowEnd,
         fetchedAt: Date.now(),
-        events: allEvents
+        events: mergedEvents
       });
+
+      const isWindowCached = cached && cached.windowStart === windowStart && cached.windowEnd === windowEnd;
+      if (!isWindowCached && !forceRefresh) {
+        loadEvents(cacheWindow.start, cacheWindow.end, true)
+          .then(async (windowEvents) => {
+            if (requestId !== latestRequestId) return;
+            const fullMerged = mergeScheduleEvents(mergedEvents, windowEvents);
+            await writeScheduleDeviceCache({
+              version: SCHEDULE_DEVICE_CACHE_VERSION,
+              sessionId: cacheSessionId,
+              requestId,
+              windowStart,
+              windowEnd,
+              fetchedAt: Date.now(),
+              events: fullMerged
+            });
+            renderEvents(fullMerged, dates);
+          })
+          .catch((err) => console.warn("[カレンダー背景先読み情報]", err));
+      }
     } catch (error) {
       if (requestId !== latestRequestId) return;
       if (!hasCachedEvents) {
