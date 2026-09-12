@@ -28,16 +28,23 @@ async function readNoticeDeviceCache() {
   }
 }
 
-async function writeNoticeDeviceCache(notices) {
+async function writeNoticeDeviceCache(notices, requestId) {
   try {
     const database = await openNoticeDeviceCache();
     await new Promise((resolve, reject) => {
       const transaction = database.transaction(NOTICE_DEVICE_CACHE_STORE, "readwrite");
-      transaction.objectStore(NOTICE_DEVICE_CACHE_STORE).put({
-        version: NOTICE_DEVICE_CACHE_VERSION,
-        fetchedAt: Date.now(),
-        notices
-      }, NOTICE_DEVICE_CACHE_KEY);
+      const store = transaction.objectStore(NOTICE_DEVICE_CACHE_STORE);
+      const getRequest = store.get(NOTICE_DEVICE_CACHE_KEY);
+      getRequest.onsuccess = () => {
+        const current = getRequest.result;
+        if (current && current.requestId > requestId) return;
+        store.put({
+          version: NOTICE_DEVICE_CACHE_VERSION,
+          fetchedAt: Date.now(),
+          requestId,
+          notices
+        }, NOTICE_DEVICE_CACHE_KEY);
+      };
       transaction.oncomplete = resolve;
       transaction.onerror = () => reject(transaction.error);
     });

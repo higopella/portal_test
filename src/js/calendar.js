@@ -1,5 +1,4 @@
 const SCHEDULE_TEMPLATE_URL = "src/calendar.html";
-const SCHEDULE_CACHE_PAST_DAYS = 0;
 const SCHEDULE_CACHE_FUTURE_DAYS = 30;
 
 function getScheduleTemplateUrl() {
@@ -9,38 +8,6 @@ function getScheduleTemplateUrl() {
 
 function getScheduleBookingUrl() {
   return window.location.pathname.includes("/booking/") ? "#" : "booking/";
-}
-
-function getScheduleDeviceCacheRange(range) {
-  const today = new Date();
-  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  start.setDate(start.getDate() - SCHEDULE_CACHE_PAST_DAYS);
-  const end = new Date(start);
-  end.setDate(end.getDate() + SCHEDULE_CACHE_PAST_DAYS + SCHEDULE_CACHE_FUTURE_DAYS);
-  if (range.end >= start && range.start <= end) return { start, end };
-  return range;
-}
-
-async function loadScheduleRangeInChunks(loadEvents, start, end, forceRefresh) {
-  const chunks = [];
-  let cursor = new Date(start);
-  while (cursor <= end) {
-    const chunkEnd = new Date(cursor);
-    chunkEnd.setDate(chunkEnd.getDate() + 30);
-    if (chunkEnd > end) chunkEnd.setTime(end.getTime());
-    chunks.push({ start: new Date(cursor), end: chunkEnd });
-    cursor = new Date(chunkEnd);
-    cursor.setDate(cursor.getDate() + 1);
-  }
-  const chunkEvents = await Promise.all(chunks.map((chunk) =>
-    loadEvents(chunk.start, chunk.end, forceRefresh)
-  ));
-  const uniqueEvents = new Map();
-  chunkEvents.flat().forEach((event) => {
-    const key = `${event.room}|${event.start}|${event.end}|${event.title}`;
-    uniqueEvents.set(key, event);
-  });
-  return [...uniqueEvents.values()];
 }
 
 async function initScheduleCalendar({ host, loadEvents, createEventElement, onRendered }) {
@@ -56,6 +23,7 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, onRe
 
   const state = { view: "week", anchorDate: new Date() };
   let latestRequestId = 0;
+  const cacheSessionId = `${Date.now()}-${Math.random()}`;
   const getDates = () => getScheduleCalendarDates(state.view, state.anchorDate);
   const getRequestRange = () => {
     if (state.view === "month") {
@@ -66,6 +34,23 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, onRe
     }
     const dates = getDates();
     return { start: dates[0], end: dates[dates.length - 1] };
+  };
+
+  const getTodayWindow = () => {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(end.getDate() + SCHEDULE_CACHE_FUTURE_DAYS);
+    return { start, end };
+  };
+
+  const mergeScheduleEvents = (baseEvents, newEvents) => {
+    const merged = new Map();
+    [...(baseEvents || []), ...(newEvents || [])].forEach((event) => {
+      const key = `${event.room}|${event.start}|${event.end}|${event.title}`;
+      merged.set(key, event);
+    });
+    return [...merged.values()];
   };
 
   const renderEvents = (events, dates) => {
@@ -87,12 +72,12 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, onRe
     const requestId = ++latestRequestId;
     const dates = getDates();
     const range = getRequestRange();
-    const fetchRange = getScheduleDeviceCacheRange(range);
-    const rangeKey = `${getScheduleDateString(range.start)}:${getScheduleDateString(range.end)}`;
-    const cached = forceRefresh ? null : await readScheduleDeviceCache(rangeKey);
+    const cacheWindow = getTodayWindow();
+    const cached = forceRefresh ? null : await readScheduleDeviceCache();
+    const windowStart = getScheduleDateString(cacheWindow.start);
+    const windowEnd = getScheduleDateString(cacheWindow.end);
     const hasCachedEvents = cached && cached.version === SCHEDULE_DEVICE_CACHE_VERSION &&
-      cached.startDate === getScheduleDateString(range.start) &&
-      cached.endDate === getScheduleDateString(range.end);
+      cached.windowStart === windowStart && cached.windowEnd === windowEnd;
     if (requestId !== latestRequestId) return;
     if (hasCachedEvents) {
       renderEvents(cached.events, dates);
@@ -103,36 +88,24 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, onRe
       loading.textContent = "読み込み中...";
       container.appendChild(loading);
     }
-    const displayDayCount = Math.floor((range.end - range.start) / 86400000) + 1;
-    const networkPromise = displayDayCount <= 31
-      ? loadEvents(range.start, range.end, true)
-      : loadScheduleRangeInChunks(loadEvents, range.start, range.end, true);
+    const networkRange = hasCachedEvents ? range : cacheWindow;
+    const networkPromise = loadEvents(networkRange.start, networkRange.end, true);
     try {
       const events = await withScheduleRefreshTimeout(networkPromise);
       if (requestId !== latestRequestId) return;
-      renderEvents(events || [], dates);
-      await writeScheduleDeviceCache(rangeKey, {
+      const allEvents = hasCachedEvents && networkRange !== cacheWindow
+        ? mergeScheduleEvents(cached.events, events)
+        : events || [];
+      renderEvents(allEvents, dates);
+      await writeScheduleDeviceCache({
         version: SCHEDULE_DEVICE_CACHE_VERSION,
-        startDate: getScheduleDateString(range.start),
-        endDate: getScheduleDateString(range.end),
+        sessionId: cacheSessionId,
+        requestId,
+        windowStart,
+        windowEnd,
         fetchedAt: Date.now(),
-        events: events || []
+        events: allEvents
       });
-
-      if (fetchRange.start.getTime() !== range.start.getTime() || fetchRange.end.getTime() !== range.end.getTime()) {
-        loadScheduleRangeInChunks(loadEvents, fetchRange.start, fetchRange.end, true)
-          .then((cachedEvents) => writeScheduleDeviceCache(
-            `${getScheduleDateString(fetchRange.start)}:${getScheduleDateString(fetchRange.end)}`,
-            {
-            version: SCHEDULE_DEVICE_CACHE_VERSION,
-            startDate: getScheduleDateString(fetchRange.start),
-            endDate: getScheduleDateString(fetchRange.end),
-            fetchedAt: Date.now(),
-            events: cachedEvents
-            }
-          ))
-          .catch((error) => console.warn("[カレンダー拡張キャッシュ取得失敗]", error));
-      }
     } catch (error) {
       if (requestId !== latestRequestId) return;
       if (!hasCachedEvents) {

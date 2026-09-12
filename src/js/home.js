@@ -186,7 +186,7 @@ async function fetchNotices() {
 		const res = await withNoticeRefreshTimeout(callGasApi('getNotice'));
 		if (requestId !== noticeRequestId) return;
 		if (!res.success) throw new Error(res.error || 'お知らせの取得に失敗しました');
-		await writeNoticeDeviceCache(res.notices || []);
+		await writeNoticeDeviceCache(res.notices || [], requestId);
 		renderNotices(res.notices || [], container);
 	} catch (e) {
 		if (requestId !== noticeRequestId) return;

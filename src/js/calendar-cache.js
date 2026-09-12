@@ -1,7 +1,7 @@
 const SCHEDULE_DEVICE_CACHE_DB = "higo-pella-schedule";
 const SCHEDULE_DEVICE_CACHE_STORE = "snapshots";
-const SCHEDULE_DEVICE_CACHE_KEY_PREFIX = "range:";
-const SCHEDULE_DEVICE_CACHE_VERSION = 4;
+const SCHEDULE_DEVICE_CACHE_KEY = "current-window";
+const SCHEDULE_DEVICE_CACHE_VERSION = 5;
 const SCHEDULE_REFRESH_TIMEOUT_MS = 10000;
 
 function openScheduleDeviceCache() {
@@ -15,13 +15,13 @@ function openScheduleDeviceCache() {
   });
 }
 
-async function readScheduleDeviceCache(cacheKey) {
+async function readScheduleDeviceCache() {
   try {
     const database = await openScheduleDeviceCache();
     return await new Promise((resolve, reject) => {
       const request = database.transaction(SCHEDULE_DEVICE_CACHE_STORE, "readonly")
         .objectStore(SCHEDULE_DEVICE_CACHE_STORE)
-        .get(`${SCHEDULE_DEVICE_CACHE_KEY_PREFIX}${cacheKey}`);
+        .get(SCHEDULE_DEVICE_CACHE_KEY);
       request.onsuccess = () => resolve(request.result || null);
       request.onerror = () => reject(request.error);
     });
@@ -31,15 +31,19 @@ async function readScheduleDeviceCache(cacheKey) {
   }
 }
 
-async function writeScheduleDeviceCache(cacheKey, record) {
+async function writeScheduleDeviceCache(record) {
   try {
     const database = await openScheduleDeviceCache();
     await new Promise((resolve, reject) => {
       const transaction = database.transaction(SCHEDULE_DEVICE_CACHE_STORE, "readwrite");
-      transaction.objectStore(SCHEDULE_DEVICE_CACHE_STORE).put(
-        record,
-        `${SCHEDULE_DEVICE_CACHE_KEY_PREFIX}${cacheKey}`
-      );
+      const store = transaction.objectStore(SCHEDULE_DEVICE_CACHE_STORE);
+      const getRequest = store.get(SCHEDULE_DEVICE_CACHE_KEY);
+      getRequest.onsuccess = () => {
+        const current = getRequest.result;
+        const isOlderSameSession = current && current.sessionId === record.sessionId &&
+          current.requestId > record.requestId;
+        if (!isOlderSameSession) store.put(record, SCHEDULE_DEVICE_CACHE_KEY);
+      };
       transaction.oncomplete = resolve;
       transaction.onerror = () => reject(transaction.error);
     });
