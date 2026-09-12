@@ -1,7 +1,7 @@
 const SCHEDULE_DEVICE_CACHE_DB = "higo-pella-schedule";
 const SCHEDULE_DEVICE_CACHE_STORE = "snapshots";
 const SCHEDULE_DEVICE_CACHE_KEY = "current-window";
-const SCHEDULE_DEVICE_CACHE_VERSION = 2;
+const SCHEDULE_DEVICE_CACHE_VERSION = 3;
 const SCHEDULE_REFRESH_TIMEOUT_MS = 10000;
 
 function openScheduleDeviceCache() {
