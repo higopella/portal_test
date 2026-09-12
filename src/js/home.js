@@ -9,30 +9,48 @@ function renderHomeView() {
 	const mainSec = document.getElementById('main-section');
 	if (!loginSec || !mainSec) return;
 
-	if (getCurrentIdToken()) {
+	if (checkUserLogin()) {
 		loginSec.style.display = 'none';
 		mainSec.style.display = 'flex';
 		calcNextMeeting();
 		fetchNotices();
 		initializeHomeScheduleCalendar();
-	} else {
+	} else if (!getCurrentIdToken()) {
 		loginSec.style.display = 'block';
 		mainSec.style.display = 'none';
+		setLoginStatus('Googleログインをお待ちください。');
 	}
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-	if (getCurrentIdToken()) setUserLogin(true);
-	initializeGoogleLogin();
+document.addEventListener('DOMContentLoaded', async () => {
+	let hasAuthenticatedSession = false;
+	if (getCurrentIdToken()) {
+		setLoginStatus('ログイン状態を確認しています。');
+		try {
+			const result = await callGasApi('authenticateGoogle', { idToken: getCurrentIdToken() });
+			if (result.status === 'authenticated') {
+				setUserLogin(true);
+				hasAuthenticatedSession = true;
+			} else {
+				clearCurrentIdToken();
+				setUserLogin(false);
+			}
+		} catch (error) {
+			clearCurrentIdToken();
+			setUserLogin(false);
+		}
+	}
+	initializeGoogleLogin(hasAuthenticatedSession);
 
 	renderHomeView();
 });
 window.addEventListener('pageshow', renderHomeView);
 
-function initializeGoogleLogin() {
+function initializeGoogleLogin(hasAuthenticatedSession = false) {
 	const buttonContainer = document.getElementById('google-login-button');
 	if (!buttonContainer) return;
 	if (!window.google || !google.accounts || !google.accounts.id) {
+		setLoginStatus('Googleログインを準備しています。');
 		const googleScript = document.getElementById('google-identity-script');
 		if (googleScript) googleScript.addEventListener('load', initializeGoogleLogin, { once: true });
 		return;
@@ -43,31 +61,45 @@ function initializeGoogleLogin() {
 		callback: handleGoogleCredential
 	});
 	google.accounts.id.renderButton(buttonContainer, { theme: 'outline', size: 'large', width: 280 });
+	if (!hasAuthenticatedSession) setLoginStatus('Googleアカウントでログインしてください。');
+}
+
+function setLoginStatus(message, type = '') {
+	const status = document.getElementById('login-status');
+	if (!status) return;
+	status.textContent = message;
+	status.className = `login-status${type ? ` is-${type}` : ''}`;
 }
 
 async function handleGoogleCredential(response) {
 	if (!response || !response.credential) {
+		setLoginStatus('Google認証に失敗しました。', 'error');
 		showToast('Google認証に失敗しました', 'error');
 		return;
 	}
 
+	setLoginStatus('認証情報を確認しています。');
 	setCurrentIdToken(response.credential);
 	try {
 		const result = await callGasApi('authenticateGoogle', { idToken: response.credential });
 		if (result.status === 'authenticated') {
+			setLoginStatus('認証に成功しました。画面を準備しています。', 'success');
 			setUserLogin(true);
 			showToast('ログインしました');
 			renderHomeView();
 			return;
 		}
 		if (result.status === 'unregistered') {
+			setLoginStatus('アカウントが未登録のため、登録画面へ移動します。');
 			window.location.assign('signup/');
 			return;
 		}
 		clearCurrentIdToken();
+		setLoginStatus(result.error || 'ログインできません。', 'error');
 		showToast(result.error || 'ログインできません', 'error');
 	} catch (error) {
 		clearCurrentIdToken();
+		setLoginStatus('認証通信に失敗しました。もう一度お試しください。', 'error');
 		showToast('認証に失敗しました', 'error');
 	}
 }

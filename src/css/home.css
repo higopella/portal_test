@@ -114,6 +114,14 @@
 			justify-content: center;
 			min-height: 40px;
 		}
+		.login-status {
+			min-height: 1.5em;
+			margin-top: 10px;
+			color: var(--text-sub, #64748b);
+			font-size: 0.85rem;
+		}
+		.login-status.is-error { color: var(--danger); }
+		.login-status.is-success { color: var(--primary-dark); }
 		.signup-link {
 			display: inline-block;
 			margin-top: 14px;
