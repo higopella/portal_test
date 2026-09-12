@@ -12,6 +12,7 @@
 			grid-template-columns: 1fr 1fr;
 			gap: 8px;
 			margin-bottom: 16px;
+			scroll-margin-top: calc(var(--header-height) + 8px);
 		}
 		.tab-btn {
 			height: 44px;

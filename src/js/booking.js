@@ -50,7 +50,10 @@ async function initializeBookingScheduleCalendar() {
 		event.preventDefault();
 		switchTab('create');
 		const panel = document.getElementById('panel-create');
-		const targetTop = panel.getBoundingClientRect().top + window.scrollY - parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-height'), 10);
+		const tabNav = document.querySelector('.booking-form-card .tab-nav');
+		const target = window.matchMedia('(max-width: 760px)').matches && tabNav ? tabNav : panel;
+		const headerHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-height'), 10) || 0;
+		const targetTop = target.getBoundingClientRect().top + window.scrollY - headerHeight - 8;
 		window.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
 	});
 }
