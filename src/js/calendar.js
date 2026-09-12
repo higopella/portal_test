@@ -10,7 +10,7 @@ function getScheduleBookingUrl() {
   return window.location.pathname.includes("/booking/") ? "#" : "booking/";
 }
 
-async function initScheduleCalendar({ host, loadEvents, createEventElement, onRendered }) {
+async function initScheduleCalendar({ host, loadEvents, createEventElement, defaultView = "week", onRendered }) {
   if (!host) return null;
   const templateResponse = await fetch(getScheduleTemplateUrl(), { cache: "no-cache" });
   if (!templateResponse.ok) throw new Error("カレンダーテンプレートを読み込めませんでした");
@@ -21,7 +21,7 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, onRe
   const bookingLink = host.querySelector(".schedule-booking-link");
   if (bookingLink) bookingLink.href = getScheduleBookingUrl();
 
-  const state = { view: "week", anchorDate: new Date() };
+  const state = { view: defaultView, anchorDate: new Date() };
   let latestRequestId = 0;
   const cacheSessionId = `${Date.now()}-${Math.random()}`;
   const getDates = () => getScheduleCalendarDates(state.view, state.anchorDate);

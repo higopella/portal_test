@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 	await initScheduleCalendar({
 		host,
+		defaultView: 'day',
 		loadEvents: async (start, end, forceRefresh) => {
 			const result = await callGasApi('getScheduleEvents', {
 				startDate: getLocalDateString(start),

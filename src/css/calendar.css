@@ -39,13 +39,17 @@
   background: var(--card);
 }
 
+:root {
+  --schedule-toolbar-height: 48px;
+}
+
 .schedule-day.is-today {
   background: #eaf8fe;
 }
 
 .schedule-day-title {
   position: sticky;
-  top: 0;
+  top: var(--schedule-toolbar-height, 48px);
   z-index: 12;
   min-height: 44px;
   margin: 0;
@@ -222,7 +226,7 @@
 
 .schedule-weekday-row {
   position: sticky;
-  top: 0;
+  top: var(--schedule-toolbar-height, 48px);
   z-index: 14;
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -260,6 +264,9 @@
 }
 
 .schedule-time-axis-header {
+  position: sticky;
+  top: var(--schedule-toolbar-height, 48px);
+  z-index: 13;
   height: 44px;
   border-bottom: 1px solid var(--border);
   background: var(--card);
@@ -319,10 +326,12 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  min-height: var(--schedule-toolbar-height, 48px);
   margin-bottom: 8px;
-  padding: 8px 0;
+  padding: 7px 0;
   background: var(--card);
   flex-wrap: wrap;
+  box-sizing: border-box;
 }
 
 .schedule-view-controls,
