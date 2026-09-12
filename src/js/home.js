@@ -1,7 +1,7 @@
 initCommonLayout('home');
 
 const GOOGLE_OAUTH_CLIENT_ID = '65097864960-vbe2ukqcoi9mpqc9capgtu9mak6vf4qs.apps.googleusercontent.com';
-let homeScheduleControllers = [];
+let homeScheduleController = null;
 let noticeRequestId = 0;
 
 function renderHomeView() {
@@ -16,17 +16,16 @@ function renderHomeView() {
 		fetchNotices();
 		initializeHomeScheduleCalendar();
 	} else if (!getCurrentIdToken()) {
-		loginSec.style.display = 'flex';
+		loginSec.style.display = 'block';
 		mainSec.style.display = 'none';
 		setLoginStatus('Googleログインをお待ちください。');
-		initializeHomeScheduleCalendar();
 	}
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
 	let hasAuthenticatedSession = false;
 	if (getCurrentIdToken()) {
-		setLoginStatus('ログイン状態を確認しています。');
+		setLoginStatus('ログイン状態を確認しています...', 'loading');
 		try {
 			const result = await callGasApi('authenticateGoogle', { idToken: getCurrentIdToken() });
 			if (result.status === 'authenticated') {
@@ -79,19 +78,19 @@ async function handleGoogleCredential(response) {
 		return;
 	}
 
-	setLoginStatus('認証情報を確認しています。');
+	setLoginStatus('認証情報を確認しています...', 'loading');
 	setCurrentIdToken(response.credential);
 	try {
 		const result = await callGasApi('authenticateGoogle', { idToken: response.credential });
 		if (result.status === 'authenticated') {
-			setLoginStatus('認証に成功しました。画面を準備しています。', 'success');
+			setLoginStatus('認証に成功しました。画面を準備しています...', 'success');
 			setUserLogin(true);
 			showToast('ログインしました');
 			renderHomeView();
 			return;
 		}
 		if (result.status === 'unregistered') {
-			setLoginStatus('アカウントが未登録のため、登録画面へ移動します。');
+			setLoginStatus('アカウントが未登録のため、登録画面へ移動します...', 'loading');
 			window.location.assign('signup/');
 			return;
 		}
@@ -144,26 +143,25 @@ function getLocalDateString(date) {
 }
 
 async function initializeHomeScheduleCalendar() {
-	if (homeScheduleControllers.length > 0) {
-		await Promise.all(homeScheduleControllers.map(c => c ? c.refresh() : null));
+	if (homeScheduleController) {
+		await homeScheduleController.refresh();
 		return;
 	}
-	const hosts = document.querySelectorAll('[data-schedule-calendar]');
-	homeScheduleControllers = await Promise.all(
-		Array.from(hosts).map(host => initScheduleCalendar({
-			host,
-			loadEvents: async (start, end, forceRefresh) => {
-				const result = await callGasApi('getScheduleEvents', {
-					startDate: getLocalDateString(start),
-					endDate: getLocalDateString(end),
-					forceRefresh
-				});
-				if (!result.success) throw new Error(result.error || '予定の取得に失敗しました');
-				return result.events;
-			},
-			createEventElement: createHomeScheduleEvent
-		}))
-	);
+	const host = document.querySelector('#main-section [data-schedule-calendar]');
+	if (!host) return;
+	homeScheduleController = await initScheduleCalendar({
+		host,
+		loadEvents: async (start, end, forceRefresh) => {
+			const result = await callGasApi('getScheduleEvents', {
+				startDate: getLocalDateString(start),
+				endDate: getLocalDateString(end),
+				forceRefresh
+			});
+			if (!result.success) throw new Error(result.error || '予定の取得に失敗しました');
+			return result.events;
+		},
+		createEventElement: createHomeScheduleEvent
+	});
 }
 
 function createHomeScheduleEvent(event, isAllDay) {

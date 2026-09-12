@@ -3,13 +3,11 @@
 			padding: 12px 14px;
 			gap: 10px;
 		}
-		.home-content-grid,
-		.login-content-grid {
+		.home-content-grid {
 			display: grid;
 			grid-template-columns: minmax(260px, 0.6fr) minmax(460px, 1.4fr);
 			gap: 10px;
 			align-items: start;
-			width: 100%;
 		}
 		.card {
 			padding: 14px;
@@ -83,7 +81,7 @@
 		.notice-body .highlight { color: var(--primary-dark, #0288d1); font-weight: bold; }
 		.login-container {
 			max-width: 360px;
-			margin: 0 auto;
+			margin: 40px auto 20px;
 			width: 100%;
 			text-align: center;
 		}
@@ -117,18 +115,69 @@
 			min-height: 40px;
 		}
 		.login-status {
-			min-height: 1.5em;
-			margin-top: 10px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 8px;
+			min-height: 2.2em;
+			margin-top: 12px;
+			padding: 6px 12px;
+			border-radius: var(--radius, 6px);
 			color: var(--text-sub, #64748b);
-			font-size: 0.85rem;
+			font-size: 0.88rem;
+			font-weight: 500;
+			background-color: var(--bg, #f8fafc);
+			transition: all 0.2s ease;
 		}
-		.login-status.is-error { color: var(--danger); }
-		.login-status.is-success { color: var(--primary-dark); }
-		.signup-link {
+		.login-status.is-loading {
+			color: var(--primary-dark, #0288d1);
+			background-color: var(--primary-light, #e1f5fe);
+			border: 1px solid rgba(79, 195, 247, 0.4);
+		}
+		.login-status.is-loading::before {
+			content: "";
 			display: inline-block;
+			width: 14px;
+			height: 14px;
+			border: 2px solid var(--primary, #4fc3f7);
+			border-top-color: var(--primary-dark, #0288d1);
+			border-radius: 50%;
+			animation: login-spinner 0.8s linear infinite;
+		}
+		@keyframes login-spinner {
+			to { transform: rotate(360deg); }
+		}
+		.login-status.is-error {
+			color: #b91c1c;
+			background-color: #fef2f2;
+			border: 1px solid #fca5a5;
+		}
+		.login-status.is-success {
+			color: #15803d;
+			background-color: #f0fdf4;
+			border: 1px solid #86efac;
+		}
+		.login-links {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 12px;
 			margin-top: 14px;
+		}
+		.signup-link,
+		.calendar-link {
+			display: inline-block;
 			color: var(--primary-dark, #0288d1);
 			font-size: 0.9rem;
+			text-decoration: none;
+		}
+		.signup-link:hover,
+		.calendar-link:hover {
+			text-decoration: underline;
+		}
+		.link-divider {
+			color: var(--border, #e2e8f0);
+			font-size: 0.85rem;
 		}
 		.input-text {
 			width: 100%;
@@ -148,8 +197,7 @@
 		.notice-message-loading { text-align: center; padding: 14px; }
 		.notice-message-error { color: var(--danger); }
 		@media (max-width: 760px) {
-			.home-content-grid,
-			.login-content-grid {
+			.home-content-grid {
 				grid-template-columns: 1fr;
 				gap: 10px;
 			}

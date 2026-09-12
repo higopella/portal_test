@@ -16,26 +16,21 @@
 
   <!-- ログイン画面 -->
   <div id="login-section" class="container is-hidden">
-    <div class="login-content-grid">
-      <div class="card login-container">
-        <div class="login-brand">
-          <img src="src/icon.png" alt="Higo-Pella Logo" class="login-logo">
-          <div class="login-app-name">Higo-Pella</div>
-        </div>
-        <div id="google-login-panel">
-          <p class="login-description">自分のGoogleアカウントでログインしてください</p>
-          <div id="google-login-button" class="google-login-button"></div>
-          <p id="login-status" class="login-status" aria-live="polite"></p>
+    <div class="card login-container">
+      <div class="login-brand">
+        <img src="src/icon.png" alt="Higo-Pella Logo" class="login-logo">
+        <div class="login-app-name">Higo-Pella</div>
+      </div>
+      <div id="google-login-panel">
+        <p class="login-description">Googleアカウントでログインしてください</p>
+        <div id="google-login-button" class="google-login-button"></div>
+        <p id="login-status" class="login-status" aria-live="polite"></p>
+        <div class="login-links">
           <a class="signup-link" href="signup/">新規登録</a>
+          <span class="link-divider">|</span>
+          <a class="calendar-link" href="calendar/">カレンダー</a>
         </div>
       </div>
-
-      <section class="card home-calendar" data-schedule-calendar data-schedule-template="src/calendar.html">
-        <div class="card-header">
-          <span class="card-title">直近の予約</span>
-        </div>
-        <div id="login-schedule"></div>
-      </section>
     </div>
   </div>
 
