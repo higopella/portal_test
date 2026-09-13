@@ -1,5 +1,5 @@
 const CONFIG = {
-  GAS_API_URL: "https://script.google.com/macros/s/AKfycbxLEU_cnLSP1Sb53hwqbz6JZynbcOiwrXkiFTI_Ev540bgndI0y_egVRSLJaKx15cmb/exec",
+  GAS_API_URL: "https://script.google.com/macros/s/AKfycbynzAVfuPKHqT9jkKX-JPh5l42JCbR6d6d0sb9PT_TAilMhtDSY2PW2hOMdEPEMXBgT/exec",
   STORAGE_KEYS: {
     IS_LOGGED_IN: "higopella_is_logged_in",
     IS_ADMIN: "higopella_is_admin",
