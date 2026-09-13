@@ -78,6 +78,7 @@
 			overflow: hidden;
 		}
 		.video-date { font-size: 0.75rem; color: var(--text-sub); margin-top: auto; }
+		.video-load-more { display: flex; margin: 16px auto 0; }
 		.playlist-control { flex: 1; min-width: 200px; }
 		.video-search-control { flex: 1; min-width: 160px; }
 		.video-message { grid-column: 1 / -1; text-align: center; color: var(--text-sub); padding: 40px; }

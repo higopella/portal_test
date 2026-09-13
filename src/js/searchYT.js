@@ -2,79 +2,85 @@ initCommonLayout('searchYT');
 
 let allVideos = [];
 let currentType = 'ALL';
+let visibleVideoCount = 40;
 
 document.addEventListener('DOMContentLoaded', async () => {
 	if (!await requirePageAuthentication()) return;
 	const selectPlaylist = document.getElementById('select-playlist');
 	if (selectPlaylist) {
-		selectPlaylist.addEventListener('change', loadVideos);
+		selectPlaylist.addEventListener('change', () => resetVideoList());
 	}
 	const inputSearch = document.getElementById('input-search');
 	if (inputSearch) {
-		inputSearch.addEventListener('input', filterVideos);
+		inputSearch.addEventListener('input', () => resetVideoList());
 	}
 	const refreshBtn = document.getElementById('btn-refresh');
 	if (refreshBtn) {
-		refreshBtn.addEventListener('click', loadPlaylists);
+		refreshBtn.addEventListener('click', refreshVideoCatalog);
 	}
 	document.querySelectorAll('.tab-btn').forEach((button) => {
 		button.addEventListener('click', () => setVideoType(button.dataset.videoType || 'ALL'));
 	});
-	loadPlaylists();
+	document.getElementById('btn-load-more')?.addEventListener('click', () => {
+		visibleVideoCount += 40;
+		filterVideos();
+	});
+	refreshVideoCatalog();
 });
 
-async function loadPlaylists() {
+async function refreshVideoCatalog() {
 	const selectEl = document.getElementById('select-playlist');
 	const refreshBtn = document.getElementById('btn-refresh');
-
+	const cached = await readYouTubeCatalogCache();
+	if (cached && cached.version === YOUTUBE_CATALOG_CACHE_VERSION && cached.catalog) {
+		applyVideoCatalog(cached.catalog, selectEl);
+	}
 	await withButtonLoading(refreshBtn, async () => {
 		try {
-			const res = await callGasApi('getPlaylists');
-			selectEl.innerHTML = '<option value="ALL">すべての動画</option>';
-			if (res.success && res.playlists) {
-				res.playlists.forEach(pl => {
-					const opt = document.createElement('option');
-					opt.value = pl.id;
-					opt.textContent = pl.title;
-					selectEl.appendChild(opt);
-				});
-			}
-			await loadVideos();
-		} catch(e) {
-			showToast('再生リストの取得に失敗しました', 'error');
+			const result = await callGasApi('getVideoCatalog');
+			if (!result.success) throw new Error(result.error || '動画一覧の取得に失敗しました');
+			applyVideoCatalog(result, selectEl);
+			await writeYouTubeCatalogCache(result);
+		} catch (error) {
+			if (allVideos.length === 0) showVideoMessage('動画の読み込みに失敗しました', true);
+			else showToast('最新の動画一覧を取得できませんでした', 'error');
 		}
 	}, '更新中');
 }
 
-async function loadVideos() {
-	const playlistId = document.getElementById('select-playlist').value;
+function applyVideoCatalog(catalog, selectEl) {
+	const selectedPlaylistId = selectEl.value || 'ALL';
+	allVideos = Array.isArray(catalog.videos) ? catalog.videos : [];
+	selectEl.textContent = '';
+	const allOption = document.createElement('option');
+	allOption.value = 'ALL';
+	allOption.textContent = 'すべての動画';
+	selectEl.appendChild(allOption);
+	(catalog.playlists || []).forEach((playlist) => {
+		const option = document.createElement('option');
+		option.value = playlist.id;
+		option.textContent = playlist.title;
+		selectEl.appendChild(option);
+	});
+	selectEl.value = Array.from(selectEl.options).some(option => option.value === selectedPlaylistId)
+		? selectedPlaylistId : 'ALL';
+	resetVideoList();
+}
+
+function resetVideoList() {
+	visibleVideoCount = 40;
+	filterVideos();
+}
+
+function showVideoMessage(message, isError = false) {
 	const listContainer = document.getElementById('video-list');
-
+	const loadMoreButton = document.getElementById('btn-load-more');
 	listContainer.textContent = '';
-	const loading = document.createElement('div');
-	loading.className = 'video-message';
-	loading.textContent = '読み込み中...';
-	listContainer.appendChild(loading);
-
-	try {
-		const res = await callGasApi('getPlaylistVideos', { playlistId });
-		if (res.success && res.videos) {
-			allVideos = res.videos;
-			filterVideos();
-		} else {
-			listContainer.textContent = '';
-			const empty = document.createElement('div');
-			empty.className = 'video-message';
-			empty.textContent = '動画が見つかりませんでした';
-			listContainer.appendChild(empty);
-		}
-	} catch(e) {
-		listContainer.textContent = '';
-		const error = document.createElement('div');
-		error.className = 'video-message video-message-error';
-		error.textContent = '動画の読み込みに失敗しました';
-		listContainer.appendChild(error);
-	}
+	const element = document.createElement('div');
+	element.className = `video-message${isError ? ' video-message-error' : ''}`;
+	element.textContent = message;
+	listContainer.appendChild(element);
+	if (loadMoreButton) loadMoreButton.hidden = true;
 }
 
 function setVideoType(type) {
@@ -82,16 +88,18 @@ function setVideoType(type) {
 	document.getElementById('tab-all').classList.toggle('active', type === 'ALL');
 	document.getElementById('tab-regular').classList.toggle('active', type === 'REGULAR');
 	document.getElementById('tab-shorts').classList.toggle('active', type === 'SHORTS');
-	filterVideos();
+	resetVideoList();
 }
 
 function filterVideos() {
 	const query = document.getElementById('input-search').value.toLowerCase().trim();
+	const playlistId = document.getElementById('select-playlist').value;
 	const listContainer = document.getElementById('video-list');
 
 	let filtered = allVideos.filter(v => {
 		const matchesQuery = String(v.title ?? '').toLowerCase().includes(query);
 		if (!matchesQuery) return false;
+		if (playlistId !== 'ALL' && (!Array.isArray(v.playlistIds) || !v.playlistIds.includes(playlistId))) return false;
 
 		if (currentType === 'REGULAR') return !v.isShort;
 		if (currentType === 'SHORTS') return v.isShort;
@@ -99,16 +107,12 @@ function filterVideos() {
 	});
 
 	if (filtered.length === 0) {
-		listContainer.textContent = '';
-		const empty = document.createElement('div');
-		empty.className = 'video-message';
-		empty.textContent = '該当する動画がありません';
-		listContainer.appendChild(empty);
+		showVideoMessage('該当する動画がありません');
 		return;
 	}
 
 	listContainer.textContent = '';
-	filtered.forEach((v) => {
+	filtered.slice(0, visibleVideoCount).forEach((v) => {
 		const dateStr = v.publishedAt ? v.publishedAt.split('T')[0] : '';
 		const youtubeUrl = `https://www.youtube.com/watch?v=${encodeURIComponent(v.videoId)}`;
 		const card = document.createElement('a');
@@ -135,4 +139,6 @@ function filterVideos() {
 		card.appendChild(info);
 		listContainer.appendChild(card);
 	});
+	const loadMoreButton = document.getElementById('btn-load-more');
+	if (loadMoreButton) loadMoreButton.hidden = filtered.length <= visibleVideoCount;
 }
