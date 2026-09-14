@@ -3,6 +3,7 @@ initCommonLayout('home');
 const GOOGLE_OAUTH_CLIENT_ID = '65097864960-vbe2ukqcoi9mpqc9capgtu9mak6vf4qs.apps.googleusercontent.com';
 let homeScheduleController = null;
 let noticeRequestId = 0;
+let homeDataLoaded = false;
 
 function renderHomeView() {
 	const loginSec = document.getElementById('login-section');
@@ -12,9 +13,12 @@ function renderHomeView() {
 	if (checkUserLogin()) {
 		loginSec.style.display = 'none';
 		mainSec.style.display = 'flex';
-		calcNextMeeting();
-		fetchNotices();
-		initializeHomeScheduleCalendar();
+		if (!homeDataLoaded) {
+			homeDataLoaded = true;
+			calcNextMeeting();
+			fetchNotices();
+			initializeHomeScheduleCalendar();
+		}
 	} else if (!getCurrentIdToken()) {
 		loginSec.style.display = 'block';
 		mainSec.style.display = 'none';
