@@ -16,8 +16,7 @@ function renderHomeView() {
 		if (!homeDataLoaded) {
 			homeDataLoaded = true;
 			calcNextMeeting();
-			fetchNotices();
-			initializeHomeScheduleCalendar();
+			loadHomeDataInOrder();
 		}
 	} else if (!getCurrentIdToken()) {
 		loginSec.style.display = 'block';
@@ -49,6 +48,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 	renderHomeView();
 });
 window.addEventListener('pageshow', renderHomeView);
+
+async function loadHomeDataInOrder() {
+	await fetchNotices();
+	setTimeout(() => initializeHomeScheduleCalendar(), 300);
+}
 
 function initializeGoogleLogin(hasAuthenticatedSession = false) {
 	const buttonContainer = document.getElementById('google-login-button');

@@ -1,5 +1,4 @@
 const SCHEDULE_TEMPLATE_URL = "src/calendar.html";
-const SCHEDULE_CACHE_FUTURE_DAYS = 30;
 
 function getScheduleTemplateUrl() {
   const host = document.querySelector("[data-schedule-calendar]");
@@ -36,14 +35,6 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, defa
     return { start: dates[0], end: dates[dates.length - 1] };
   };
 
-  const getTodayWindow = () => {
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(start);
-    end.setDate(end.getDate() + SCHEDULE_CACHE_FUTURE_DAYS);
-    return { start, end };
-  };
-
   const mergeScheduleEvents = (baseEvents, newEvents) => {
     const merged = new Map();
     [...(baseEvents || []), ...(newEvents || [])].forEach((event) => {
@@ -72,10 +63,9 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, defa
     const requestId = ++latestRequestId;
     const dates = getDates();
     const range = getRequestRange();
-    const cacheWindow = getTodayWindow();
     const cached = forceRefresh ? null : await readScheduleDeviceCache();
-    const windowStart = getScheduleDateString(cacheWindow.start);
-    const windowEnd = getScheduleDateString(cacheWindow.end);
+    const windowStart = getScheduleDateString(range.start);
+    const windowEnd = getScheduleDateString(range.end);
     const hasCachedEvents = cached && cached.version === SCHEDULE_DEVICE_CACHE_VERSION &&
       Array.isArray(cached.events);
     if (requestId !== latestRequestId) return;
@@ -104,25 +94,6 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, defa
         events: mergedEvents
       });
 
-      const isWindowCached = cached && cached.windowStart === windowStart && cached.windowEnd === windowEnd;
-      if (!isWindowCached && !forceRefresh) {
-        loadEvents(cacheWindow.start, cacheWindow.end, true)
-          .then(async (windowEvents) => {
-            if (requestId !== latestRequestId) return;
-            const fullMerged = mergeScheduleEvents(mergedEvents, windowEvents);
-            await writeScheduleDeviceCache({
-              version: SCHEDULE_DEVICE_CACHE_VERSION,
-              sessionId: cacheSessionId,
-              requestId,
-              windowStart,
-              windowEnd,
-              fetchedAt: Date.now(),
-              events: fullMerged
-            });
-            renderEvents(fullMerged, dates);
-          })
-          .catch((err) => console.warn("[カレンダー背景先読み情報]", err));
-      }
     } catch (error) {
       if (requestId !== latestRequestId) return;
       if (!hasCachedEvents) {
