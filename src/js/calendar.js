@@ -63,9 +63,10 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, defa
     const requestId = ++latestRequestId;
     const dates = getDates();
     const range = getRequestRange();
+    const cacheWindow = getScheduleCacheWindow();
     const cached = forceRefresh ? null : await readScheduleDeviceCache();
-    const windowStart = getScheduleDateString(range.start);
-    const windowEnd = getScheduleDateString(range.end);
+    const windowStart = getScheduleDateString(cacheWindow.start);
+    const windowEnd = getScheduleDateString(cacheWindow.end);
     const hasCachedEvents = cached && cached.version === SCHEDULE_DEVICE_CACHE_VERSION &&
       Array.isArray(cached.events);
     if (requestId !== latestRequestId) return;
@@ -88,11 +89,18 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, defa
         version: SCHEDULE_DEVICE_CACHE_VERSION,
         sessionId: cacheSessionId,
         requestId,
-        windowStart,
-        windowEnd,
+        windowStart: getScheduleDateString(range.start),
+        windowEnd: getScheduleDateString(range.end),
         fetchedAt: Date.now(),
         events: mergedEvents
       });
+
+      const hasCachedWindow = cached && cached.windowStart === windowStart && cached.windowEnd === windowEnd;
+      if (!forceRefresh && !hasCachedWindow) {
+        setTimeout(() => {
+          preloadScheduleCacheWindow(cacheWindow, requestId, mergedEvents);
+        }, 1000);
+      }
 
     } catch (error) {
       if (requestId !== latestRequestId) return;
@@ -125,7 +133,34 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, defa
     refresh();
   });
   await refresh();
+
+  async function preloadScheduleCacheWindow(cacheWindow, requestId, activeEvents) {
+    try {
+      const events = await loadEvents(cacheWindow.start, cacheWindow.end, true);
+      if (requestId !== latestRequestId) return;
+      await writeScheduleDeviceCache({
+        version: SCHEDULE_DEVICE_CACHE_VERSION,
+        sessionId: cacheSessionId,
+        requestId,
+        windowStart: getScheduleDateString(cacheWindow.start),
+        windowEnd: getScheduleDateString(cacheWindow.end),
+        fetchedAt: Date.now(),
+        events: mergeScheduleEvents(activeEvents, events)
+      });
+    } catch (error) {
+      console.warn("[カレンダー先読み失敗]", error);
+    }
+  }
+
   return { refresh, state };
+}
+
+function getScheduleCacheWindow() {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 30);
+  return { start, end };
 }
 
 function moveScheduleAnchorDate(state, direction) {

@@ -50,8 +50,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 window.addEventListener('pageshow', renderHomeView);
 
 async function loadHomeDataInOrder() {
-	await fetchNotices();
-	setTimeout(() => initializeHomeScheduleCalendar(), 300);
+	fetchNotices();
+	setTimeout(() => initializeHomeScheduleCalendar(), 500);
 }
 
 function initializeGoogleLogin(hasAuthenticatedSession = false) {
