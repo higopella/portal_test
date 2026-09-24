@@ -6,6 +6,8 @@ function getScheduleTemplateUrl() {
 }
 
 function getScheduleBookingUrl() {
+  const host = document.querySelector("[data-schedule-calendar]");
+  if (host?.dataset.scheduleBookingUrl) return host.dataset.scheduleBookingUrl;
   return window.location.pathname.includes("/booking/") ? "#" : "booking/";
 }
 
