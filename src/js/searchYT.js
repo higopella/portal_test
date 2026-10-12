@@ -2,12 +2,13 @@ initCommonLayout('searchYT');
 
 let allVideos = [];
 let currentType = 'ALL';
+let latestRequestId = 0;
 
 document.addEventListener('DOMContentLoaded', async () => {
 	if (!await requirePageAuthentication()) return;
 	const selectPlaylist = document.getElementById('select-playlist');
 	if (selectPlaylist) {
-		selectPlaylist.addEventListener('change', loadVideos);
+		selectPlaylist.addEventListener('change', filterVideos);
 	}
 	const inputSearch = document.getElementById('input-search');
 	if (inputSearch) {
@@ -15,66 +16,90 @@ document.addEventListener('DOMContentLoaded', async () => {
 	}
 	const refreshBtn = document.getElementById('btn-refresh');
 	if (refreshBtn) {
-		refreshBtn.addEventListener('click', loadPlaylists);
+		refreshBtn.addEventListener('click', () => refreshVideoCatalog(true));
 	}
 	document.querySelectorAll('.tab-btn').forEach((button) => {
 		button.addEventListener('click', () => setVideoType(button.dataset.videoType || 'ALL'));
 	});
-	loadPlaylists();
+	refreshVideoCatalog(false);
 });
 
-async function loadPlaylists() {
+async function refreshVideoCatalog(forceRefresh) {
+	const requestId = ++latestRequestId;
 	const selectEl = document.getElementById('select-playlist');
 	const refreshBtn = document.getElementById('btn-refresh');
 
-	await withButtonLoading(refreshBtn, async () => {
-		try {
-			const res = await callGasApi('getPlaylists');
-			selectEl.innerHTML = '<option value="ALL">すべての動画</option>';
-			if (res.success && res.playlists) {
-				res.playlists.forEach(pl => {
-					const opt = document.createElement('option');
-					opt.value = pl.id;
-					opt.textContent = pl.title;
-					selectEl.appendChild(opt);
-				});
-			}
-			await loadVideos();
-		} catch(e) {
-			showToast('再生リストの取得に失敗しました', 'error');
+	if (!forceRefresh) {
+		const cached = await readYouTubeCatalogCache();
+		if (isYouTubeCatalogCacheValid(cached)) {
+			allVideos = cached.videos;
+			renderPlaylistOptions(selectEl, cached.playlists, cached.videos);
+			filterVideos();
 		}
-	}, '更新中');
-}
-
-async function loadVideos() {
-	const playlistId = document.getElementById('select-playlist').value;
-	const listContainer = document.getElementById('video-list');
-
-	listContainer.textContent = '';
-	const loading = document.createElement('div');
-	loading.className = 'video-message';
-	loading.textContent = '読み込み中...';
-	listContainer.appendChild(loading);
+	} else {
+		await clearYouTubeCatalogCache();
+	}
 
 	try {
-		const res = await callGasApi('getPlaylistVideos', { playlistId });
-		if (res.success && res.videos) {
-			allVideos = res.videos;
-			filterVideos();
-		} else {
+		const playlistRes = await callGasApi('getPlaylists');
+		const playlists = playlistRes.success && Array.isArray(playlistRes.playlists) ? playlistRes.playlists : [];
+		const videoRes = await callGasApi('getPlaylistVideos', { playlistId: 'ALL', forceRefresh: Boolean(forceRefresh) });
+		if (!videoRes.success) throw new Error(videoRes.error || '動画の取得に失敗しました');
+		if (requestId !== latestRequestId) return;
+
+		allVideos = Array.isArray(videoRes.videos) ? videoRes.videos : [];
+		renderPlaylistOptions(selectEl, playlists, allVideos);
+		filterVideos();
+		await writeYouTubeCatalogCache(allVideos, playlists);
+	} catch (error) {
+		if (allVideos.length === 0) {
+			const listContainer = document.getElementById('video-list');
 			listContainer.textContent = '';
-			const empty = document.createElement('div');
-			empty.className = 'video-message';
-			empty.textContent = '動画が見つかりませんでした';
-			listContainer.appendChild(empty);
+			const errorMessage = document.createElement('div');
+			errorMessage.className = 'video-message video-message-error';
+			errorMessage.textContent = '動画の読み込みに失敗しました';
+			listContainer.appendChild(errorMessage);
+		} else {
+			showToast('最新の動画一覧を取得できませんでした', 'error');
 		}
-	} catch(e) {
-		listContainer.textContent = '';
-		const error = document.createElement('div');
-		error.className = 'video-message video-message-error';
-		error.textContent = '動画の読み込みに失敗しました';
-		listContainer.appendChild(error);
+	} finally {
+		if (refreshBtn) refreshBtn.disabled = false;
 	}
+}
+
+function renderPlaylistOptions(selectEl, playlists, videos) {
+	const selectedValue = selectEl.value || 'ALL';
+	selectEl.textContent = '';
+	const allOption = document.createElement('option');
+	allOption.value = 'ALL';
+	allOption.textContent = 'すべての動画';
+	selectEl.appendChild(allOption);
+
+	extractTitleCategories(videos).forEach((category) => {
+		const opt = document.createElement('option');
+		opt.value = `CAT:${category}`;
+		opt.textContent = `【${category}】`;
+		selectEl.appendChild(opt);
+	});
+
+	(playlists || []).forEach((pl) => {
+		const opt = document.createElement('option');
+		opt.value = pl.id;
+		opt.textContent = pl.title;
+		selectEl.appendChild(opt);
+	});
+
+	selectEl.value = Array.from(selectEl.options).some(option => option.value === selectedValue)
+		? selectedValue : 'ALL';
+}
+
+function extractTitleCategories(videos) {
+	const categories = new Set();
+	(videos || []).forEach((video) => {
+		const match = String(video.title || '').match(/【([^】]+)】/);
+		if (match && match[1].trim()) categories.add(match[1].trim());
+	});
+	return Array.from(categories).sort((a, b) => a.localeCompare(b, 'ja'));
 }
 
 function setVideoType(type) {
@@ -87,12 +112,14 @@ function setVideoType(type) {
 
 function filterVideos() {
 	const query = document.getElementById('input-search').value.toLowerCase().trim();
+	const selectedValue = document.getElementById('select-playlist').value;
+	const selectedCategory = selectedValue.startsWith('CAT:') ? selectedValue.slice(4) : null;
 	const listContainer = document.getElementById('video-list');
 
 	let filtered = allVideos.filter(v => {
-		const matchesQuery = String(v.title ?? '').toLowerCase().includes(query);
-		if (!matchesQuery) return false;
-
+		const title = String(v.title ?? '');
+		if (query && !title.toLowerCase().includes(query)) return false;
+		if (selectedCategory && !title.includes(`【${selectedCategory}】`)) return false;
 		if (currentType === 'REGULAR') return !v.isShort;
 		if (currentType === 'SHORTS') return v.isShort;
 		return true;
