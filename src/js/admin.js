@@ -1,6 +1,7 @@
 initCommonLayout('admin');
 
 document.addEventListener('DOMContentLoaded', async () => {
+	showChecking();
 	if (!await requirePageAuthentication()) return;
 	if (checkAdminLogin()) {
 		showDashboard();
@@ -9,13 +10,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 	}
 });
 
+function showChecking() {
+	document.getElementById('admin-checking-section').style.display = 'flex';
+	document.getElementById('admin-access-denied-section').style.display = 'none';
+	document.getElementById('admin-dashboard-section').style.display = 'none';
+}
+
 function showDashboard() {
+	document.getElementById('admin-checking-section').style.display = 'none';
 	document.getElementById('admin-access-denied-section').style.display = 'none';
 	document.getElementById('admin-dashboard-section').style.display = 'flex';
 	loadDashboardData();
 }
 
 function showAccessDenied() {
+	document.getElementById('admin-checking-section').style.display = 'none';
 	document.getElementById('admin-access-denied-section').style.display = 'block';
 	document.getElementById('admin-dashboard-section').style.display = 'none';
 }

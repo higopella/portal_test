@@ -89,6 +89,10 @@ body {
   box-sizing: border-box;
 }
 
+.is-hidden {
+  display: none;
+}
+
 .card {
   background-color: var(--card);
   border-radius: var(--radius);
