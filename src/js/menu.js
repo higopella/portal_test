@@ -9,6 +9,9 @@ function initCommonLayout(activeKey = "") {
   const menuItems = [
     { key: "home", title: "ホーム", href: `${basePath}` },
     { key: "booking", title: "練習予約", href: `${basePath}booking/` },
+    { key: "meeting", title: "部会", href: `${basePath}meeting/` },
+    { key: "live", title: "LIVE", href: `${basePath}live/` },
+    { key: "score", title: "Score", href: `${basePath}score/` },
     { key: "searchYT", title: "YouTube検索", href: `${basePath}searchYT/` },
     { key: "forms", title: "フォーム", href: `${basePath}forms/` }
   ];

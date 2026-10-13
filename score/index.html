@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Score - Higo-Pella Portal</title>
+  <link rel="stylesheet" href="../src/css/common.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    .container { max-width: 900px; padding: 16px; }
+    .card { padding: 20px; }
+    .page-title { font-size: 1.1rem; font-weight: bold; color: var(--primary-dark); margin-bottom: 14px; }
+    .page-description { font-size: 0.95rem; color: var(--text-sub); }
+  </style>
+</head>
+<body>
+
+  <main class="container">
+    <section class="card">
+      <div class="page-title">Score</div>
+      <p class="page-description">このページは準備中です。</p>
+    </section>
+  </main>
+
+  <script src="../src/js/ui.js"></script>
+  <script src="../src/js/api.js"></script>
+  <script src="../src/js/auth.js"></script>
+  <script src="../src/js/menu.js"></script>
+  <script>
+    initCommonLayout('score');
+    requirePageAuthentication();
+  </script>
+</body>
+</html>
