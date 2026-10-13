@@ -148,6 +148,7 @@ async function initializeHomeScheduleCalendar() {
 	if (!host) return;
 	homeScheduleController = await initScheduleCalendar({
 		host,
+		defaultView: 'day',
 		loadEvents: async (start, end, forceRefresh) => {
 			const result = await callGasApi('getScheduleEvents', {
 				startDate: getLocalDateString(start),
