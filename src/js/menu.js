@@ -10,8 +10,7 @@ function initCommonLayout(activeKey = "") {
     { key: "home", title: "ホーム", href: `${basePath}` },
     { key: "booking", title: "練習予約", href: `${basePath}booking/` },
     { key: "searchYT", title: "YouTube検索", href: `${basePath}searchYT/` },
-    { key: "forms", title: "申請フォーム", href: `${basePath}forms/` },
-    { key: "admin", title: "管理者画面", href: `${basePath}admin/` }
+    { key: "forms", title: "申請フォーム", href: `${basePath}forms/` }
   ];
 
   const layoutHtml = `
@@ -38,6 +37,9 @@ function initCommonLayout(activeKey = "") {
           )
           .join("")}
       </ul>
+      <div class="drawer-admin">
+        <a href="${basePath}admin/" class="${activeKey === "admin" ? "current" : ""}">管理者</a>
+      </div>
       <div class="drawer-footer">
         <a href="#" class="drawer-logout-link" id="btn-drawer-logout">ログアウト</a>
       </div>

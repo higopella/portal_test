@@ -247,8 +247,28 @@ body {
   color: var(--primary-dark);
 }
 
-.drawer-footer {
+.drawer-admin {
   margin-top: auto;
+  padding-top: 16px;
+}
+
+.drawer-admin a {
+  display: block;
+  padding: 10px 14px;
+  color: var(--text);
+  text-decoration: none;
+  border-radius: var(--radius);
+  font-weight: 500;
+}
+
+.drawer-admin a:hover,
+.drawer-admin a.current {
+  background-color: var(--primary-light);
+  color: var(--primary-dark);
+}
+
+.drawer-footer {
+  margin-top: 0;
   padding: 16px 0 12px;
   border-top: 1px solid var(--border);
 }
