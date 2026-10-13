@@ -2,6 +2,7 @@ initCommonLayout('admin');
 
 document.addEventListener('DOMContentLoaded', async () => {
 	showChecking();
+	bindNoticeFormEvents();
 	if (!await requirePageAuthentication()) return;
 	if (checkAdminLogin()) {
 		showDashboard();
@@ -9,6 +10,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 		showAccessDenied();
 	}
 });
+
+function bindNoticeFormEvents() {
+	document.getElementById('form-add-notice').addEventListener('submit', (e) => {
+		e.preventDefault();
+		handleAddNotice();
+	});
+	document.getElementById('btn-insert-highlight').addEventListener('click', () => wrapNoticeSelection('[[', ']]'));
+	document.getElementById('btn-insert-bold-blue').addEventListener('click', () => wrapNoticeSelection('**', '**'));
+	document.getElementById('btn-insert-strike').addEventListener('click', () => wrapNoticeSelection('~~', '~~'));
+	document.getElementById('btn-cancel-edit').addEventListener('click', cancelEditNotice);
+	document.getElementById('btn-refresh-all').addEventListener('click', loadDashboardData);
+}
 
 function showChecking() {
 	document.getElementById('admin-checking-section').style.display = 'flex';
@@ -45,22 +58,57 @@ async function fetchAccessCount() {
 	} catch(e) {}
 }
 
-function insertHighlightTag() {
+function wrapNoticeSelection(before, after) {
 	const textarea = document.getElementById('notice-text');
 	const start = textarea.selectionStart;
 	const end = textarea.selectionEnd;
 	const selected = textarea.value.substring(start, end);
 	if (!selected) {
-		showToast('強調したい文字を選択してください');
+		showToast('装飾したい文字を選択してください');
 		return;
 	}
-	textarea.setRangeText(`[[${selected}]]`, start, end, 'end');
+	textarea.setRangeText(`${before}${selected}${after}`, start, end, 'end');
+	textarea.focus();
+}
+
+let editingNoticeTime = null;
+
+function startEditNotice(item) {
+	editingNoticeTime = item.time;
+	document.getElementById('notice-text').value = item.text;
+	document.getElementById('notice-is-pinned').checked = !!item.isPinned;
+	document.getElementById('btn-submit-notice').textContent = '更新';
+	document.getElementById('btn-cancel-edit').classList.remove('is-hidden');
+	document.getElementById('notice-text').focus();
+	window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function cancelEditNotice() {
+	editingNoticeTime = null;
+	document.getElementById('form-add-notice').reset();
+	document.getElementById('btn-submit-notice').textContent = '追加';
+	document.getElementById('btn-cancel-edit').classList.add('is-hidden');
 }
 
 async function handleAddNotice() {
 	const text = document.getElementById('notice-text').value.trim();
 	const isPinned = document.getElementById('notice-is-pinned').checked;
 	const btn = document.getElementById('btn-submit-notice');
+
+	if (editingNoticeTime) {
+		await withButtonLoading(btn, async () => {
+			const res = await callGasApi('editNotice', { time: editingNoticeTime, text });
+			if (res.success) {
+				await clearNoticeDeviceCache();
+				showToast('お知らせを更新しました');
+				cancelEditNotice();
+				fetchAdminNotices();
+			} else {
+				showToast(res.error || '更新に失敗しました', 'error');
+			}
+		}, '更新中...');
+		return;
+	}
 
 	await withButtonLoading(btn, async () => {
 		const res = await callGasApi('updateNotice', { text, isPinned });
@@ -110,6 +158,11 @@ async function fetchAdminNotices() {
 			toggleBtn.className = 'btn btn-primary small-action-button';
 			toggleBtn.textContent = item.isPinned ? '解除' : '固定';
 			toggleBtn.addEventListener('click', () => handleTogglePin(item.time, toggleBtn));
+			const editBtn = document.createElement('button');
+			editBtn.type = 'button';
+			editBtn.className = 'btn btn-primary small-action-button';
+			editBtn.textContent = '編集';
+			editBtn.addEventListener('click', () => startEditNotice(item));
 			const deleteBtn = document.createElement('button');
 			deleteBtn.type = 'button';
 			deleteBtn.className = 'btn btn-danger small-action-button';
@@ -117,6 +170,7 @@ async function fetchAdminNotices() {
 			deleteBtn.addEventListener('click', () => handleDeleteNotice(item.time, deleteBtn));
 
 			actions.appendChild(toggleBtn);
+			actions.appendChild(editBtn);
 			actions.appendChild(deleteBtn);
 			noticeItem.appendChild(noticeText);
 			noticeItem.appendChild(actions);

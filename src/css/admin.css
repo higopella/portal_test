@@ -68,7 +68,9 @@
 		.access-count { font-size: 1.6rem; font-weight: bold; color: var(--primary-dark); }
 		.notice-form { margin-bottom: 20px; }
 		.highlight-control { margin-bottom: 8px; }
-		.highlight-button { padding: 4px 10px; font-size: 0.8rem; margin-bottom: 6px; }
+		.highlight-button { padding: 4px 10px; font-size: 0.8rem; }
+		.notice-toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+		.notice-submit-group { display: flex; gap: 8px; align-items: center; }
 		.notice-form-row { display: flex; justify-content: space-between; align-items: center; }
 		.pin-label { font-size: 0.9rem; display: flex; align-items: center; gap: 6px; cursor: pointer; }
 		.notice-list-heading { font-size: 1rem; border-top: 1px solid var(--border); padding-top: 14px; }

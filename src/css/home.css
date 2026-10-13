@@ -79,6 +79,8 @@
 		.notice-pin-tag { font-weight: bold; color: var(--primary-dark, #0288d1); }
 		.notice-body { font-size: 0.95rem; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
 		.notice-body .highlight { color: var(--primary-dark, #0288d1); font-weight: bold; }
+		.notice-body .notice-bold-blue { color: #0d47a1; font-weight: bold; }
+		.notice-body .notice-strikethrough { text-decoration: line-through; }
 		.login-container {
 			max-width: 360px;
 			margin: 40px auto 20px;

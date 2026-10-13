@@ -199,19 +199,31 @@ function getHomeScheduleRoomClass(room) {
 function renderNoticeText(text) {
 	const wrapper = document.createElement('div');
 	wrapper.className = 'notice-body';
-	const parts = String(text ?? '').split(/\[\[(.*?)\]\]/g);
-	parts.forEach((part, index) => {
-		if (index % 2 === 1) {
-			const highlight = document.createElement('span');
-			highlight.className = 'highlight';
-			highlight.textContent = part;
-			wrapper.appendChild(highlight);
-			return;
+	const str = String(text ?? '');
+	const pattern = /\[\[(.*?)\]\]|\*\*(.+?)\*\*|~~(.+?)~~/g;
+	let lastIndex = 0;
+	let match;
+	while ((match = pattern.exec(str)) !== null) {
+		if (match.index > lastIndex) {
+			wrapper.appendChild(document.createTextNode(str.slice(lastIndex, match.index)));
 		}
-		if (part) {
-			wrapper.appendChild(document.createTextNode(part));
+		const span = document.createElement('span');
+		if (match[1] !== undefined) {
+			span.className = 'highlight';
+			span.textContent = match[1];
+		} else if (match[2] !== undefined) {
+			span.className = 'notice-bold-blue';
+			span.textContent = match[2];
+		} else {
+			span.className = 'notice-strikethrough';
+			span.textContent = match[3];
 		}
-	});
+		wrapper.appendChild(span);
+		lastIndex = pattern.lastIndex;
+	}
+	if (lastIndex < str.length) {
+		wrapper.appendChild(document.createTextNode(str.slice(lastIndex)));
+	}
 	return wrapper;
 }
 
