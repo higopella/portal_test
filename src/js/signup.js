@@ -38,6 +38,7 @@ async function handleSignupGoogleCredential(response) {
     if (result.status === 'authenticated') {
       setUserLogin(true);
       setAdminLogin(result.user && result.user.role === 'admin');
+      recordLoginHistory();
       window.location.replace('../');
       return;
     }
@@ -96,6 +97,7 @@ async function verifySignupOtp(event) {
       }
       setUserLogin(true);
       setAdminLogin(result.user && result.user.role === 'admin');
+      recordLoginHistory();
       showToast('登録が完了しました');
       window.location.replace('../');
     } catch (error) {

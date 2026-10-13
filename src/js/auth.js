@@ -1,10 +1,14 @@
+const GOOGLE_OAUTH_CLIENT_ID = '65097864960-vbe2ukqcoi9mpqc9capgtu9mak6vf4qs.apps.googleusercontent.com';
+const LOGIN_HISTORY_TTL_MS = 14 * 24 * 60 * 60 * 1000;
+
 const CONFIG = {
   GAS_API_URL: "https://script.google.com/macros/s/AKfycbynzAVfuPKHqT9jkKX-JPh5l42JCbR6d6d0sb9PT_TAilMhtDSY2PW2hOMdEPEMXBgT/exec",
   STORAGE_KEYS: {
     IS_LOGGED_IN: "higopella_is_logged_in",
     IS_ADMIN: "higopella_is_admin",
     ID_TOKEN: "higopella_id_token",
-    LAST_ACCESS_TIME: "higopella_last_access_time"
+    LAST_ACCESS_TIME: "higopella_last_access_time",
+    LAST_LOGIN_AT: "higopella_last_login_at"
   }
 };
 
@@ -57,7 +61,109 @@ function logoutUser() {
   clearCurrentIdToken();
   setUserLogin(false);
   setAdminLogin(false);
+  clearLoginHistory();
   window.location.replace(window.location.pathname.includes('/portal_test/') ? '/portal_test/' : '/');
+}
+
+function recordLoginHistory() {
+  localStorage.setItem(CONFIG.STORAGE_KEYS.LAST_LOGIN_AT, String(Date.now()));
+}
+
+function clearLoginHistory() {
+  localStorage.removeItem(CONFIG.STORAGE_KEYS.LAST_LOGIN_AT);
+}
+
+function hasValidLoginHistory() {
+  const raw = localStorage.getItem(CONFIG.STORAGE_KEYS.LAST_LOGIN_AT);
+  if (!raw) return false;
+  const lastLoginAt = Number(raw);
+  return Number.isFinite(lastLoginAt) && Date.now() - lastLoginAt <= LOGIN_HISTORY_TTL_MS;
+}
+
+let gisInitialized = false;
+let gisCredentialHandler = null;
+
+function initGoogleIdentity(callback) {
+  if (!window.google || !google.accounts || !google.accounts.id) return false;
+  gisCredentialHandler = callback;
+  if (!gisInitialized) {
+    gisInitialized = true;
+    google.accounts.id.initialize({
+      client_id: GOOGLE_OAUTH_CLIENT_ID,
+      auto_select: true,
+      callback: (response) => {
+        if (gisCredentialHandler) gisCredentialHandler(response);
+      }
+    });
+  }
+  return true;
+}
+
+function waitForGisReady(timeoutMs = 5000) {
+  return new Promise((resolve) => {
+    if (window.google && google.accounts && google.accounts.id) {
+      resolve(true);
+      return;
+    }
+    const startedAt = Date.now();
+    const timer = setInterval(() => {
+      if (window.google && google.accounts && google.accounts.id) {
+        clearInterval(timer);
+        resolve(true);
+      } else if (Date.now() - startedAt >= timeoutMs) {
+        clearInterval(timer);
+        resolve(false);
+      }
+    }, 100);
+  });
+}
+
+function requestSilentIdToken(timeoutMs = 6000) {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (token) => {
+      if (settled) return;
+      settled = true;
+      resolve(token);
+    };
+    if (!initGoogleIdentity((response) => finish(response && response.credential ? response.credential : null))) {
+      finish(null);
+      return;
+    }
+    try {
+      google.accounts.id.prompt(() => {});
+    } catch (error) {
+      finish(null);
+      return;
+    }
+    setTimeout(() => finish(null), timeoutMs);
+  });
+}
+
+async function trySilentReauth() {
+  if (!hasValidLoginHistory()) return false;
+  if (!await waitForGisReady()) return false;
+  const token = await requestSilentIdToken();
+  if (!token) return false;
+  setCurrentIdToken(token);
+  return true;
+}
+
+async function verifySessionWithGas() {
+  try {
+    const result = await callGasApi('authenticateGoogle', { idToken: getCurrentIdToken() });
+    if (result.status === 'authenticated') {
+      setUserLogin(true);
+      setAdminLogin(result.user && result.user.role === 'admin');
+      recordLoginHistory();
+      return true;
+    }
+  } catch (error) {
+    // Treat communication and authentication failures as logged out.
+  }
+  clearCurrentIdToken();
+  setUserLogin(false);
+  return false;
 }
 
 function syncDrawerLogoutVisibility() {
@@ -68,23 +174,11 @@ function syncDrawerLogoutVisibility() {
 async function requirePageAuthentication() {
   const homePath = window.location.pathname.includes('/portal_test/') ? '/portal_test/' : '/';
   if (!getCurrentIdToken()) {
-    window.location.replace(homePath);
-    return false;
+    await trySilentReauth();
   }
 
-  try {
-    const result = await callGasApi('authenticateGoogle', { idToken: getCurrentIdToken() });
-    if (result.status === 'authenticated') {
-      setUserLogin(true);
-      setAdminLogin(result.user && result.user.role === 'admin');
-      return true;
-    }
-  } catch (error) {
-    // Treat communication and authentication failures as logged out.
-  }
+  if (getCurrentIdToken() && await verifySessionWithGas()) return true;
 
-  clearCurrentIdToken();
-  setUserLogin(false);
   window.location.replace(homePath);
   return false;
 }

@@ -1,6 +1,5 @@
 initCommonLayout('home');
 
-const GOOGLE_OAUTH_CLIENT_ID = '65097864960-vbe2ukqcoi9mpqc9capgtu9mak6vf4qs.apps.googleusercontent.com';
 let homeScheduleController = null;
 let noticeRequestId = 0;
 let homeDataLoaded = false;
@@ -27,20 +26,13 @@ function renderHomeView() {
 
 document.addEventListener('DOMContentLoaded', async () => {
 	let hasAuthenticatedSession = false;
-	if (getCurrentIdToken()) {
+	if (getCurrentIdToken() || hasValidLoginHistory()) {
 		setLoginStatus('ログイン状態を確認しています...', 'loading');
-		try {
-			const result = await callGasApi('authenticateGoogle', { idToken: getCurrentIdToken() });
-			if (result.status === 'authenticated') {
-				setUserLogin(true);
-				hasAuthenticatedSession = true;
-			} else {
-				clearCurrentIdToken();
-				setUserLogin(false);
-			}
-		} catch (error) {
-			clearCurrentIdToken();
-			setUserLogin(false);
+		if (!getCurrentIdToken()) {
+			await trySilentReauth();
+		}
+		if (getCurrentIdToken()) {
+			hasAuthenticatedSession = await verifySessionWithGas();
 		}
 	}
 	initializeGoogleLogin(hasAuthenticatedSession);
@@ -57,17 +49,13 @@ async function loadHomeDataInOrder() {
 function initializeGoogleLogin(hasAuthenticatedSession = false) {
 	const buttonContainer = document.getElementById('google-login-button');
 	if (!buttonContainer) return;
-	if (!window.google || !google.accounts || !google.accounts.id) {
+	if (!initGoogleIdentity(handleGoogleCredential)) {
 		setLoginStatus('Googleログインを準備しています。');
 		const googleScript = document.getElementById('google-identity-script');
 		if (googleScript) googleScript.addEventListener('load', initializeGoogleLogin, { once: true });
 		return;
 	}
 
-	google.accounts.id.initialize({
-		client_id: GOOGLE_OAUTH_CLIENT_ID,
-		callback: handleGoogleCredential
-	});
 	google.accounts.id.renderButton(buttonContainer, { theme: 'outline', size: 'large', width: 280 });
 	if (!hasAuthenticatedSession) setLoginStatus('Googleアカウントでログインしてください。');
 }
@@ -93,6 +81,7 @@ async function handleGoogleCredential(response) {
 		if (result.status === 'authenticated') {
 			setLoginStatus('認証に成功しました。画面を準備しています...', 'success');
 			setUserLogin(true);
+			recordLoginHistory();
 			showToast('ログインしました');
 			renderHomeView();
 			return;
