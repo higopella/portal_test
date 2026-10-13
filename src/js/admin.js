@@ -2,7 +2,7 @@ initCommonLayout('admin');
 
 document.addEventListener('DOMContentLoaded', async () => {
 	showChecking();
-	bindNoticeFormEvents();
+	bindAdminFormEvents();
 	if (!await requirePageAuthentication()) return;
 	if (checkAdminLogin()) {
 		showDashboard();
@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 	}
 });
 
-function bindNoticeFormEvents() {
+function bindAdminFormEvents() {
 	document.getElementById('form-add-notice').addEventListener('submit', (e) => {
 		e.preventDefault();
 		handleAddNotice();
@@ -20,6 +20,25 @@ function bindNoticeFormEvents() {
 	document.getElementById('btn-insert-strike').addEventListener('click', () => wrapNoticeSelection('~~', '~~'));
 	document.getElementById('btn-cancel-edit').addEventListener('click', cancelEditNotice);
 	document.getElementById('btn-refresh-all').addEventListener('click', loadDashboardData);
+	document.getElementById('form-main-event').addEventListener('submit', (e) => {
+		e.preventDefault();
+		handleAddMainEvent();
+	});
+	document.getElementById('main-event-all-day').addEventListener('change', (e) => {
+		document.getElementById('main-event-time-row').classList.toggle('is-hidden', e.target.checked);
+	});
+	document.querySelectorAll('.admin-tab').forEach((tab) => {
+		tab.addEventListener('click', () => switchAdminTab(tab.dataset.tab));
+	});
+}
+
+function switchAdminTab(tabKey) {
+	document.querySelectorAll('.admin-tab').forEach((tab) => {
+		tab.classList.toggle('active', tab.dataset.tab === tabKey);
+	});
+	document.querySelectorAll('.admin-tab-panel').forEach((panel) => {
+		panel.classList.toggle('is-hidden', panel.id !== `tab-${tabKey}`);
+	});
 }
 
 function showChecking() {
@@ -209,6 +228,30 @@ async function handleDeleteNotice(timeStr, btn) {
 			showToast(res.error || '失敗しました', 'error');
 		}
 	}, '削除中');
+}
+
+async function handleAddMainEvent() {
+	const date = document.getElementById('main-event-date').value;
+	const isAllDay = document.getElementById('main-event-all-day').checked;
+	const startTime = document.getElementById('main-event-start').value;
+	const endTime = document.getElementById('main-event-end').value;
+	const title = document.getElementById('main-event-title').value.trim();
+	if (!date || !title || (!isAllDay && (!startTime || !endTime))) {
+		showToast('未入力の項目があります', 'error');
+		return;
+	}
+	const btn = document.getElementById('btn-submit-main-event');
+	await withButtonLoading(btn, async () => {
+		const res = await callGasApi('addMainEvent', { date, isAllDay, startTime, endTime, title });
+		if (res.success) {
+			if (typeof clearScheduleDeviceCache === 'function') await clearScheduleDeviceCache();
+			showToast('メインカレンダーに登録しました');
+			document.getElementById('form-main-event').reset();
+			fetchLogs();
+		} else {
+			showToast(res.error || '登録に失敗しました', 'error');
+		}
+	}, '登録中...');
 }
 
 async function fetchLogs() {

@@ -40,6 +40,14 @@
 			color: var(--primary-dark);
 			font-weight: bold;
 		}
+		.log-scroll { max-height: 320px; overflow-y: auto; }
+		.log-scroll thead th { position: sticky; top: 0; z-index: 1; }
+		.admin-tabs { display: flex; gap: 6px; }
+		.admin-tab { flex: 1; padding: 10px 4px; border: 1px solid var(--border); border-radius: var(--radius); background-color: var(--card); color: var(--text-sub); font-size: 0.8rem; font-weight: bold; cursor: pointer; white-space: nowrap; text-align: center; }
+		.admin-tab.active { background-color: var(--primary); color: #fff; border-color: var(--primary); }
+		@media (max-width: 360px) {
+			.admin-tab { font-size: 0.7rem; padding: 8px 2px; }
+		}
 		.admin-notice-item {
 			display: flex;
 			justify-content: space-between;
@@ -71,6 +79,10 @@
 		.highlight-button { padding: 4px 10px; font-size: 0.8rem; }
 		.notice-toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 		.notice-submit-group { display: flex; gap: 8px; align-items: center; }
+		.main-event-grid { display: flex; gap: 12px; margin-bottom: 12px; }
+		.main-event-grid .input-text { flex: 1; }
+		.main-event-all-day-label { flex: 0 0 auto; align-self: center; }
+		.main-event-title { margin-bottom: 12px; }
 		.notice-form-row { display: flex; justify-content: space-between; align-items: center; }
 		.pin-label { font-size: 0.9rem; display: flex; align-items: center; gap: 6px; cursor: pointer; }
 		.notice-list-heading { font-size: 1rem; border-top: 1px solid var(--border); padding-top: 14px; }

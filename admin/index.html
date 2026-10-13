@@ -29,6 +29,14 @@
 
   <!-- 2. 管理者ダッシュボード -->
   <main id="admin-dashboard-section" class="container is-hidden">
+    <nav class="admin-tabs" aria-label="管理メニュー">
+      <button type="button" class="admin-tab active" data-tab="access">閲覧数</button>
+      <button type="button" class="admin-tab" data-tab="notice">お知らせ追加</button>
+      <button type="button" class="admin-tab" data-tab="booking">予約</button>
+      <button type="button" class="admin-tab" data-tab="logs">予約ログ</button>
+    </nav>
+
+    <div class="admin-tab-panel" id="tab-access">
     <!-- 概要・アクセス数 -->
     <section class="card dashboard-summary">
       <div>
@@ -37,6 +45,9 @@
       </div>
       <button type="button" class="btn btn-primary" id="btn-refresh-all">更新</button>
     </section>
+    </div>
+
+    <div class="admin-tab-panel is-hidden" id="tab-notice">
 
     <!-- お知らせ管理 -->
     <section class="card">
@@ -61,11 +72,39 @@
       <div class="card-title notice-list-heading">投稿済み一覧</div>
       <div id="admin-notice-list">読み込み中...</div>
     </section>
+    </div>
 
-    <!-- 操作ログ（直近50件） -->
+    <div class="admin-tab-panel is-hidden" id="tab-booking">
+
+    <!-- メインカレンダー登録（管理者専用） -->
     <section class="card">
-      <div class="card-title">予約・操作ログ (最新50件)</div>
-      <div class="table-responsive">
+      <div class="card-title">メインカレンダー登録</div>
+      <form id="form-main-event" class="notice-form">
+        <div class="main-event-grid">
+          <input type="date" id="main-event-date" class="input-text" aria-label="日付" required>
+          <label class="pin-label main-event-all-day-label">
+            <input type="checkbox" id="main-event-all-day"> 終日
+          </label>
+        </div>
+        <div class="main-event-grid" id="main-event-time-row">
+          <input type="time" id="main-event-start" class="input-text" step="60" aria-label="開始時間">
+          <input type="time" id="main-event-end" class="input-text" step="60" aria-label="終了時間">
+        </div>
+        <input type="text" id="main-event-title" class="input-text main-event-title" placeholder="内容（例: 部会）" required>
+        <div class="notice-form-row">
+          <span></span>
+          <button type="submit" id="btn-submit-main-event" class="btn btn-primary">登録</button>
+        </div>
+      </form>
+    </section>
+    </div>
+
+    <div class="admin-tab-panel is-hidden" id="tab-logs">
+
+    <!-- 操作ログ（直近1ヶ月） -->
+    <section class="card">
+      <div class="card-title">予約・操作ログ (直近1ヶ月)</div>
+      <div class="table-responsive log-scroll">
         <table class="log-table">
           <thead>
             <tr>
@@ -85,6 +124,7 @@
         </table>
       </div>
     </section>
+    </div>
   </main>
 
   <script src="../src/js/ui.js"></script>
