@@ -17,7 +17,6 @@ function bindNoticeFormEvents() {
 		handleAddNotice();
 	});
 	document.getElementById('btn-insert-highlight').addEventListener('click', () => wrapNoticeSelection('[[', ']]'));
-	document.getElementById('btn-insert-bold-blue').addEventListener('click', () => wrapNoticeSelection('**', '**'));
 	document.getElementById('btn-insert-strike').addEventListener('click', () => wrapNoticeSelection('~~', '~~'));
 	document.getElementById('btn-cancel-edit').addEventListener('click', cancelEditNotice);
 	document.getElementById('btn-refresh-all').addEventListener('click', loadDashboardData);

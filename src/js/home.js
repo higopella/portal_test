@@ -200,7 +200,7 @@ function renderNoticeText(text) {
 	const wrapper = document.createElement('div');
 	wrapper.className = 'notice-body';
 	const str = String(text ?? '');
-	const pattern = /\[\[(.*?)\]\]|\*\*(.+?)\*\*|~~(.+?)~~/g;
+	const pattern = /\[\[(.*?)\]\]|~~(.*?)~~/g;
 	let lastIndex = 0;
 	let match;
 	while ((match = pattern.exec(str)) !== null) {
@@ -211,12 +211,9 @@ function renderNoticeText(text) {
 		if (match[1] !== undefined) {
 			span.className = 'highlight';
 			span.textContent = match[1];
-		} else if (match[2] !== undefined) {
-			span.className = 'notice-bold-blue';
-			span.textContent = match[2];
 		} else {
 			span.className = 'notice-strikethrough';
-			span.textContent = match[3];
+			span.textContent = match[2];
 		}
 		wrapper.appendChild(span);
 		lastIndex = pattern.lastIndex;
