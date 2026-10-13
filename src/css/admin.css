@@ -40,7 +40,7 @@
 			color: var(--primary-dark);
 			font-weight: bold;
 		}
-		.log-scroll { max-height: 320px; overflow-y: auto; }
+		.log-scroll { max-height: 480px; overflow-y: auto; }
 		.log-scroll thead th { position: sticky; top: 0; z-index: 1; }
 		.admin-tabs { display: flex; gap: 6px; }
 		.admin-tab { flex: 1; padding: 10px 4px; border: 1px solid var(--border); border-radius: var(--radius); background-color: var(--card); color: var(--text-sub); font-size: 0.8rem; font-weight: bold; cursor: pointer; white-space: nowrap; text-align: center; }
