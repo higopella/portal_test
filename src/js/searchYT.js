@@ -3,6 +3,8 @@ initCommonLayout('searchYT');
 let allVideos = [];
 let currentType = 'ALL';
 let latestRequestId = 0;
+let visibleCount = 50;
+const VIDEOS_PER_PAGE = 50;
 
 document.addEventListener('DOMContentLoaded', async () => {
 	if (!await requirePageAuthentication()) return;
@@ -21,6 +23,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 	document.querySelectorAll('.tab-btn').forEach((button) => {
 		button.addEventListener('click', () => setVideoType(button.dataset.videoType || 'ALL'));
 	});
+	const loadMoreBtn = document.getElementById('btn-load-more');
+	if (loadMoreBtn) {
+		loadMoreBtn.addEventListener('click', () => {
+			visibleCount += VIDEOS_PER_PAGE;
+			filterVideos();
+		});
+	}
 	refreshVideoCatalog(false);
 });
 
@@ -49,6 +58,7 @@ async function refreshVideoCatalog(forceRefresh) {
 
 		allVideos = Array.isArray(videoRes.videos) ? videoRes.videos : [];
 		renderPlaylistOptions(selectEl, playlists, allVideos);
+		visibleCount = VIDEOS_PER_PAGE;
 		filterVideos();
 		await writeYouTubeCatalogCache(allVideos, playlists);
 	} catch (error) {
@@ -107,6 +117,7 @@ function setVideoType(type) {
 	document.getElementById('tab-all').classList.toggle('active', type === 'ALL');
 	document.getElementById('tab-regular').classList.toggle('active', type === 'REGULAR');
 	document.getElementById('tab-shorts').classList.toggle('active', type === 'SHORTS');
+	visibleCount = VIDEOS_PER_PAGE;
 	filterVideos();
 }
 
@@ -131,11 +142,14 @@ function filterVideos() {
 		empty.className = 'video-message';
 		empty.textContent = '該当する動画がありません';
 		listContainer.appendChild(empty);
+		const loadMoreBtn = document.getElementById('btn-load-more');
+		if (loadMoreBtn) loadMoreBtn.hidden = true;
 		return;
 	}
 
 	listContainer.textContent = '';
-	filtered.forEach((v) => {
+	const visibleVideos = filtered.slice(0, visibleCount);
+	visibleVideos.forEach((v) => {
 		const dateStr = v.publishedAt ? v.publishedAt.split('T')[0] : '';
 		const youtubeUrl = `https://www.youtube.com/watch?v=${encodeURIComponent(v.videoId)}`;
 		const card = document.createElement('a');
@@ -162,4 +176,9 @@ function filterVideos() {
 		card.appendChild(info);
 		listContainer.appendChild(card);
 	});
+
+	const loadMoreBtn = document.getElementById('btn-load-more');
+	if (loadMoreBtn) {
+		loadMoreBtn.hidden = filtered.length <= visibleCount;
+	}
 }
