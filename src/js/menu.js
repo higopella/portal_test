@@ -10,7 +10,7 @@ function initCommonLayout(activeKey = "") {
     { key: "home", title: "ホーム", href: `${basePath}` },
     { key: "booking", title: "練習予約", href: `${basePath}booking/` },
     { key: "searchYT", title: "YouTube検索", href: `${basePath}searchYT/` },
-    { key: "forms", title: "申請フォーム", href: `${basePath}forms/` }
+    { key: "forms", title: "フォーム", href: `${basePath}forms/` }
   ];
 
   const layoutHtml = `
