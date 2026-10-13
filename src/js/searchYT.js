@@ -107,7 +107,7 @@ function extractTitleCategories(videos) {
 	const categories = new Set();
 	(videos || []).forEach((video) => {
 		const match = String(video.title || '').match(/【([^】]+)】/);
-		if (match && match[1].trim()) categories.add(match[1].trim());
+		if (match && match[1].trim() && match[1].trim() !== 'Higo-Pella') categories.add(match[1].trim());
 	});
 	return Array.from(categories).sort((a, b) => a.localeCompare(b, 'ja'));
 }
