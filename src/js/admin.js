@@ -2,36 +2,22 @@ initCommonLayout('admin');
 
 document.addEventListener('DOMContentLoaded', async () => {
 	if (!await requirePageAuthentication()) return;
-	const isAdmin = checkAdminLogin();
-	if (isAdmin) {
+	if (checkAdminLogin()) {
 		showDashboard();
 	} else {
-		showToast('管理者権限が必要です', 'error');
-		window.location.replace('../');
+		showAccessDenied();
 	}
 });
 
-async function handleAdminLogin() {
-	const username = document.getElementById('admin-username').value.trim();
-	const password = document.getElementById('admin-password').value.trim();
-	const btn = document.getElementById('btn-admin-login');
-
-	await withButtonLoading(btn, async () => {
-		const res = await callGasApi('verifyAdminLogin', { username, password });
-		if (res.success) {
-			setAdminLogin(true);
-			showToast('管理者としてログインしました');
-			showDashboard();
-		} else {
-			showToast(res.error || '認証に失敗しました', 'error');
-		}
-	}, '認証中...');
-}
-
 function showDashboard() {
-	document.getElementById('admin-login-section').style.display = 'none';
+	document.getElementById('admin-access-denied-section').style.display = 'none';
 	document.getElementById('admin-dashboard-section').style.display = 'flex';
 	loadDashboardData();
+}
+
+function showAccessDenied() {
+	document.getElementById('admin-access-denied-section').style.display = 'block';
+	document.getElementById('admin-dashboard-section').style.display = 'none';
 }
 
 async function loadDashboardData() {

@@ -86,4 +86,10 @@ function initCommonLayout(activeKey = "") {
   });
 
   initScrollTopButton();
+  recordPageAccess();
+}
+
+function recordPageAccess() {
+  if (typeof callGasApi !== "function") return;
+  callGasApi('recordAccess').catch(() => {});
 }

@@ -60,6 +60,7 @@
 		.admin-notice-actions { display: flex; gap: 6px; }
 		.admin-login-card { max-width: 360px; margin: 40px auto; text-align: center; }
 		.admin-login-title { margin-bottom: 12px; color: var(--primary-dark); }
+		.admin-login-description { font-size: 0.9rem; color: var(--text-sub); margin-bottom: 16px; }
 		.admin-login-username { margin-bottom: 12px; }
 		.admin-login-password { margin-bottom: 16px; }
 		.dashboard-summary { display: flex; justify-content: space-between; align-items: center; }

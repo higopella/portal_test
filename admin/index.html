@@ -9,15 +9,12 @@
 </head>
 <body>
 
-  <!-- 1. 管理者ログインフォーム -->
-  <div id="admin-login-section" class="container is-hidden">
+  <!-- 1. 権限なし表示 -->
+  <div id="admin-access-denied-section" class="container is-hidden">
     <div class="card admin-login-card">
-      <h2 class="admin-login-title">管理者ログイン</h2>
-      <form id="form-admin-login">
-        <input type="text" id="admin-username" class="input-text admin-login-username" placeholder="ユーザー名" required>
-        <input type="password" id="admin-password" class="input-text admin-login-password" placeholder="パスワード" required>
-        <button type="submit" id="btn-admin-login" class="btn btn-primary full-width">ログイン</button>
-      </form>
+      <h2 class="admin-login-title">権限がありません</h2>
+      <p class="admin-login-description">このページは管理者のみアクセスできます。</p>
+      <a href="../" class="btn btn-primary full-width">ホームへ戻る</a>
     </div>
   </div>
 
