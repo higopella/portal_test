@@ -30,6 +30,8 @@ function bindAdminFormEvents() {
 	document.querySelectorAll('.admin-tab').forEach((tab) => {
 		tab.addEventListener('click', () => switchAdminTab(tab.dataset.tab));
 	});
+	document.getElementById('admin-delete-date').value = getScheduleDateString(new Date());
+	document.getElementById('btn-admin-search-events').addEventListener('click', handleAdminSearchEvents);
 }
 
 function switchAdminTab(tabKey) {
@@ -226,6 +228,70 @@ async function handleDeleteNotice(timeStr, btn) {
 			fetchAdminNotices();
 		} else {
 			showToast(res.error || '失敗しました', 'error');
+		}
+	}, '削除中');
+}
+
+async function handleAdminSearchEvents() {
+	const date = document.getElementById('admin-delete-date').value;
+	if (!date) {
+		showToast('対象日を選択してください', 'error');
+		return;
+	}
+	const container = document.getElementById('admin-event-list');
+	container.textContent = '読み込み中...';
+	try {
+		const res = await callGasApi('adminFindEvents', { date });
+		container.textContent = '';
+		if (!res.success || !res.events || res.events.length === 0) {
+			const empty = document.createElement('div');
+			empty.className = 'table-message';
+			empty.textContent = '予定はありません';
+			container.appendChild(empty);
+			return;
+		}
+		res.events.forEach((event) => {
+			const item = document.createElement('div');
+			item.className = 'admin-notice-item';
+
+			const text = document.createElement('div');
+			text.className = 'admin-notice-text';
+			const timeLabel = event.isAllDay ? '終日' : `${event.startTime}-${event.endTime}`;
+			text.textContent = `${timeLabel} ${event.room} ${event.title}`;
+
+			const actions = document.createElement('div');
+			actions.className = 'admin-notice-actions';
+			const deleteBtn = document.createElement('button');
+			deleteBtn.type = 'button';
+			deleteBtn.className = 'btn btn-danger small-action-button';
+			deleteBtn.textContent = '削除';
+			deleteBtn.addEventListener('click', () => handleAdminDeleteEvent(event.id, event.title, deleteBtn));
+			actions.appendChild(deleteBtn);
+
+			item.appendChild(text);
+			item.appendChild(actions);
+			container.appendChild(item);
+		});
+	} catch (e) {
+		container.textContent = '';
+		const error = document.createElement('div');
+		error.className = 'table-message table-message-error';
+		error.textContent = '取得失敗';
+		container.appendChild(error);
+	}
+}
+
+async function handleAdminDeleteEvent(eventId, title, btn) {
+	if (!confirm(`「${title}」を削除しますか？`)) return;
+	await withButtonLoading(btn, async () => {
+		const res = await callGasApi('adminDeleteEvent', { eventId });
+		if (res.success) {
+			if (typeof clearScheduleDeviceCache === 'function') await clearScheduleDeviceCache();
+			showToast('削除しました');
+			handleAdminSearchEvents();
+			fetchLogs();
+		} else {
+			showToast(res.error || '削除に失敗しました', 'error');
 		}
 	}, '削除中');
 }
