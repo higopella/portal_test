@@ -80,17 +80,35 @@
     <section class="card">
       <div class="card-title">メインカレンダー登録</div>
       <form id="form-main-event" class="notice-form">
-        <div class="main-event-grid">
-          <input type="date" id="main-event-date" class="input-text" aria-label="日付" required>
-          <label class="pin-label main-event-all-day-label">
-            <input type="checkbox" id="main-event-all-day"> 終日
-          </label>
+        <div class="admin-form-group">
+          <label class="admin-form-label" for="main-event-date">日付</label>
+          <div class="main-event-grid">
+            <input type="date" id="main-event-date" class="input-text" required>
+            <label class="pin-label main-event-all-day-label">
+              <input type="checkbox" id="main-event-all-day"> 終日
+            </label>
+          </div>
         </div>
-        <div class="main-event-grid" id="main-event-time-row">
-          <input type="time" id="main-event-start" class="input-text" step="60" aria-label="開始時間">
-          <input type="time" id="main-event-end" class="input-text" step="60" aria-label="終了時間">
+        <div id="main-event-time-row">
+          <div class="admin-form-group main-event-grid">
+            <div class="admin-form-field">
+              <label class="admin-form-label" for="main-event-start">開始時間</label>
+              <input type="time" id="main-event-start" class="input-text" step="60">
+            </div>
+            <div class="admin-form-field">
+              <label class="admin-form-label" for="main-event-end">終了時間</label>
+              <input type="time" id="main-event-end" class="input-text" step="60">
+            </div>
+          </div>
         </div>
-        <input type="text" id="main-event-title" class="input-text main-event-title" placeholder="内容（例: 部会）" required>
+        <div class="admin-form-group">
+          <label class="admin-form-label" for="main-event-title">内容</label>
+          <input type="text" id="main-event-title" class="input-text" placeholder="例: 部会" required>
+        </div>
+        <div class="admin-form-group">
+          <label class="admin-form-label" for="main-event-rep-name">予約者名（任意）</label>
+          <input type="text" id="main-event-rep-name" class="input-text" placeholder="例: 肥後">
+        </div>
         <div class="notice-form-row">
           <span></span>
           <button type="submit" id="btn-submit-main-event" class="btn btn-primary">登録</button>

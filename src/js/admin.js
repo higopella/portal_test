@@ -236,13 +236,14 @@ async function handleAddMainEvent() {
 	const startTime = document.getElementById('main-event-start').value;
 	const endTime = document.getElementById('main-event-end').value;
 	const title = document.getElementById('main-event-title').value.trim();
+	const repName = document.getElementById('main-event-rep-name').value.trim();
 	if (!date || !title || (!isAllDay && (!startTime || !endTime))) {
 		showToast('未入力の項目があります', 'error');
 		return;
 	}
 	const btn = document.getElementById('btn-submit-main-event');
 	await withButtonLoading(btn, async () => {
-		const res = await callGasApi('addMainEvent', { date, isAllDay, startTime, endTime, title });
+		const res = await callGasApi('addMainEvent', { date, isAllDay, startTime, endTime, title, repName });
 		if (res.success) {
 			if (typeof clearScheduleDeviceCache === 'function') await clearScheduleDeviceCache();
 			showToast('メインカレンダーに登録しました');

@@ -79,10 +79,12 @@
 		.highlight-button { padding: 4px 10px; font-size: 0.8rem; }
 		.notice-toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 		.notice-submit-group { display: flex; gap: 8px; align-items: center; }
-		.main-event-grid { display: flex; gap: 12px; margin-bottom: 12px; }
+		.main-event-grid { display: flex; gap: 12px; }
 		.main-event-grid .input-text { flex: 1; }
 		.main-event-all-day-label { flex: 0 0 auto; align-self: center; }
-		.main-event-title { margin-bottom: 12px; }
+		.admin-form-group { margin-bottom: 12px; }
+		.admin-form-label { display: block; font-size: 0.85rem; color: var(--text-sub); margin-bottom: 4px; }
+		.admin-form-field { flex: 1; min-width: 0; }
 		.notice-form-row { display: flex; justify-content: space-between; align-items: center; }
 		.pin-label { font-size: 0.9rem; display: flex; align-items: center; gap: 6px; cursor: pointer; }
 		.notice-list-heading { font-size: 1rem; border-top: 1px solid var(--border); padding-top: 14px; }
