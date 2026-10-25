@@ -92,6 +92,7 @@ async function verifySignupOtp(event) {
     try {
       const result = await callGasApi('verifyOtp', { idToken, schoolEmail, nickname, otp });
       if (!result.success) {
+        if (result.code === 'USER_ALREADY_EXISTS' && await finalizeSignupAsLoggedIn()) return;
         showToast(result.error || '確認コードを確認できません', 'error');
         return;
       }
@@ -101,7 +102,23 @@ async function verifySignupOtp(event) {
       showToast('登録が完了しました');
       window.location.replace('../');
     } catch (error) {
+      if (await finalizeSignupAsLoggedIn()) return;
       showToast('登録に失敗しました', 'error');
     }
   }, '登録中...');
+}
+
+async function finalizeSignupAsLoggedIn() {
+  try {
+    const result = await callGasApi('authenticateGoogle', { idToken: getCurrentIdToken() });
+    if (result.status === 'authenticated') {
+      setUserLogin(true);
+      setAdminLogin(result.user && result.user.role === 'admin');
+      recordLoginHistory();
+      showToast('登録が完了しました');
+      window.location.replace('../');
+      return true;
+    }
+  } catch (error) {}
+  return false;
 }
