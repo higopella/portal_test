@@ -1,37 +1,66 @@
-initCommonLayout('admin');
+const ROLE_PAGE_KEY = (document.body.dataset.roleKey || 'admin');
+const REQUIRED_ROLE = (document.body.dataset.requiredRole || ROLE_PAGE_KEY);
+
+initCommonLayout(`role-${ROLE_PAGE_KEY}`);
+
+const ROLE_SWITCH_PAGES = [
+	{ role: 'admin', label: '管理者', href: '../admin/' },
+	{ role: 'kanbu', label: '幹部', href: '../kanbu/' },
+	{ role: 'higopelive', label: 'ヒゴペライブ', href: '../higopelive/' }
+];
 
 document.addEventListener('DOMContentLoaded', async () => {
 	showChecking();
-	bindAdminFormEvents();
+	bindRolePageEvents();
 	if (!await requirePageAuthentication()) return;
-	if (checkAdminLogin()) {
+	if (hasRole(REQUIRED_ROLE)) {
 		showDashboard();
 	} else {
 		showAccessDenied();
 	}
 });
 
-function bindAdminFormEvents() {
-	document.getElementById('form-add-notice').addEventListener('submit', (e) => {
+function bindRolePageEvents() {
+	const on = (id, event, handler) => {
+		const el = document.getElementById(id);
+		if (el) el.addEventListener(event, handler);
+	};
+	on('form-add-notice', 'submit', (e) => {
 		e.preventDefault();
 		handleAddNotice();
 	});
-	document.getElementById('btn-insert-highlight').addEventListener('click', () => wrapNoticeSelection('[[', ']]'));
-	document.getElementById('btn-insert-strike').addEventListener('click', () => wrapNoticeSelection('~~', '~~'));
-	document.getElementById('btn-cancel-edit').addEventListener('click', cancelEditNotice);
-	document.getElementById('btn-refresh-all').addEventListener('click', loadDashboardData);
-	document.getElementById('form-main-event').addEventListener('submit', (e) => {
+	on('btn-insert-highlight', 'click', () => wrapNoticeSelection('[[', ']]'));
+	on('btn-insert-strike', 'click', () => wrapNoticeSelection('~~', '~~'));
+	on('btn-cancel-edit', 'click', cancelEditNotice);
+	on('btn-refresh-all', 'click', loadDashboardData);
+	on('form-main-event', 'submit', (e) => {
 		e.preventDefault();
 		handleAddMainEvent();
 	});
-	document.getElementById('main-event-all-day').addEventListener('change', (e) => {
+	on('main-event-all-day', 'change', (e) => {
 		document.getElementById('main-event-time-row').classList.toggle('is-hidden', e.target.checked);
 	});
+	on('btn-admin-search-events', 'click', handleAdminSearchEvents);
 	document.querySelectorAll('.admin-tab').forEach((tab) => {
 		tab.addEventListener('click', () => switchAdminTab(tab.dataset.tab));
 	});
-	document.getElementById('admin-delete-date').value = getScheduleDateString(new Date());
-	document.getElementById('btn-admin-search-events').addEventListener('click', handleAdminSearchEvents);
+	const deleteDate = document.getElementById('admin-delete-date');
+	if (deleteDate) deleteDate.value = getScheduleDateString(new Date());
+}
+
+function renderRoleSwitcher() {
+	const container = document.getElementById('role-switcher');
+	if (!container || typeof hasRole !== 'function') return;
+	const available = ROLE_SWITCH_PAGES.filter((page) => hasRole(page.role));
+	if (available.length < 2) return;
+	available.forEach((page) => {
+		const link = document.createElement('a');
+		link.className = 'role-switch-link' + (page.role === REQUIRED_ROLE ? ' current' : '');
+		link.href = page.href;
+		link.textContent = page.label;
+		container.appendChild(link);
+	});
+	container.classList.remove('is-hidden');
 }
 
 function switchAdminTab(tabKey) {
@@ -53,6 +82,7 @@ function showDashboard() {
 	document.getElementById('admin-checking-section').style.display = 'none';
 	document.getElementById('admin-access-denied-section').style.display = 'none';
 	document.getElementById('admin-dashboard-section').style.display = 'flex';
+	renderRoleSwitcher();
 	loadDashboardData();
 }
 
@@ -64,9 +94,18 @@ function showAccessDenied() {
 
 async function loadDashboardData() {
 	const refreshBtn = document.getElementById('btn-refresh-all');
-	await withButtonLoading(refreshBtn, async () => {
-		await Promise.all([fetchAccessCount(), fetchAdminNotices(), fetchLogs()]);
-	}, '更新中');
+	const tasks = [];
+	if (document.getElementById('stat-access-count')) tasks.push(fetchAccessCount());
+	if (document.getElementById('admin-notice-list')) tasks.push(fetchAdminNotices());
+	if (document.getElementById('log-table-body')) tasks.push(fetchLogs());
+	if (document.getElementById('kanbu-user-list')) tasks.push(fetchUsers());
+	if (refreshBtn) {
+		await withButtonLoading(refreshBtn, async () => {
+			await Promise.all(tasks);
+		}, '更新中');
+	} else {
+		await Promise.all(tasks);
+	}
 }
 
 async function fetchAccessCount() {
@@ -145,6 +184,7 @@ async function handleAddNotice() {
 
 async function fetchAdminNotices() {
 	const container = document.getElementById('admin-notice-list');
+	if (!container) return;
 	try {
 		const res = await callGasApi('getNotice');
 		if (!res.success || !res.notices || res.notices.length === 0) {
@@ -323,6 +363,7 @@ async function handleAddMainEvent() {
 
 async function fetchLogs() {
 	const tbody = document.getElementById('log-table-body');
+	if (!tbody) return;
 	try {
 		const res = await callGasApi('getLogs');
 		if (!res.success || !res.logs || res.logs.length === 0) {
@@ -357,4 +398,86 @@ async function fetchLogs() {
 		row.appendChild(cell);
 		tbody.appendChild(row);
 	}
+}
+async function fetchUsers() {
+	const container = document.getElementById('kanbu-user-list');
+	if (!container) return;
+	try {
+		const res = await callGasApi('listUsers');
+		container.textContent = '';
+		if (!res.success || !res.users || res.users.length === 0) {
+			const empty = document.createElement('div');
+			empty.className = 'table-message';
+			empty.textContent = 'ユーザーがいません';
+			container.appendChild(empty);
+			return;
+		}
+		res.users.forEach((user) => container.appendChild(createUserRow(user)));
+	} catch (e) {
+		container.textContent = '';
+		const error = document.createElement('div');
+		error.className = 'table-message table-message-error';
+		error.textContent = '取得失敗';
+		container.appendChild(error);
+	}
+}
+
+function createUserRow(user) {
+	const item = document.createElement('div');
+	item.className = 'admin-notice-item user-item';
+
+	const info = document.createElement('div');
+	info.className = 'admin-notice-text';
+	const name = document.createElement('div');
+	name.className = 'user-item-name';
+	name.textContent = `${user.nickname}（${user.internalUserId}）`;
+	const email = document.createElement('div');
+	email.className = 'user-item-email';
+	email.textContent = user.schoolEmail;
+	info.appendChild(name);
+	info.appendChild(email);
+
+	const checks = document.createElement('div');
+	checks.className = 'user-role-checks';
+	['admin', 'kanbu', 'higopelive'].forEach((role) => {
+		const label = document.createElement('label');
+		label.className = 'user-role-check';
+		const checkbox = document.createElement('input');
+		checkbox.type = 'checkbox';
+		checkbox.checked = user.roles.indexOf(role) !== -1;
+		checkbox.dataset.role = role;
+		label.appendChild(checkbox);
+		label.appendChild(document.createTextNode(role));
+		checks.appendChild(label);
+	});
+
+	const actions = document.createElement('div');
+	actions.className = 'admin-notice-actions';
+	const saveBtn = document.createElement('button');
+	saveBtn.type = 'button';
+	saveBtn.className = 'btn btn-primary small-action-button';
+	saveBtn.textContent = '保存';
+	saveBtn.addEventListener('click', () => handleSaveUserRoles(user.internalUserId, checks, saveBtn));
+	actions.appendChild(saveBtn);
+
+	item.appendChild(info);
+	item.appendChild(checks);
+	item.appendChild(actions);
+	return item;
+}
+
+async function handleSaveUserRoles(internalUserId, checksContainer, btn) {
+	const roles = ['user'];
+	checksContainer.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+		if (cb.checked) roles.push(cb.dataset.role);
+	});
+	await withButtonLoading(btn, async () => {
+		const res = await callGasApi('updateUserRoles', { internalUserId, roles });
+		if (res.success) {
+			showToast('ロールを更新しました');
+			fetchUsers();
+		} else {
+			showToast(res.error || '更新に失敗しました', 'error');
+		}
+	}, '保存中');
 }

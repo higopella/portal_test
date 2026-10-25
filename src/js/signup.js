@@ -37,7 +37,7 @@ async function handleSignupGoogleCredential(response) {
     const result = await callGasApi('authenticateGoogle', { idToken: response.credential });
     if (result.status === 'authenticated') {
       setUserLogin(true);
-      setAdminLogin(result.user && result.user.role === 'admin');
+      setUserRoles(result.user && Array.isArray(result.user.roles) ? result.user.roles : (result.user && result.user.role ? [result.user.role] : []));
       recordLoginHistory();
       window.location.replace('../');
       return;
@@ -97,7 +97,7 @@ async function verifySignupOtp(event) {
         return;
       }
       setUserLogin(true);
-      setAdminLogin(result.user && result.user.role === 'admin');
+      setUserRoles(result.user && Array.isArray(result.user.roles) ? result.user.roles : (result.user && result.user.role ? [result.user.role] : []));
       recordLoginHistory();
       showToast('登録が完了しました');
       window.location.replace('../');
@@ -113,7 +113,7 @@ async function finalizeSignupAsLoggedIn() {
     const result = await callGasApi('authenticateGoogle', { idToken: getCurrentIdToken() });
     if (result.status === 'authenticated') {
       setUserLogin(true);
-      setAdminLogin(result.user && result.user.role === 'admin');
+      setUserRoles(result.user && Array.isArray(result.user.roles) ? result.user.roles : (result.user && result.user.role ? [result.user.role] : []));
       recordLoginHistory();
       showToast('登録が完了しました');
       window.location.replace('../');

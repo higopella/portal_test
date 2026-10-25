@@ -3,8 +3,12 @@
  */
 
 function initCommonLayout(activeKey = "") {
-  const isSubDir = activeKey !== "home";
-  const basePath = isSubDir ? "../" : "./";
+  const depth = activeKey === "home" ? 0 : (activeKey.indexOf("role-") === 0 ? 2 : 1);
+  const basePath = depth === 0 ? "./" : "../".repeat(depth);
+
+  const defaultRoleHref = (typeof hasRole === "function")
+    ? (hasRole("admin") ? `${basePath}role/admin/` : hasRole("kanbu") ? `${basePath}role/kanbu/` : hasRole("higopelive") ? `${basePath}role/higopelive/` : `${basePath}role/admin/`)
+    : `${basePath}role/admin/`;
 
   const menuItems = [
     { key: "home", title: "ホーム", href: `${basePath}` },
@@ -41,7 +45,7 @@ function initCommonLayout(activeKey = "") {
           .join("")}
       </ul>
       <div class="drawer-admin">
-        <a href="${basePath}admin/" class="${activeKey === "admin" ? "current" : ""}">管理者</a>
+        <a href="${defaultRoleHref}" class="${activeKey.indexOf("role-") === 0 ? "current" : ""}">管理者</a>
       </div>
       <div class="drawer-footer">
         <a href="#" class="drawer-logout-link" id="btn-drawer-logout">ログアウト</a>

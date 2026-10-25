@@ -8,7 +8,8 @@ const CONFIG = {
     IS_ADMIN: "higopella_is_admin",
     ID_TOKEN: "higopella_id_token",
     LAST_ACCESS_TIME: "higopella_last_access_time",
-    LAST_LOGIN_AT: "higopella_last_login_at"
+    LAST_LOGIN_AT: "higopella_last_login_at",
+    ROLES: "higopella_roles"
   }
 };
 
@@ -55,6 +56,30 @@ function setAdminLogin(status) {
     return;
   }
   sessionStorage.removeItem(CONFIG.STORAGE_KEYS.IS_ADMIN);
+}
+
+function setUserRoles(roles) {
+  const normalized = Array.isArray(roles) ? roles : [];
+  if (normalized.length > 0) {
+    sessionStorage.setItem(CONFIG.STORAGE_KEYS.ROLES, JSON.stringify(normalized));
+  } else {
+    sessionStorage.removeItem(CONFIG.STORAGE_KEYS.ROLES);
+  }
+  setAdminLogin(normalized.indexOf('admin') !== -1);
+}
+
+function getUserRoles() {
+  try {
+    const raw = sessionStorage.getItem(CONFIG.STORAGE_KEYS.ROLES);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function hasRole(role) {
+  return getUserRoles().indexOf(role) !== -1;
 }
 
 function logoutUser() {
@@ -154,7 +179,7 @@ async function verifySessionWithGas() {
     const result = await callGasApi('authenticateGoogle', { idToken: getCurrentIdToken() });
     if (result.status === 'authenticated') {
       setUserLogin(true);
-      setAdminLogin(result.user && result.user.role === 'admin');
+      setUserRoles(result.user && Array.isArray(result.user.roles) ? result.user.roles : (result.user && result.user.role ? [result.user.role] : []));
       recordLoginHistory();
       return true;
     }

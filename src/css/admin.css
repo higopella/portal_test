@@ -48,6 +48,14 @@
 		@media (max-width: 360px) {
 			.admin-tab { font-size: 0.7rem; padding: 8px 2px; }
 		}
+		.role-switcher { display: flex; gap: 6px; margin-bottom: 4px; }
+		.role-switch-link { flex: 1; text-align: center; padding: 8px 4px; border: 1px solid var(--border); border-radius: var(--radius); text-decoration: none; color: var(--text-sub); font-size: 0.85rem; font-weight: bold; background: var(--card); }
+		.role-switch-link.current { background: var(--primary); color: #fff; border-color: var(--primary); }
+		.user-item { flex-wrap: wrap; }
+		.user-item-name { font-weight: bold; font-size: 0.9rem; }
+		.user-item-email { font-size: 0.78rem; color: var(--text-sub); word-break: break-all; }
+		.user-role-checks { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+		.user-role-check { display: flex; align-items: center; gap: 4px; font-size: 0.82rem; cursor: pointer; }
 		.admin-notice-item {
 			display: flex;
 			justify-content: space-between;

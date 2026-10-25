@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理者 - Higo-Pella Portal</title>
+  <link rel="stylesheet" href="../../src/css/common.css">
+  <link rel="stylesheet" href="../../src/css/admin.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body data-role-key="admin" data-required-role="admin">
+
+  <!-- 0. 権限確認中 -->
+  <div id="admin-checking-section" class="container">
+    <div class="card admin-login-card">
+      <h2 class="admin-login-title">権限確認中</h2>
+      <p class="admin-login-description">権限を確認しています…</p>
+    </div>
+  </div>
+
+  <!-- 1. 権限なし表示 -->
+  <div id="admin-access-denied-section" class="container is-hidden">
+    <div class="card admin-login-card">
+      <h2 class="admin-login-title">権限がありません</h2>
+      <p class="admin-login-description">このページは管理者のみアクセスできます。</p>
+      <a href="../../" class="btn btn-primary full-width">ホームへ戻る</a>
+    </div>
+  </div>
+
+  <!-- 2. 管理者ダッシュボード -->
+  <main id="admin-dashboard-section" class="container is-hidden">
+    <nav id="role-switcher" class="role-switcher is-hidden" aria-label="権限切替"></nav>
+
+    <nav class="admin-tabs" aria-label="管理メニュー">
+      <button type="button" class="admin-tab active" data-tab="access">閲覧数</button>
+      <button type="button" class="admin-tab" data-tab="notice">お知らせ追加</button>
+    </nav>
+
+    <div class="admin-tab-panel" id="tab-access">
+    <!-- 概要・アクセス数 -->
+    <section class="card dashboard-summary">
+      <div>
+        <span class="access-label">累計アクセス数</span>
+        <div id="stat-access-count" class="access-count">--</div>
+      </div>
+      <button type="button" class="btn btn-primary" id="btn-refresh-all">更新</button>
+    </section>
+    </div>
+
+    <div class="admin-tab-panel is-hidden" id="tab-notice">
+
+    <!-- お知らせ管理 -->
+    <section class="card">
+      <div class="card-title">お知らせの追加・管理</div>
+      <form id="form-add-notice" class="notice-form">
+        <textarea id="notice-text" class="textarea" rows="3" placeholder="お知らせ内容を入力（文字を選択して下のボタンで装飾できます）" required></textarea>
+        <div class="notice-toolbar">
+          <button type="button" class="btn btn-primary highlight-button" id="btn-insert-highlight">強調(水色)</button>
+          <button type="button" class="btn btn-primary highlight-button" id="btn-insert-strike">斜線</button>
+        </div>
+        <div class="notice-form-row">
+          <label class="pin-label">
+            <input type="checkbox" id="notice-is-pinned"> 最上部に固定する
+          </label>
+          <div class="notice-submit-group">
+            <button type="button" id="btn-cancel-edit" class="btn small-action-button is-hidden">キャンセル</button>
+            <button type="submit" id="btn-submit-notice" class="btn btn-primary">追加</button>
+          </div>
+        </div>
+      </form>
+
+      <div class="card-title notice-list-heading">投稿済み一覧</div>
+      <div id="admin-notice-list">読み込み中...</div>
+    </section>
+    </div>
+  </main>
+
+  <script src="../../src/js/ui.js"></script>
+  <script src="../../src/js/notice-cache.js"></script>
+  <script src="../../src/js/api.js"></script>
+  <script src="../../src/js/auth.js"></script>
+  <script src="../../src/js/menu.js"></script>
+  <script src="../../src/js/role-page.js"></script>
+</body>
+</html>
