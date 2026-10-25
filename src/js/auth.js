@@ -79,7 +79,9 @@ function getUserRoles() {
 }
 
 function hasRole(role) {
-  return getUserRoles().indexOf(role) !== -1;
+  const roles = getUserRoles();
+  if (roles.indexOf('admin') !== -1) return true;
+  return roles.indexOf(role) !== -1;
 }
 
 function logoutUser() {
