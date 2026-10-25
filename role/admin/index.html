@@ -34,6 +34,7 @@
     <nav class="admin-tabs" aria-label="管理メニュー">
       <button type="button" class="admin-tab active" data-tab="access">閲覧数</button>
       <button type="button" class="admin-tab" data-tab="notice">お知らせ追加</button>
+      <button type="button" class="admin-tab" data-tab="users">ユーザー管理</button>
     </nav>
 
     <div class="admin-tab-panel" id="tab-access">
@@ -71,6 +72,16 @@
 
       <div class="card-title notice-list-heading">投稿済み一覧</div>
       <div id="admin-notice-list">読み込み中...</div>
+    </section>
+    </div>
+
+    <div class="admin-tab-panel is-hidden" id="tab-users">
+
+    <!-- ユーザー管理 -->
+    <section class="card">
+      <div class="card-title">ユーザー管理（ロール設定）</div>
+      <p class="admin-login-description">メンバーごとにロールをプルダウンで変更し、「保存」を押してください。</p>
+      <div id="kanbu-user-list">読み込み中...</div>
     </section>
     </div>
   </main>

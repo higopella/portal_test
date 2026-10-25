@@ -56,6 +56,11 @@
 		.user-item-email { font-size: 0.78rem; color: var(--text-sub); word-break: break-all; }
 		.user-role-checks { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 		.user-role-check { display: flex; align-items: center; gap: 4px; font-size: 0.82rem; cursor: pointer; }
+		.user-role-actions { align-items: center; }
+		.user-role-select { width: auto; min-width: 110px; }
+		.user-role-area { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+		.user-role-selects { display: flex; gap: 6px; flex-wrap: wrap; }
+		.user-admin-badge { font-weight: bold; color: var(--primary-dark); background: var(--primary-light); padding: 4px 10px; border-radius: var(--radius); font-size: 0.82rem; }
 		.admin-notice-item {
 			display: flex;
 			justify-content: space-between;

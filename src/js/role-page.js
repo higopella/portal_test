@@ -422,6 +422,9 @@ async function fetchUsers() {
 	}
 }
 
+const ROLE_SELECT_OPTIONS = ['user', 'higopelive', 'kanbu'];
+const ROLE_SORT_ORDER = { user: 0, higopelive: 1, kanbu: 2 };
+
 function createUserRow(user) {
 	const item = document.createElement('div');
 	item.className = 'admin-notice-item user-item';
@@ -430,47 +433,77 @@ function createUserRow(user) {
 	info.className = 'admin-notice-text';
 	const name = document.createElement('div');
 	name.className = 'user-item-name';
-	name.textContent = `${user.nickname}（${user.internalUserId}）`;
+	name.textContent = `${user.internalUserId} ${user.nickname}`;
 	const email = document.createElement('div');
 	email.className = 'user-item-email';
 	email.textContent = user.schoolEmail;
 	info.appendChild(name);
 	info.appendChild(email);
+	item.appendChild(info);
 
-	const checks = document.createElement('div');
-	checks.className = 'user-role-checks';
-	['admin', 'kanbu', 'higopelive'].forEach((role) => {
-		const label = document.createElement('label');
-		label.className = 'user-role-check';
-		const checkbox = document.createElement('input');
-		checkbox.type = 'checkbox';
-		checkbox.checked = user.roles.indexOf(role) !== -1;
-		checkbox.dataset.role = role;
-		label.appendChild(checkbox);
-		label.appendChild(document.createTextNode(role));
-		checks.appendChild(label);
+	const roleArea = document.createElement('div');
+	roleArea.className = 'user-role-area';
+
+	if (user.roles.indexOf('admin') !== -1) {
+		const badge = document.createElement('span');
+		badge.className = 'user-admin-badge';
+		badge.textContent = 'admin';
+		roleArea.appendChild(badge);
+		item.appendChild(roleArea);
+		return item;
+	}
+
+	const selectWrap = document.createElement('div');
+	selectWrap.className = 'user-role-selects';
+	const editableRoles = user.roles
+		.filter((role) => role !== 'user' && role !== 'admin')
+		.sort((a, b) => ROLE_SORT_ORDER[a] - ROLE_SORT_ORDER[b]);
+	(editableRoles.length > 0 ? editableRoles : ['user']).forEach((role) => {
+		selectWrap.appendChild(createRoleSelect(role));
 	});
+	roleArea.appendChild(selectWrap);
 
 	const actions = document.createElement('div');
-	actions.className = 'admin-notice-actions';
+	actions.className = 'admin-notice-actions user-role-actions';
+	const addBtn = document.createElement('button');
+	addBtn.type = 'button';
+	addBtn.className = 'btn small-action-button';
+	addBtn.textContent = '＋';
+	addBtn.title = 'ロールを追加';
+	addBtn.addEventListener('click', () => selectWrap.appendChild(createRoleSelect('user')));
 	const saveBtn = document.createElement('button');
 	saveBtn.type = 'button';
 	saveBtn.className = 'btn btn-primary small-action-button';
 	saveBtn.textContent = '保存';
-	saveBtn.addEventListener('click', () => handleSaveUserRoles(user.internalUserId, checks, saveBtn));
+	saveBtn.addEventListener('click', () => handleSaveUserRoles(user.internalUserId, selectWrap, saveBtn));
+	actions.appendChild(addBtn);
 	actions.appendChild(saveBtn);
+	roleArea.appendChild(actions);
 
-	item.appendChild(info);
-	item.appendChild(checks);
-	item.appendChild(actions);
+	item.appendChild(roleArea);
 	return item;
 }
 
-async function handleSaveUserRoles(internalUserId, checksContainer, btn) {
-	const roles = ['user'];
-	checksContainer.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
-		if (cb.checked) roles.push(cb.dataset.role);
+function createRoleSelect(value) {
+	const select = document.createElement('select');
+	select.className = 'input-text user-role-select';
+	select.setAttribute('aria-label', 'ロール');
+	ROLE_SELECT_OPTIONS.forEach((role) => {
+		const option = document.createElement('option');
+		option.value = role;
+		option.textContent = role;
+		select.appendChild(option);
 	});
+	select.value = value;
+	return select;
+}
+
+async function handleSaveUserRoles(internalUserId, selectWrap, btn) {
+	const picked = [];
+	selectWrap.querySelectorAll('select').forEach((select) => {
+		if (select.value !== 'user' && picked.indexOf(select.value) === -1) picked.push(select.value);
+	});
+	const roles = picked.length > 0 ? picked : ['user'];
 	await withButtonLoading(btn, async () => {
 		const res = await callGasApi('updateUserRoles', { internalUserId, roles });
 		if (res.success) {
