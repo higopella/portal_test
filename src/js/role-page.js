@@ -399,26 +399,62 @@ async function fetchLogs() {
 		tbody.appendChild(row);
 	}
 }
+const USERS_PER_PAGE = 100;
+let allUsersCache = [];
+let userListPage = 0;
+
 async function fetchUsers() {
 	const container = document.getElementById('kanbu-user-list');
 	if (!container) return;
 	try {
 		const res = await callGasApi('listUsers');
-		container.textContent = '';
-		if (!res.success || !res.users || res.users.length === 0) {
-			const empty = document.createElement('div');
-			empty.className = 'table-message';
-			empty.textContent = 'ユーザーがいません';
-			container.appendChild(empty);
-			return;
-		}
-		res.users.forEach((user) => container.appendChild(createUserRow(user)));
+		allUsersCache = (res.success && Array.isArray(res.users)) ? res.users : [];
+		renderUserListPage(container, 0);
 	} catch (e) {
 		container.textContent = '';
 		const error = document.createElement('div');
 		error.className = 'table-message table-message-error';
 		error.textContent = '取得失敗';
 		container.appendChild(error);
+	}
+}
+
+function renderUserListPage(container, page) {
+	container.textContent = '';
+	if (allUsersCache.length === 0) {
+		const empty = document.createElement('div');
+		empty.className = 'table-message';
+		empty.textContent = 'ユーザーがいません';
+		container.appendChild(empty);
+		return;
+	}
+	const totalPages = Math.ceil(allUsersCache.length / USERS_PER_PAGE);
+	userListPage = Math.max(0, Math.min(page, totalPages - 1));
+	const start = userListPage * USERS_PER_PAGE;
+	allUsersCache.slice(start, start + USERS_PER_PAGE).forEach((user) => container.appendChild(createUserRow(user)));
+
+	if (totalPages > 1) {
+		const pager = document.createElement('div');
+		pager.className = 'user-pager';
+		const prevBtn = document.createElement('button');
+		prevBtn.type = 'button';
+		prevBtn.className = 'btn small-action-button';
+		prevBtn.textContent = '前へ';
+		prevBtn.disabled = userListPage === 0;
+		prevBtn.addEventListener('click', () => renderUserListPage(container, userListPage - 1));
+		const info = document.createElement('span');
+		info.className = 'user-pager-info';
+		info.textContent = `${userListPage + 1} / ${totalPages} ページ（全${allUsersCache.length}人）`;
+		const nextBtn = document.createElement('button');
+		nextBtn.type = 'button';
+		nextBtn.className = 'btn small-action-button';
+		nextBtn.textContent = '次へ';
+		nextBtn.disabled = userListPage >= totalPages - 1;
+		nextBtn.addEventListener('click', () => renderUserListPage(container, userListPage + 1));
+		pager.appendChild(prevBtn);
+		pager.appendChild(info);
+		pager.appendChild(nextBtn);
+		container.appendChild(pager);
 	}
 }
 
