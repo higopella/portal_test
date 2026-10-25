@@ -1,5 +1,6 @@
 const GOOGLE_OAUTH_CLIENT_ID = '65097864960-vbe2ukqcoi9mpqc9capgtu9mak6vf4qs.apps.googleusercontent.com';
 const LOGIN_HISTORY_TTL_MS = 14 * 24 * 60 * 60 * 1000;
+const SESSION_VERIFIED_TTL_MS = 10 * 60 * 1000;
 
 const CONFIG = {
   GAS_API_URL: "https://script.google.com/macros/s/AKfycbynzAVfuPKHqT9jkKX-JPh5l42JCbR6d6d0sb9PT_TAilMhtDSY2PW2hOMdEPEMXBgT/exec",
@@ -9,7 +10,8 @@ const CONFIG = {
     ID_TOKEN: "higopella_id_token",
     LAST_ACCESS_TIME: "higopella_last_access_time",
     LAST_LOGIN_AT: "higopella_last_login_at",
-    ROLES: "higopella_roles"
+    ROLES: "higopella_roles",
+    SESSION_VERIFIED_AT: "higopella_session_verified_at"
   }
 };
 
@@ -41,6 +43,7 @@ function setUserLogin(status) {
     sessionStorage.setItem(CONFIG.STORAGE_KEYS.IS_LOGGED_IN, "true");
   } else {
     sessionStorage.removeItem(CONFIG.STORAGE_KEYS.IS_LOGGED_IN);
+    sessionStorage.removeItem(CONFIG.STORAGE_KEYS.SESSION_VERIFIED_AT);
     clearCurrentIdToken();
   }
   syncDrawerLogoutVisibility();
@@ -82,6 +85,17 @@ function hasRole(role) {
   const roles = getUserRoles();
   if (roles.indexOf('admin') !== -1) return true;
   return roles.indexOf(role) !== -1;
+}
+
+function markSessionVerified() {
+  sessionStorage.setItem(CONFIG.STORAGE_KEYS.SESSION_VERIFIED_AT, String(Date.now()));
+}
+
+function isSessionRecentlyVerified() {
+  const raw = sessionStorage.getItem(CONFIG.STORAGE_KEYS.SESSION_VERIFIED_AT);
+  if (!raw) return false;
+  const verifiedAt = Number(raw);
+  return Number.isFinite(verifiedAt) && Date.now() - verifiedAt <= SESSION_VERIFIED_TTL_MS;
 }
 
 function logoutUser() {
@@ -183,6 +197,7 @@ async function verifySessionWithGas() {
       setUserLogin(true);
       setUserRoles(result.user && Array.isArray(result.user.roles) ? result.user.roles : (result.user && result.user.role ? [result.user.role] : []));
       recordLoginHistory();
+      markSessionVerified();
       return true;
     }
   } catch (error) {
@@ -204,7 +219,14 @@ async function requirePageAuthentication() {
     await trySilentReauth();
   }
 
-  if (getCurrentIdToken() && await verifySessionWithGas()) return true;
+  if (!getCurrentIdToken()) {
+    window.location.replace(homePath);
+    return false;
+  }
+
+  if (isSessionRecentlyVerified()) return true;
+
+  if (await verifySessionWithGas()) return true;
 
   window.location.replace(homePath);
   return false;
