@@ -60,6 +60,14 @@ function renderRoleSwitcher() {
 		link.textContent = page.label;
 		container.appendChild(link);
 	});
+	const selectLink = document.createElement('a');
+	selectLink.className = 'role-switch-link';
+	selectLink.href = '../';
+	selectLink.textContent = '選択画面へ';
+	selectLink.addEventListener('click', () => {
+		sessionStorage.removeItem('higopella_role_page');
+	});
+	container.appendChild(selectLink);
 	container.classList.remove('is-hidden');
 }
 

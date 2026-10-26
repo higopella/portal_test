@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>権限ページ選択 - Higo-Pella Portal</title>
+  <link rel="stylesheet" href="../src/css/common.css">
+  <link rel="stylesheet" href="../src/css/admin.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+  <!-- 0. 権限確認中 -->
+  <div id="role-select-checking" class="container">
+    <div class="card admin-login-card">
+      <h2 class="admin-login-title">権限確認中</h2>
+      <p class="admin-login-description">権限を確認しています…</p>
+    </div>
+  </div>
+
+  <!-- 1. 権限なし表示 -->
+  <div id="role-select-denied" class="container is-hidden">
+    <div class="card admin-login-card">
+      <h2 class="admin-login-title">権限がありません</h2>
+      <p class="admin-login-description">利用できる権限ページがありません。</p>
+      <a href="../" class="btn btn-primary full-width">ホームへ戻る</a>
+    </div>
+  </div>
+
+  <!-- 2. 権限ページ選択 -->
+  <main id="role-select-section" class="container is-hidden">
+    <div class="card admin-login-card">
+      <h2 class="admin-login-title">権限ページ選択</h2>
+      <p class="admin-login-description">移動するページを選択してください（ログイン中は次回から自動で移動します）</p>
+      <div id="role-select-buttons"></div>
+    </div>
+  </main>
+
+  <script src="../src/js/ui.js"></script>
+  <script src="../src/js/api.js"></script>
+  <script src="../src/js/auth.js"></script>
+  <script src="../src/js/menu.js"></script>
+  <script src="../src/js/role-select.js"></script>
+</body>
+</html>

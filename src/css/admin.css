@@ -64,6 +64,8 @@
 		.user-admin-badge { font-weight: bold; color: var(--primary-dark); background: var(--primary-light); padding: 4px 10px; border-radius: var(--radius); font-size: 0.82rem; }
 		.user-pager { display: flex; gap: 10px; justify-content: center; align-items: center; margin-top: 12px; }
 		.user-pager-info { font-size: 0.85rem; color: var(--text-sub); }
+		.role-select-button { margin-bottom: 4px; }
+		.role-select-description { font-size: 0.8rem; color: var(--text-sub); margin-bottom: 12px; text-align: center; }
 		.admin-notice-item {
 			display: flex;
 			justify-content: space-between;
