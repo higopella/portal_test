@@ -60,6 +60,7 @@
 		.user-role-select { width: auto; min-width: 110px; }
 		.user-role-area { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 		.user-role-selects { display: flex; gap: 6px; flex-wrap: wrap; }
+		.user-role-select-row { display: flex; gap: 4px; align-items: center; }
 		.user-admin-badge { font-weight: bold; color: var(--primary-dark); background: var(--primary-light); padding: 4px 10px; border-radius: var(--radius); font-size: 0.82rem; }
 		.user-pager { display: flex; gap: 10px; justify-content: center; align-items: center; margin-top: 12px; }
 		.user-pager-info { font-size: 0.85rem; color: var(--text-sub); }

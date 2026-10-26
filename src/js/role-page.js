@@ -496,14 +496,6 @@ function createUserRow(user) {
 	const editableRoles = user.roles
 		.filter((role) => role !== 'user' && role !== 'admin')
 		.sort((a, b) => ROLE_SORT_ORDER[a] - ROLE_SORT_ORDER[b]);
-	(editableRoles.length > 0 ? editableRoles : ['user']).forEach((role) => {
-		selectWrap.appendChild(createRoleSelect(role));
-	});
-	selectWrap.addEventListener('change', () => refreshRoleSelects(selectWrap));
-	roleArea.appendChild(selectWrap);
-
-	const actions = document.createElement('div');
-	actions.className = 'admin-notice-actions user-role-actions';
 	const addBtn = document.createElement('button');
 	addBtn.type = 'button';
 	addBtn.className = 'btn small-action-button';
@@ -511,10 +503,18 @@ function createUserRow(user) {
 	addBtn.title = 'ロールを追加';
 	addBtn.addEventListener('click', () => {
 		if (selectWrap.querySelectorAll('select').length >= MAX_ROLE_SELECTS) return;
-		selectWrap.appendChild(createRoleSelect('user'));
+		selectWrap.appendChild(createRoleSelectRow('user', selectWrap, addBtn));
 		refreshRoleSelects(selectWrap);
 		updateRoleAddBtn(selectWrap, addBtn);
 	});
+	(editableRoles.length > 0 ? editableRoles : ['user']).forEach((role) => {
+		selectWrap.appendChild(createRoleSelectRow(role, selectWrap, addBtn));
+	});
+	selectWrap.addEventListener('change', () => refreshRoleSelects(selectWrap));
+	roleArea.appendChild(selectWrap);
+
+	const actions = document.createElement('div');
+	actions.className = 'admin-notice-actions user-role-actions';
 	const saveBtn = document.createElement('button');
 	saveBtn.type = 'button';
 	saveBtn.className = 'btn btn-primary small-action-button';
@@ -529,6 +529,25 @@ function createUserRow(user) {
 
 	item.appendChild(roleArea);
 	return item;
+}
+
+function createRoleSelectRow(value, selectWrap, addBtn) {
+	const row = document.createElement('div');
+	row.className = 'user-role-select-row';
+	const select = createRoleSelect(value);
+	const removeBtn = document.createElement('button');
+	removeBtn.type = 'button';
+	removeBtn.className = 'btn btn-danger small-action-button';
+	removeBtn.textContent = '×';
+	removeBtn.title = 'このロールを削除';
+	removeBtn.addEventListener('click', () => {
+		row.remove();
+		refreshRoleSelects(selectWrap);
+		updateRoleAddBtn(selectWrap, addBtn);
+	});
+	row.appendChild(select);
+	row.appendChild(removeBtn);
+	return row;
 }
 
 function createRoleSelect(value) {
