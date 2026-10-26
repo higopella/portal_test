@@ -27,15 +27,66 @@
     </div>
   </div>
 
-  <!-- 2. ヒゴペライブ ダッシュボード -->
+  <!-- 2. Higopelive! ダッシュボード -->
   <main id="admin-dashboard-section" class="container is-hidden">
     <nav id="role-switcher" class="role-switcher is-hidden" aria-label="権限切替"></nav>
 
+    <nav class="admin-tabs" aria-label="Higopelive!メニュー">
+      <button type="button" class="admin-tab active" data-tab="lives">ライブ管理</button>
+      <button type="button" class="admin-tab" data-tab="apps">申請一覧</button>
+    </nav>
+
+    <div class="admin-tab-panel" id="tab-lives">
+
+    <!-- ライブ作成 -->
     <section class="card">
-      <div class="card-title">Higopelive!</div>
-      <p class="admin-login-description">このページは準備中です。</p>
+      <div class="card-title">ライブを作成</div>
+      <div class="admin-form-group">
+        <label class="admin-form-label" for="live-new-title">タイトル</label>
+        <input type="text" id="live-new-title" class="input-text" placeholder="例: 12月Higopelive!" maxlength="100">
+      </div>
+      <div class="admin-form-group">
+        <label class="admin-form-label" for="live-new-date">開催日</label>
+        <input type="date" id="live-new-date" class="input-text">
+      </div>
+      <div class="notice-form-row">
+        <span></span>
+        <button type="button" id="btn-create-live" class="btn btn-primary">作成</button>
+      </div>
     </section>
+
+    <!-- ライブ一覧（フォルダ） -->
+    <section class="card">
+      <div class="card-title">ライブ一覧</div>
+      <div id="higopelive-live-list">読み込み中...</div>
+    </section>
+    </div>
+
+    <div class="admin-tab-panel is-hidden" id="tab-apps">
+
+    <!-- 申請一覧 -->
+    <section class="card">
+      <div class="card-title">申請一覧 <span id="higopelive-current-live" class="admin-login-description"></span></div>
+      <div id="higopelive-app-list">ライブ管理タブからライブを選択してください</div>
+    </section>
+
+    <!-- 申請詳細 -->
+    <section class="card is-hidden" id="higopelive-detail-card">
+      <div class="card-title" id="higopelive-detail-title">申請詳細</div>
+      <div class="notice-form-row">
+        <span></span>
+        <div class="notice-submit-group">
+          <button type="button" id="btn-print-pa" class="btn small-action-button">PA表を印刷</button>
+          <button type="button" id="btn-print-light" class="btn small-action-button">照明表を印刷</button>
+        </div>
+      </div>
+      <div id="higopelive-detail"></div>
+    </section>
+    </div>
   </main>
+
+  <!-- 印刷用エリア -->
+  <div id="print-area" class="is-hidden"></div>
 
   <script src="../../src/js/ui.js"></script>
   <script src="../../src/js/notice-cache.js"></script>

@@ -41,6 +41,9 @@ function bindRolePageEvents() {
 		document.getElementById('main-event-time-row').classList.toggle('is-hidden', e.target.checked);
 	});
 	on('btn-admin-search-events', 'click', handleAdminSearchEvents);
+	on('btn-create-live', 'click', handleCreateLive);
+	on('btn-print-pa', 'click', () => handlePrintHigopelive('pa'));
+	on('btn-print-light', 'click', () => handlePrintHigopelive('light'));
 	document.querySelectorAll('.admin-tab').forEach((tab) => {
 		tab.addEventListener('click', () => switchAdminTab(tab.dataset.tab));
 	});
@@ -107,6 +110,7 @@ async function loadDashboardData() {
 	if (document.getElementById('admin-notice-list')) tasks.push(fetchAdminNotices());
 	if (document.getElementById('log-table-body')) tasks.push(fetchLogs());
 	if (document.getElementById('kanbu-user-list')) tasks.push(fetchUsers());
+	if (document.getElementById('higopelive-live-list')) tasks.push(fetchHigopeliveLives());
 	if (refreshBtn) {
 		await withButtonLoading(refreshBtn, async () => {
 			await Promise.all(tasks);
@@ -608,4 +612,228 @@ async function handleSaveUserRoles(internalUserId, selectWrap, btn) {
 			showToast(res.error || '更新に失敗しました', 'error');
 		}
 	}, '保存中');
+}
+
+/* ===== Higopelive! 管理 ===== */
+
+let higopeliveLives = [];
+let currentHigopeliveLive = null;
+let currentHigopeliveApp = null;
+
+async function handleCreateLive() {
+	const title = document.getElementById('live-new-title').value.trim();
+	const date = document.getElementById('live-new-date').value;
+	if (!title || !date) {
+		showToast('タイトルと開催日を入力してください', 'error');
+		return;
+	}
+	const btn = document.getElementById('btn-create-live');
+	await withButtonLoading(btn, async () => {
+		const res = await callGasApi('createLive', { title, date });
+		if (res.success) {
+			showToast(`ライブを作成しました（${res.liveId}）`);
+			document.getElementById('live-new-title').value = '';
+			fetchHigopeliveLives();
+		} else {
+			showToast(res.error || '作成に失敗しました', 'error');
+		}
+	}, '作成中');
+}
+
+async function fetchHigopeliveLives() {
+	const container = document.getElementById('higopelive-live-list');
+	if (!container) return;
+	try {
+		const res = await callGasApi('getLives');
+		container.textContent = '';
+		higopeliveLives = (res.success && Array.isArray(res.lives)) ? res.lives : [];
+		if (higopeliveLives.length === 0) {
+			const empty = document.createElement('div');
+			empty.className = 'table-message';
+			empty.textContent = 'ライブがありません。上のフォームから作成してください';
+			container.appendChild(empty);
+			return;
+		}
+		higopeliveLives.forEach((live) => {
+			const item = document.createElement('div');
+			item.className = 'admin-notice-item';
+			const text = document.createElement('div');
+			text.className = 'admin-notice-text';
+			text.textContent = `📁 ${live.title}（${live.date}）`;
+			const actions = document.createElement('div');
+			actions.className = 'admin-notice-actions';
+			const openBtn = document.createElement('button');
+			openBtn.type = 'button';
+			openBtn.className = 'btn btn-primary small-action-button';
+			openBtn.textContent = '開く';
+			openBtn.addEventListener('click', () => selectHigopeliveLive(live));
+			actions.appendChild(openBtn);
+			item.appendChild(text);
+			item.appendChild(actions);
+			container.appendChild(item);
+		});
+	} catch (e) {
+		container.textContent = '';
+		const error = document.createElement('div');
+		error.className = 'table-message table-message-error';
+		error.textContent = '取得失敗';
+		container.appendChild(error);
+	}
+}
+
+function selectHigopeliveLive(live) {
+	currentHigopeliveLive = live;
+	currentHigopeliveApp = null;
+	document.getElementById('higopelive-detail-card').classList.add('is-hidden');
+	document.getElementById('higopelive-current-live').textContent = `（${live.title}）`;
+	switchAdminTab('apps');
+	fetchHigopeliveApplications();
+}
+
+async function fetchHigopeliveApplications() {
+	const container = document.getElementById('higopelive-app-list');
+	if (!container || !currentHigopeliveLive) return;
+	container.textContent = '読み込み中...';
+	try {
+		const res = await callGasApi('getApplications', { liveId: currentHigopeliveLive.liveId });
+		container.textContent = '';
+		if (!res.success || !res.applications || res.applications.length === 0) {
+			const empty = document.createElement('div');
+			empty.className = 'table-message';
+			empty.textContent = 'このライブの申請はまだありません';
+			container.appendChild(empty);
+			return;
+		}
+		res.applications.forEach((app) => {
+			const item = document.createElement('div');
+			item.className = 'admin-notice-item';
+			const text = document.createElement('div');
+			text.className = 'admin-notice-text';
+			const title = document.createElement('div');
+			title.className = 'user-item-name';
+			title.textContent = `${app.groupName}（代表: ${app.representative}）`;
+			const meta = document.createElement('div');
+			meta.className = 'user-item-email';
+			meta.textContent = `投稿: ${app.submittedAt} / ${app.submittedBy}`;
+			text.appendChild(title);
+			text.appendChild(meta);
+			const actions = document.createElement('div');
+			actions.className = 'admin-notice-actions';
+			const detailBtn = document.createElement('button');
+			detailBtn.type = 'button';
+			detailBtn.className = 'btn btn-primary small-action-button';
+			detailBtn.textContent = '詳細';
+			detailBtn.addEventListener('click', () => showHigopeliveDetail(app));
+			actions.appendChild(detailBtn);
+			item.appendChild(text);
+			item.appendChild(actions);
+			container.appendChild(item);
+		});
+	} catch (e) {
+		container.textContent = '';
+		const error = document.createElement('div');
+		error.className = 'table-message table-message-error';
+		error.textContent = '取得失敗';
+		container.appendChild(error);
+	}
+}
+
+function buildHigopeliveTable(parent, headers, rowsData) {
+	const wrapper = document.createElement('div');
+	wrapper.className = 'table-responsive';
+	const table = document.createElement('table');
+	table.className = 'log-table';
+	const thead = document.createElement('thead');
+	const headRow = document.createElement('tr');
+	headers.forEach((h) => {
+		const th = document.createElement('th');
+		th.textContent = h;
+		headRow.appendChild(th);
+	});
+	thead.appendChild(headRow);
+	const tbody = document.createElement('tbody');
+	rowsData.forEach((cells) => {
+		const row = document.createElement('tr');
+		cells.forEach((cellText) => {
+			const td = document.createElement('td');
+			td.textContent = cellText;
+			row.appendChild(td);
+		});
+		tbody.appendChild(row);
+	});
+	table.appendChild(thead);
+	table.appendChild(tbody);
+	wrapper.appendChild(table);
+	parent.appendChild(wrapper);
+}
+
+function buildHigopeliveNote(parent, label, value) {
+	const note = document.createElement('p');
+	note.className = 'higopelive-note';
+	note.textContent = `${label}: ${value || 'なし'}`;
+	parent.appendChild(note);
+}
+
+function buildPaSection(app) {
+	const section = document.createElement('div');
+	section.className = 'higopelive-section';
+	const heading = document.createElement('div');
+	heading.className = 'card-title notice-list-heading';
+	heading.textContent = 'PA表';
+	section.appendChild(heading);
+	const members = (app.pa && Array.isArray(app.pa.members)) ? app.pa.members : [];
+	buildHigopeliveTable(section, ['順番', '名前', 'パート'], members.map((m, i) => [`${i + 1}（下手→上手）`, m.name, m.part]));
+	buildHigopeliveNote(section, 'マイク持ち込み', app.pa ? app.pa.micBring : '');
+	buildHigopeliveNote(section, '要望・特記', app.pa ? app.pa.notes : '');
+	return section;
+}
+
+function buildLightSection(app) {
+	const section = document.createElement('div');
+	section.className = 'higopelive-section';
+	const heading = document.createElement('div');
+	heading.className = 'card-title notice-list-heading';
+	heading.textContent = '照明表';
+	section.appendChild(heading);
+	const songs = (app.lighting && Array.isArray(app.lighting.songs)) ? app.lighting.songs : [];
+	buildHigopeliveTable(section, ['曲名', 'テンポ', 'イメージカラー', 'ジャンル'], songs.map((s) => [s.title, s.tempo, s.color, s.genre || '-']));
+	if (app.lighting) {
+		buildHigopeliveNote(section, 'MCの有無', app.lighting.hasMc ? 'あり' : 'なし');
+		buildHigopeliveNote(section, 'MC中SE', app.lighting.mcSe ? 'あり' : 'なし');
+		buildHigopeliveNote(section, '要望・特記', app.lighting.notes);
+	}
+	return section;
+}
+
+function showHigopeliveDetail(app) {
+	currentHigopeliveApp = app;
+	const card = document.getElementById('higopelive-detail-card');
+	card.classList.remove('is-hidden');
+	document.getElementById('higopelive-detail-title').textContent = `${app.groupName}（代表: ${app.representative}）`;
+	const container = document.getElementById('higopelive-detail');
+	container.textContent = '';
+	container.appendChild(buildPaSection(app));
+	container.appendChild(buildLightSection(app));
+	card.scrollIntoView({ behavior: 'smooth' });
+}
+
+function handlePrintHigopelive(kind) {
+	if (!currentHigopeliveApp) return;
+	const area = document.getElementById('print-area');
+	area.textContent = '';
+	const title = document.createElement('h2');
+	title.textContent = kind === 'pa' ? `PA表：${currentHigopeliveApp.groupName}` : `照明表：${currentHigopeliveApp.groupName}`;
+	area.appendChild(title);
+	const meta = document.createElement('p');
+	meta.textContent = `${currentHigopeliveLive ? `${currentHigopeliveLive.title}（${currentHigopeliveLive.date}）` : ''} 代表: ${currentHigopeliveApp.representative}`;
+	area.appendChild(meta);
+	area.appendChild(kind === 'pa' ? buildPaSection(currentHigopeliveApp) : buildLightSection(currentHigopeliveApp));
+	area.classList.remove('is-hidden');
+	const cleanup = () => {
+		area.classList.add('is-hidden');
+		window.removeEventListener('afterprint', cleanup);
+	};
+	window.addEventListener('afterprint', cleanup);
+	window.print();
+	setTimeout(cleanup, 1500);
 }

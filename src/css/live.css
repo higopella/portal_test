@@ -1,0 +1,104 @@
+/* LIVE（Higopelive! 申請フォーム） (src/css/live.css) */
+.container {
+	max-width: 900px;
+	padding: 16px;
+	gap: 16px;
+}
+.card {
+	padding: 20px;
+}
+.card-title {
+	font-size: 1.1rem;
+	font-weight: bold;
+	color: var(--primary-dark);
+	margin-bottom: 14px;
+}
+.live-note {
+	font-size: 0.82rem;
+	color: var(--text-sub);
+	line-height: 1.6;
+	margin-bottom: 12px;
+}
+.live-form-group {
+	margin-bottom: 12px;
+}
+.live-field-gap {
+	margin-top: 16px;
+}
+.live-label {
+	display: block;
+	font-size: 0.85rem;
+	font-weight: bold;
+	color: var(--text);
+	margin-bottom: 4px;
+}
+.live-input {
+	width: 100%;
+	padding: 10px 12px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	font-size: 0.95rem;
+	outline: none;
+	box-sizing: border-box;
+	background-color: #ffffff;
+}
+.live-input:focus {
+	border-color: var(--primary);
+}
+.live-textarea {
+	width: 100%;
+	padding: 10px 12px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	font-size: 0.95rem;
+	outline: none;
+	box-sizing: border-box;
+	font-family: inherit;
+	resize: vertical;
+}
+.live-textarea:focus {
+	border-color: var(--primary);
+}
+.live-member-row,
+.live-song-row {
+	display: flex;
+	gap: 6px;
+	align-items: center;
+	margin-bottom: 8px;
+	flex-wrap: wrap;
+}
+.live-drag-handle {
+	cursor: grab;
+	color: var(--text-sub);
+	padding: 4px;
+	user-select: none;
+}
+.live-member-name {
+	flex: 2;
+	min-width: 120px;
+}
+.live-member-part {
+	flex: 1;
+	min-width: 90px;
+	width: auto;
+}
+.live-song-title {
+	flex: 2;
+	min-width: 120px;
+}
+.live-song-tempo,
+.live-song-color {
+	flex: 1;
+	min-width: 110px;
+	width: auto;
+}
+.live-song-genre {
+	flex: 1;
+	min-width: 90px;
+}
+.live-member-row.is-dragging {
+	opacity: 0.5;
+}
+#btn-submit-live-application {
+	margin-top: 4px;
+}
