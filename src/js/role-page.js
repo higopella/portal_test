@@ -4,9 +4,9 @@ const REQUIRED_ROLE = (document.body.dataset.requiredRole || ROLE_PAGE_KEY);
 initCommonLayout(`role-${ROLE_PAGE_KEY}`);
 
 const ROLE_SWITCH_PAGES = [
-	{ role: 'admin', label: '管理者', href: '../admin/' },
 	{ role: 'kanbu', label: '幹部', href: '../kanbu/' },
-	{ role: 'higopelive', label: 'ヒゴペライブ', href: '../higopelive/' }
+	{ role: 'higopelive', label: 'Higopelive!', href: '../higopelive/' },
+	{ role: 'admin', label: '管理者', href: '../admin/' }
 ];
 
 document.addEventListener('DOMContentLoaded', async () => {
