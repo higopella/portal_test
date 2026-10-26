@@ -460,6 +460,8 @@ function renderUserListPage(container, page) {
 
 const ROLE_SELECT_OPTIONS = ['user', 'higopelive', 'kanbu'];
 const ROLE_SORT_ORDER = { user: 0, higopelive: 1, kanbu: 2 };
+const ASSIGNABLE_ROLES = ['kanbu', 'higopelive'];
+const MAX_ROLE_SELECTS = ASSIGNABLE_ROLES.length;
 
 function createUserRow(user) {
 	const item = document.createElement('div');
@@ -497,6 +499,7 @@ function createUserRow(user) {
 	(editableRoles.length > 0 ? editableRoles : ['user']).forEach((role) => {
 		selectWrap.appendChild(createRoleSelect(role));
 	});
+	selectWrap.addEventListener('change', () => refreshRoleSelects(selectWrap));
 	roleArea.appendChild(selectWrap);
 
 	const actions = document.createElement('div');
@@ -506,7 +509,12 @@ function createUserRow(user) {
 	addBtn.className = 'btn small-action-button';
 	addBtn.textContent = '＋';
 	addBtn.title = 'ロールを追加';
-	addBtn.addEventListener('click', () => selectWrap.appendChild(createRoleSelect('user')));
+	addBtn.addEventListener('click', () => {
+		if (selectWrap.querySelectorAll('select').length >= MAX_ROLE_SELECTS) return;
+		selectWrap.appendChild(createRoleSelect('user'));
+		refreshRoleSelects(selectWrap);
+		updateRoleAddBtn(selectWrap, addBtn);
+	});
 	const saveBtn = document.createElement('button');
 	saveBtn.type = 'button';
 	saveBtn.className = 'btn btn-primary small-action-button';
@@ -515,6 +523,9 @@ function createUserRow(user) {
 	actions.appendChild(addBtn);
 	actions.appendChild(saveBtn);
 	roleArea.appendChild(actions);
+
+	refreshRoleSelects(selectWrap);
+	updateRoleAddBtn(selectWrap, addBtn);
 
 	item.appendChild(roleArea);
 	return item;
@@ -532,6 +543,27 @@ function createRoleSelect(value) {
 	});
 	select.value = value;
 	return select;
+}
+
+function refreshRoleSelects(selectWrap) {
+	const selects = Array.from(selectWrap.querySelectorAll('select'));
+	const selectedRoles = selects.map((s) => s.value).filter((v) => v !== 'user');
+	selects.forEach((select) => {
+		const current = select.value;
+		select.textContent = '';
+		ROLE_SELECT_OPTIONS.forEach((role) => {
+			if (role !== 'user' && role !== current && selectedRoles.indexOf(role) !== -1) return;
+			const option = document.createElement('option');
+			option.value = role;
+			option.textContent = role;
+			select.appendChild(option);
+		});
+		select.value = current;
+	});
+}
+
+function updateRoleAddBtn(selectWrap, addBtn) {
+	addBtn.classList.toggle('is-hidden', selectWrap.querySelectorAll('select').length >= MAX_ROLE_SELECTS);
 }
 
 async function handleSaveUserRoles(internalUserId, selectWrap, btn) {

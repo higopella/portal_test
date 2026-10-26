@@ -60,12 +60,13 @@ async function requestSignupOtp(event) {
   const button = document.getElementById('btn-request-otp');
   const schoolEmail = document.getElementById('signup-school-email').value.trim();
   const nickname = document.getElementById('signup-nickname').value.trim();
+  const generation = Number(document.getElementById('signup-generation').value);
   const idToken = getCurrentIdToken();
   if (!idToken) return;
 
   await withButtonLoading(button, async () => {
     try {
-      const result = await callGasApi('requestOtp', { idToken, schoolEmail, nickname });
+      const result = await callGasApi('requestOtp', { idToken, schoolEmail, nickname, generation });
       if (!result.success) {
         showToast(result.error || 'パスキーを送信できません', 'error');
         return;
