@@ -19,7 +19,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function bindLiveFormEvents() {
-	document.getElementById('btn-add-pa-member').addEventListener('click', () => addPaMemberRow());
 	document.getElementById('btn-add-song').addEventListener('click', () => addSongTitleRow());
 	document.getElementById('form-live-application').addEventListener('submit', handleSubmitLiveApplication);
 }
@@ -94,10 +93,7 @@ function addPaMemberRow() {
 	nameInput.placeholder = '名前';
 	nameInput.maxLength = 100;
 
-	const removeBtn = createRowButton('×', 'btn btn-danger small-action-button', 'この演者を削除');
-	removeBtn.addEventListener('click', () => { col.remove(); renumberPaMembers(); });
-
-	col.append(order, partSelect, nameInput, removeBtn);
+	col.append(order, partSelect, nameInput);
 	list.appendChild(col);
 	renumberPaMembers();
 }
