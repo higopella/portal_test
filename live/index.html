@@ -37,11 +37,11 @@
       <!-- PA表 -->
       <section class="card">
         <div class="card-title">PA表</div>
-        <p class="live-note">演者は左から下手→上手の順に1列ずつ入力してください（7列まで）。列のドラッグまたは←→ボタンで並び替えできます。マイクは曲間で変更しないでください（1曲目で使ったマイクと同じものを使用します）。</p>
+        <p class="live-note">演者は左から下手→上手の順に入力してください。マイクは曲間で変更しないでください（1曲目で使ったマイクと同じものを使用します）。</p>
         <div id="pa-member-list"></div>
         <button type="button" id="btn-add-pa-member" class="btn btn-primary small-action-button">演者を追加</button>
         <div class="live-form-group live-field-gap">
-          <label class="live-label" for="pa-mic-bring">マイク持ち込み（ある場合は詳細に記入）</label>
+          <label class="live-label" for="pa-mic-bring">マイク持ち込み（ある場合は"パート/マイク名"を記入）</label>
           <textarea id="pa-mic-bring" class="live-textarea" rows="2" maxlength="1000"></textarea>
         </div>
         <div class="live-form-group">
@@ -54,19 +54,13 @@
       <!-- 照明表 -->
       <section class="card">
         <div class="card-title">照明表</div>
-        <p class="live-note">曲ごとのテンポ・イメージカラー・ジャンル・要望を入力してください（曲名は基本情報の演奏曲と連動します）。</p>
-        <div class="live-form-group">
-          <label class="live-label" for="light-has-mc">MCの有無</label>
-          <select id="light-has-mc" class="live-input">
-            <option value="false">なし</option>
-            <option value="true">あり</option>
-          </select>
-        </div>
+        <p class="live-note">曲ごとのテンポ・イメージカラー・ジャンル・演奏前のMC・要望を入力してください（曲名は基本情報の演奏曲と連動します）。</p>
         <div class="live-form-group">
           <label class="live-label" for="light-mc-se">MC中SE</label>
           <select id="light-mc-se" class="live-input">
-            <option value="false">なし</option>
+            <option value="" selected disabled>MC中SEを選択</option>
             <option value="true">あり</option>
+            <option value="false">なし</option>
           </select>
         </div>
         <div class="live-form-group">

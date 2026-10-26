@@ -42,8 +42,10 @@ function bindRolePageEvents() {
 	});
 	on('btn-admin-search-events', 'click', handleAdminSearchEvents);
 	on('btn-create-live', 'click', handleCreateLive);
-	on('btn-print-pa', 'click', () => handlePrintHigopelive('pa'));
-	on('btn-print-light', 'click', () => handlePrintHigopelive('light'));
+	on('btn-print-pa', 'click', (e) => downloadHigopelivePdf('pa', e.currentTarget));
+	on('btn-print-light', 'click', (e) => downloadHigopelivePdf('light', e.currentTarget));
+	on('btn-batch-pa', 'click', (e) => downloadAllHigopelivePdf('pa', e.currentTarget));
+	on('btn-batch-light', 'click', (e) => downloadAllHigopelivePdf('light', e.currentTarget));
 	document.querySelectorAll('.admin-tab').forEach((tab) => {
 		tab.addEventListener('click', () => switchAdminTab(tab.dataset.tab));
 	});
@@ -823,15 +825,14 @@ function buildLightSection(app) {
 	section.appendChild(heading);
 	const details = (app.lighting && Array.isArray(app.lighting.songDetails)) ? app.lighting.songDetails : [];
 	if (details.length > 0) {
-		buildHigopeliveTable(section, ['曲', '曲名', 'テンポ', 'イメージカラー', 'ジャンル', '要望'], details.map((s, i) => [`${i + 1}曲目`, s.title, s.tempo, s.color, s.genre || '-', s.notes || '-']));
+		buildHigopeliveTable(section, ['曲', '曲名', 'テンポ', 'イメージカラー', 'ジャンル', '演奏前のMC', '要望'], details.map((s, i) => [`${i + 1}曲目`, s.title, s.tempo, s.color, s.genre || '-', s.preMc ? 'あり' : 'なし', s.notes || '-']));
 	}
 	const legacySongs = (app.lighting && Array.isArray(app.lighting.songs)) ? app.lighting.songs : [];
 	if (legacySongs.length > 0) {
 		buildHigopeliveTable(section, ['曲名', 'テンポ', 'イメージカラー', 'ジャンル'], legacySongs.map((s) => [s.title, s.tempo, s.color, s.genre || '-']));
 	}
 	if (app.lighting) {
-		buildHigopeliveNote(section, 'MCの有無', app.lighting.hasMc ? 'あり' : 'なし');
-		buildHigopeliveNote(section, 'MC中SE', app.lighting.mcSe ? 'あり' : 'なし');
+		buildHigopeliveNote(section, 'MC中SE', app.lighting.mcSe ? 'あり' : (app.lighting.mcSe === false ? 'なし' : ''));
 		buildHigopeliveNote(section, '要望・特記', app.lighting.notes);
 	}
 	return section;
@@ -849,23 +850,43 @@ function showHigopeliveDetail(app) {
 	card.scrollIntoView({ behavior: 'smooth' });
 }
 
-function handlePrintHigopelive(kind) {
-	if (!currentHigopeliveApp) return;
-	const area = document.getElementById('print-area');
-	area.textContent = '';
-	const title = document.createElement('h2');
-	title.textContent = kind === 'pa' ? `PA表：${currentHigopeliveApp.groupName}` : `照明表：${currentHigopeliveApp.groupName}`;
-	area.appendChild(title);
-	const meta = document.createElement('p');
-	meta.textContent = `${currentHigopeliveLive ? `${currentHigopeliveLive.title}（${currentHigopeliveLive.date}）` : ''} 代表: ${currentHigopeliveApp.representative}`;
-	area.appendChild(meta);
-	area.appendChild(kind === 'pa' ? buildPaSection(currentHigopeliveApp) : buildLightSection(currentHigopeliveApp));
-	area.classList.remove('is-hidden');
-	const cleanup = () => {
-		area.classList.add('is-hidden');
-		window.removeEventListener('afterprint', cleanup);
-	};
-	window.addEventListener('afterprint', cleanup);
-	window.print();
-	setTimeout(cleanup, 1500);
+function downloadBase64Pdf(base64, filename) {
+	const bin = atob(base64);
+	const bytes = new Uint8Array(bin.length);
+	for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+	const blob = new Blob([bytes], { type: 'application/pdf' });
+	const url = URL.createObjectURL(blob);
+	const a = document.createElement('a');
+	a.href = url;
+	a.download = filename;
+	document.body.appendChild(a);
+	a.click();
+	a.remove();
+	URL.revokeObjectURL(url);
+}
+
+async function downloadHigopelivePdf(kind, btn) {
+	if (!currentHigopeliveApp || !currentHigopeliveLive) return;
+	await withButtonLoading(btn, async () => {
+		const res = await callGasApi('exportApplicationPdf', { liveId: currentHigopeliveLive.liveId, appId: currentHigopeliveApp.appId, kind: kind });
+		if (res.success && res.data) {
+			downloadBase64Pdf(res.data, res.name);
+			showToast('ダウンロードしました');
+		} else {
+			showToast(res.error || 'PDFの生成に失敗しました', 'error');
+		}
+	}, 'PDF生成中');
+}
+
+async function downloadAllHigopelivePdf(kind, btn) {
+	if (!currentHigopeliveLive) return;
+	await withButtonLoading(btn, async () => {
+		const res = await callGasApi('exportAllApplicationsPdf', { liveId: currentHigopeliveLive.liveId, kind: kind });
+		if (res.success && res.data) {
+			downloadBase64Pdf(res.data, res.name);
+			showToast('ダウンロードしました');
+		} else {
+			showToast(res.error || 'PDFの生成に失敗しました', 'error');
+		}
+	}, 'PDF生成中');
 }

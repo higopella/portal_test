@@ -97,6 +97,9 @@
 .live-member-col.is-dragging {
 	opacity: 0.5;
 }
+@media (max-width: 640px) {
+	.live-member-actions { display: none; }
+}
 .live-song-title {
 	flex: 2;
 	min-width: 120px;

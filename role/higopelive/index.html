@@ -67,6 +67,13 @@
     <!-- 申請一覧 -->
     <section class="card">
       <div class="card-title">申請一覧 <span id="higopelive-current-live" class="admin-login-description"></span></div>
+      <div class="notice-form-row">
+        <span></span>
+        <div class="notice-submit-group">
+          <button type="button" id="btn-batch-pa" class="btn small-action-button">PA表を一括PDF</button>
+          <button type="button" id="btn-batch-light" class="btn small-action-button">照明表を一括PDF</button>
+        </div>
+      </div>
       <div id="higopelive-app-list">ライブ管理タブからライブを選択してください</div>
     </section>
 
@@ -76,17 +83,14 @@
       <div class="notice-form-row">
         <span></span>
         <div class="notice-submit-group">
-          <button type="button" id="btn-print-pa" class="btn small-action-button">PA表を印刷</button>
-          <button type="button" id="btn-print-light" class="btn small-action-button">照明表を印刷</button>
+          <button type="button" id="btn-print-pa" class="btn small-action-button">PA表をPDF</button>
+          <button type="button" id="btn-print-light" class="btn small-action-button">照明表をPDF</button>
         </div>
       </div>
       <div id="higopelive-detail"></div>
     </section>
     </div>
   </main>
-
-  <!-- 印刷用エリア -->
-  <div id="print-area" class="is-hidden"></div>
 
   <script src="../../src/js/ui.js"></script>
   <script src="../../src/js/notice-cache.js"></script>
