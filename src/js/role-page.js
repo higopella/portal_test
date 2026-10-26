@@ -782,9 +782,35 @@ function buildPaSection(app) {
 	heading.textContent = 'PA表';
 	section.appendChild(heading);
 	const members = (app.pa && Array.isArray(app.pa.members)) ? app.pa.members : [];
-	buildHigopeliveTable(section, ['順番', '名前', 'パート'], members.map((m, i) => [`${i + 1}（下手→上手）`, m.name, m.part]));
+
+	const wrapper = document.createElement('div');
+	wrapper.className = 'table-responsive';
+	const table = document.createElement('table');
+	table.className = 'log-table';
+	const tbody = document.createElement('tbody');
+	[
+		['順番', ...members.map((m, i) => String(i + 1))],
+		['パート', ...members.map((m) => m.part)],
+		['名前', ...members.map((m) => m.name)]
+	].forEach((cells) => {
+		const row = document.createElement('tr');
+		cells.forEach((cellText, cellIndex) => {
+			const cell = document.createElement(cellIndex === 0 ? 'th' : 'td');
+			cell.textContent = cellText;
+			row.appendChild(cell);
+		});
+		tbody.appendChild(row);
+	});
+	table.appendChild(tbody);
+	wrapper.appendChild(table);
+	section.appendChild(wrapper);
+
 	buildHigopeliveNote(section, 'マイク持ち込み', app.pa ? app.pa.micBring : '');
 	buildHigopeliveNote(section, '要望・特記', app.pa ? app.pa.notes : '');
+	const songNotes = (app.pa && Array.isArray(app.pa.songNotes)) ? app.pa.songNotes : [];
+	if (songNotes.length > 0) {
+		buildHigopeliveTable(section, ['曲', '曲名', 'PA要望'], songNotes.map((sn, i) => [`${i + 1}曲目`, sn.title, sn.notes || '-']));
+	}
 	return section;
 }
 
@@ -795,8 +821,14 @@ function buildLightSection(app) {
 	heading.className = 'card-title notice-list-heading';
 	heading.textContent = '照明表';
 	section.appendChild(heading);
-	const songs = (app.lighting && Array.isArray(app.lighting.songs)) ? app.lighting.songs : [];
-	buildHigopeliveTable(section, ['曲名', 'テンポ', 'イメージカラー', 'ジャンル'], songs.map((s) => [s.title, s.tempo, s.color, s.genre || '-']));
+	const details = (app.lighting && Array.isArray(app.lighting.songDetails)) ? app.lighting.songDetails : [];
+	if (details.length > 0) {
+		buildHigopeliveTable(section, ['曲', '曲名', 'テンポ', 'イメージカラー', 'ジャンル', '要望'], details.map((s, i) => [`${i + 1}曲目`, s.title, s.tempo, s.color, s.genre || '-', s.notes || '-']));
+	}
+	const legacySongs = (app.lighting && Array.isArray(app.lighting.songs)) ? app.lighting.songs : [];
+	if (legacySongs.length > 0) {
+		buildHigopeliveTable(section, ['曲名', 'テンポ', 'イメージカラー', 'ジャンル'], legacySongs.map((s) => [s.title, s.tempo, s.color, s.genre || '-']));
+	}
 	if (app.lighting) {
 		buildHigopeliveNote(section, 'MCの有無', app.lighting.hasMc ? 'あり' : 'なし');
 		buildHigopeliveNote(section, 'MC中SE', app.lighting.mcSe ? 'あり' : 'なし');

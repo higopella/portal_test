@@ -27,12 +27,17 @@
           <label class="live-label" for="live-representative">代表者</label>
           <input type="text" id="live-representative" class="live-input" maxlength="200" placeholder="例: 肥後" required>
         </div>
+        <div class="live-form-group">
+          <label class="live-label">演奏曲</label>
+          <div id="song-title-list"></div>
+          <button type="button" id="btn-add-song" class="btn btn-primary small-action-button">曲を追加</button>
+        </div>
       </section>
 
       <!-- PA表 -->
       <section class="card">
         <div class="card-title">PA表</div>
-        <p class="live-note">演者は下手→上手の並び順で入力してください（7人まで）。行の「⠿」ドラッグまたは↑↓ボタンで並び替えできます。マイクは曲間で変更しないでください（1曲目で使ったマイクと同じものを使用します）。</p>
+        <p class="live-note">演者は左から下手→上手の順に1列ずつ入力してください（7列まで）。列のドラッグまたは←→ボタンで並び替えできます。マイクは曲間で変更しないでください（1曲目で使ったマイクと同じものを使用します）。</p>
         <div id="pa-member-list"></div>
         <button type="button" id="btn-add-pa-member" class="btn btn-primary small-action-button">演者を追加</button>
         <div class="live-form-group live-field-gap">
@@ -43,15 +48,14 @@
           <label class="live-label" for="pa-notes">PA 要望・特記欄</label>
           <textarea id="pa-notes" class="live-textarea" rows="3" maxlength="2000"></textarea>
         </div>
+        <div id="pa-song-notes"></div>
       </section>
 
       <!-- 照明表 -->
       <section class="card">
         <div class="card-title">照明表</div>
-        <p class="live-note">曲ごとに曲名・テンポ・イメージカラー・ジャンルを入力してください（10曲まで）。</p>
-        <div id="light-song-list"></div>
-        <button type="button" id="btn-add-light-song" class="btn btn-primary small-action-button">曲を追加</button>
-        <div class="live-form-group live-field-gap">
+        <p class="live-note">曲ごとのテンポ・イメージカラー・ジャンル・要望を入力してください（曲名は基本情報の演奏曲と連動します）。</p>
+        <div class="live-form-group">
           <label class="live-label" for="light-has-mc">MCの有無</label>
           <select id="light-has-mc" class="live-input">
             <option value="false">なし</option>
@@ -69,6 +73,7 @@
           <label class="live-label" for="light-notes">照明 要望・特記欄</label>
           <textarea id="light-notes" class="live-textarea" rows="3" maxlength="2000"></textarea>
         </div>
+        <div id="light-song-detail-list"></div>
       </section>
 
       <button type="submit" id="btn-submit-live-application" class="btn btn-primary full-width">申請する</button>

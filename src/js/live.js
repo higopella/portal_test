@@ -8,7 +8,7 @@ const PA_PARTS = ['1st', '2nd', '3rd', '4th','lead', 'bass', 'perc.'];
 const LIGHT_TEMPOS = ['アップテンポ', 'ミドルテンポ', 'スローテンポ'];
 const LIGHT_COLORS = ['白', '赤', '青', '黄', '緑', '紫', 'ピンク', 'オレンジ'];
 const MAX_PA_MEMBERS = 7;
-const MAX_LIGHT_SONGS = 10;
+const MAX_SONGS = 10;
 
 let liveDragSrcRow = null;
 
@@ -16,14 +16,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 	if (!await requirePageAuthentication()) return;
 	addPaMemberRow();
 	addPaMemberRow();
-	addLightSongRow();
+	addSongTitleRow();
 	bindLiveFormEvents();
 	loadLiveOptions();
 });
 
 function bindLiveFormEvents() {
 	document.getElementById('btn-add-pa-member').addEventListener('click', () => addPaMemberRow());
-	document.getElementById('btn-add-light-song').addEventListener('click', () => addLightSongRow());
+	document.getElementById('btn-add-song').addEventListener('click', () => addSongTitleRow());
 	document.getElementById('form-live-application').addEventListener('submit', handleSubmitLiveApplication);
 }
 
@@ -91,6 +91,7 @@ function attachRowDrag(row) {
 		const targetIndex = rows.indexOf(row);
 		if (srcIndex < targetIndex) list.insertBefore(liveDragSrcRow, row.nextSibling);
 		else list.insertBefore(liveDragSrcRow, row);
+		renumberPaMembers();
 	});
 }
 
@@ -100,20 +101,13 @@ function addPaMemberRow() {
 		showToast(`演者は${MAX_PA_MEMBERS}人までです`, 'error');
 		return;
 	}
-	const row = document.createElement('div');
-	row.className = 'live-member-row';
-	row.draggable = true;
-	attachRowDrag(row);
+	const col = document.createElement('div');
+	col.className = 'live-member-col';
+	col.draggable = true;
+	attachRowDrag(col);
 
-	const handle = document.createElement('span');
-	handle.className = 'live-drag-handle';
-	handle.textContent = '⠿';
-
-	const nameInput = document.createElement('input');
-	nameInput.type = 'text';
-	nameInput.className = 'live-input live-member-name';
-	nameInput.placeholder = '名前';
-	nameInput.maxLength = 100;
+	const order = document.createElement('div');
+	order.className = 'live-member-order';
 
 	const partSelect = document.createElement('select');
 	partSelect.className = 'live-input live-member-part';
@@ -124,32 +118,104 @@ function addPaMemberRow() {
 		partSelect.appendChild(option);
 	});
 
-	const upBtn = createRowButton('↑', 'btn small-action-button', '上へ');
-	upBtn.addEventListener('click', () => moveLiveRow(row, -1));
-	const downBtn = createRowButton('↓', 'btn small-action-button', '下へ');
-	downBtn.addEventListener('click', () => moveLiveRow(row, 1));
-	const removeBtn = createRowButton('×', 'btn btn-danger small-action-button', 'この演者を削除');
-	removeBtn.addEventListener('click', () => row.remove());
+	const nameInput = document.createElement('input');
+	nameInput.type = 'text';
+	nameInput.className = 'live-input live-member-name';
+	nameInput.placeholder = '名前';
+	nameInput.maxLength = 100;
 
-	row.append(handle, nameInput, partSelect, upBtn, downBtn, removeBtn);
-	list.appendChild(row);
+	const actions = document.createElement('div');
+	actions.className = 'live-member-actions';
+	const leftBtn = createRowButton('←', 'btn small-action-button', '左へ（下手側）');
+	leftBtn.addEventListener('click', () => { moveLiveRow(col, -1); renumberPaMembers(); });
+	const rightBtn = createRowButton('→', 'btn small-action-button', '右へ（上手側）');
+	rightBtn.addEventListener('click', () => { moveLiveRow(col, 1); renumberPaMembers(); });
+	const removeBtn = createRowButton('×', 'btn btn-danger small-action-button', 'この演者を削除');
+	removeBtn.addEventListener('click', () => { col.remove(); renumberPaMembers(); });
+	actions.append(leftBtn, rightBtn, removeBtn);
+
+	col.append(order, partSelect, nameInput, actions);
+	list.appendChild(col);
+	renumberPaMembers();
 }
 
-function addLightSongRow() {
-	const list = document.getElementById('light-song-list');
-	if (list.children.length >= MAX_LIGHT_SONGS) {
-		showToast(`曲は${MAX_LIGHT_SONGS}曲までです`, 'error');
+function renumberPaMembers() {
+	document.querySelectorAll('#pa-member-list .live-member-col').forEach((col, index) => {
+		col.querySelector('.live-member-order').textContent = `${index + 1}（下手→上手）`;
+	});
+}
+
+function addSongTitleRow(title = '') {
+	const list = document.getElementById('song-title-list');
+	if (list.children.length >= MAX_SONGS) {
+		showToast(`曲は${MAX_SONGS}曲までです`, 'error');
 		return;
 	}
 	const row = document.createElement('div');
 	row.className = 'live-song-row';
+	const input = document.createElement('input');
+	input.type = 'text';
+	input.className = 'live-input song-title-input';
+	input.placeholder = `曲名（${list.children.length + 1}曲目）`;
+	input.maxLength = 100;
+	input.value = title;
+	input.addEventListener('input', syncSongSections);
+	const removeBtn = createRowButton('×', 'btn btn-danger small-action-button', 'この曲を削除');
+	removeBtn.addEventListener('click', () => {
+		if (list.children.length > 1) {
+			row.remove();
+			syncSongSections();
+		}
+	});
+	row.append(input, removeBtn);
+	list.appendChild(row);
+	syncSongSections();
+}
 
-	const titleInput = document.createElement('input');
-	titleInput.type = 'text';
-	titleInput.className = 'live-input live-song-title';
-	titleInput.placeholder = '曲名';
-	titleInput.maxLength = 100;
+function getSongTitles() {
+	const titles = [];
+	document.querySelectorAll('#song-title-list .song-title-input').forEach((input) => {
+		const value = input.value.trim();
+		if (value) titles.push(value);
+	});
+	return titles;
+}
 
+function syncSongSections() {
+	const titles = getSongTitles();
+	syncPaSongNotes(titles);
+	syncLightSongDetails(titles);
+}
+
+function syncPaSongNotes(titles) {
+	const container = document.getElementById('pa-song-notes');
+	const existing = Array.from(container.querySelectorAll('textarea')).map((t) => t.value);
+	container.textContent = '';
+	titles.forEach((title, index) => {
+		const group = document.createElement('div');
+		group.className = 'live-form-group';
+		const label = document.createElement('label');
+		label.className = 'live-label';
+		label.textContent = `${index + 1}曲目（${title}）のPA要望`;
+		const textarea = document.createElement('textarea');
+		textarea.className = 'live-textarea pa-song-note';
+		textarea.rows = 2;
+		textarea.maxLength = 1000;
+		textarea.value = existing[index] || '';
+		group.append(label, textarea);
+		container.appendChild(group);
+	});
+}
+
+function createLightSongDetail(index, title, values) {
+	const group = document.createElement('div');
+	group.className = 'live-form-group live-song-detail';
+	const label = document.createElement('label');
+	label.className = 'live-label';
+	label.textContent = `${index + 1}曲目（${title}）`;
+
+	const row = document.createElement('div');
+	row.className = 'live-song-row';
 	const tempoSelect = document.createElement('select');
 	tempoSelect.className = 'live-input live-song-tempo';
 	LIGHT_TEMPOS.forEach((tempo) => {
@@ -158,7 +224,6 @@ function addLightSongRow() {
 		option.textContent = tempo;
 		tempoSelect.appendChild(option);
 	});
-
 	const colorSelect = document.createElement('select');
 	colorSelect.className = 'live-input live-song-color';
 	LIGHT_COLORS.forEach((color) => {
@@ -167,20 +232,42 @@ function addLightSongRow() {
 		option.textContent = color;
 		colorSelect.appendChild(option);
 	});
-
 	const genreInput = document.createElement('input');
 	genreInput.type = 'text';
 	genreInput.className = 'live-input live-song-genre';
 	genreInput.placeholder = 'ジャンル（任意）';
 	genreInput.maxLength = 50;
+	row.append(tempoSelect, colorSelect, genreInput);
 
-	const removeBtn = createRowButton('×', 'btn btn-danger small-action-button', 'この曲を削除');
-	removeBtn.addEventListener('click', () => {
-		if (list.children.length > 1) row.remove();
+	const notes = document.createElement('textarea');
+	notes.className = 'live-textarea live-song-notes';
+	notes.rows = 2;
+	notes.maxLength = 1000;
+	notes.placeholder = 'この曲の照明要望（任意）';
+
+	if (values) {
+		tempoSelect.value = values.tempo;
+		colorSelect.value = values.color;
+		genreInput.value = values.genre;
+		notes.value = values.notes;
+	}
+
+	group.append(label, row, notes);
+	return group;
+}
+
+function syncLightSongDetails(titles) {
+	const container = document.getElementById('light-song-detail-list');
+	const existing = Array.from(container.querySelectorAll('.live-song-detail')).map((detail) => ({
+		tempo: detail.querySelector('.live-song-tempo').value,
+		color: detail.querySelector('.live-song-color').value,
+		genre: detail.querySelector('.live-song-genre').value,
+		notes: detail.querySelector('.live-song-notes').value
+	}));
+	container.textContent = '';
+	titles.forEach((title, index) => {
+		container.appendChild(createLightSongDetail(index, title, existing[index]));
 	});
-
-	row.append(titleInput, tempoSelect, colorSelect, genreInput, removeBtn);
-	list.appendChild(row);
 }
 
 async function handleSubmitLiveApplication(e) {
@@ -190,28 +277,32 @@ async function handleSubmitLiveApplication(e) {
 	const representative = document.getElementById('live-representative').value.trim();
 
 	const members = [];
-	document.querySelectorAll('#pa-member-list .live-member-row').forEach((row) => {
+	document.querySelectorAll('#pa-member-list .live-member-col').forEach((row) => {
 		const name = row.querySelector('.live-member-name').value.trim();
 		const part = row.querySelector('.live-member-part').value;
 		if (name) members.push({ name, part });
 	});
 
-	const songs = [];
-	document.querySelectorAll('#light-song-list .live-song-row').forEach((row) => {
-		const title = row.querySelector('.live-song-title').value.trim();
-		if (!title) return;
-		songs.push({
-			title: title,
-			tempo: row.querySelector('.live-song-tempo').value,
-			color: row.querySelector('.live-song-color').value,
-			genre: row.querySelector('.live-song-genre').value.trim()
+	const songTitles = getSongTitles();
+	const paSongNotes = [];
+	Array.from(document.querySelectorAll('#pa-song-notes .pa-song-note')).forEach((textarea, index) => {
+		paSongNotes.push({ title: songTitles[index], notes: textarea.value.trim() });
+	});
+	const songDetails = [];
+	Array.from(document.querySelectorAll('#light-song-detail-list .live-song-detail')).forEach((detail, index) => {
+		songDetails.push({
+			title: songTitles[index],
+			tempo: detail.querySelector('.live-song-tempo').value,
+			color: detail.querySelector('.live-song-color').value,
+			genre: detail.querySelector('.live-song-genre').value.trim(),
+			notes: detail.querySelector('.live-song-notes').value.trim()
 		});
 	});
 
 	if (!liveId) { showToast('対象ライブを選択してください', 'error'); return; }
 	if (!groupName || !representative) { showToast('グループ名と代表者を入力してください', 'error'); return; }
 	if (members.length === 0) { showToast('演者を1人以上入力してください', 'error'); return; }
-	if (songs.length === 0) { showToast('曲を1曲以上入力してください', 'error'); return; }
+	if (songTitles.length === 0) { showToast('演奏曲を1曲以上入力してください', 'error'); return; }
 
 	const payload = {
 		liveId: liveId,
@@ -220,13 +311,14 @@ async function handleSubmitLiveApplication(e) {
 		pa: {
 			members: members,
 			micBring: document.getElementById('pa-mic-bring').value.trim(),
-			notes: document.getElementById('pa-notes').value.trim()
+			notes: document.getElementById('pa-notes').value.trim(),
+			songNotes: paSongNotes
 		},
 		lighting: {
-			songs: songs,
 			hasMc: document.getElementById('light-has-mc').value === 'true',
 			mcSe: document.getElementById('light-mc-se').value === 'true',
-			notes: document.getElementById('light-notes').value.trim()
+			notes: document.getElementById('light-notes').value.trim(),
+			songDetails: songDetails
 		}
 	};
 
@@ -237,10 +329,10 @@ async function handleSubmitLiveApplication(e) {
 			showToast('申請しました');
 			document.getElementById('form-live-application').reset();
 			document.getElementById('pa-member-list').textContent = '';
-			document.getElementById('light-song-list').textContent = '';
+			document.getElementById('song-title-list').textContent = '';
 			addPaMemberRow();
 			addPaMemberRow();
-			addLightSongRow();
+			addSongTitleRow();
 			loadLiveOptions();
 		} else {
 			showToast(res.error || '申請に失敗しました', 'error');
