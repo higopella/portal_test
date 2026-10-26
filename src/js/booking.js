@@ -203,7 +203,8 @@ async function loadAvailableTimeSlots() {
 		if (!result.success) throw new Error(result.error);
 		container.textContent = '';
 		const roomLabels = { '①': '部室', '②': '機材庫', '③': '教室' };
-		['①', '②', '③'].forEach((room) => {
+		// 機材庫は一般利用停止中のため空き場所に表示しない。復活する場合は下行を ['①', '②', '③'] に戻す
+		['①', '③'].forEach((room) => {
 			const row = document.createElement('div');
 			row.className = 'available-time-row';
 			const label = document.createElement('span');
