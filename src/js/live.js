@@ -76,7 +76,7 @@ function addPaMemberRow() {
 	partSelect.className = 'live-input live-member-part';
 	const partPlaceholder = document.createElement('option');
 	partPlaceholder.value = '';
-	partPlaceholder.textContent = '演奏者を記入';
+	partPlaceholder.textContent = 'パートを記入';
 	partPlaceholder.disabled = true;
 	partPlaceholder.selected = true;
 	partSelect.appendChild(partPlaceholder);
