@@ -5,8 +5,8 @@ const SITE_ENV = (function () {
 })();
 
 const GAS_API_URLS = {
-  test: "https://script.google.com/macros/s/AKfycbynzAVfuPKHqT9jkKX-JPh5l42JCbR6d6d0sb9PT_TAilMhtDSY2PW2hOMdEPEMXBgT/exec",
-  production: "https://script.google.com/macros/s/AKfycbynzAVfuPKHqT9jkKX-JPh5l42JCbR6d6d0sb9PT_TAilMhtDSY2PW2hOMdEPEMXBgT/exec" // TODO: 本番用GASのURLに差し替える
+  test: "https://script.google.com/macros/s/AKfycbxbT6BAfofuOLyltLkV1SzqeOFlVuWtwXWewvHXaP50xuK839BXYkkGsnVhoy0TqoUjQQ/exec",
+  production: "https://script.google.com/macros/s/AKfycbynzAVfuPKHqT9jkKX-JPh5l42JCbR6d6d0sb9PT_TAilMhtDSY2PW2hOMdEPEMXBgT/exec"
 };
 
 function getSiteBasePath() {
