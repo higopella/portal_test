@@ -222,6 +222,7 @@ async function fetchNotices() {
 	if (requestId !== noticeRequestId) return;
 	if (cached && cached.version === NOTICE_DEVICE_CACHE_VERSION && Array.isArray(cached.notices)) {
 		renderNotices(cached.notices, container);
+		if (Date.now() - Number(cached.fetchedAt || 0) < NOTICE_DEVICE_CACHE_TTL_MS) return;
 	}
 	try {
 		const res = await withNoticeRefreshTimeout(callGasApi('getNotice'));

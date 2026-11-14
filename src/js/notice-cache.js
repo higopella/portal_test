@@ -2,6 +2,7 @@ const NOTICE_DEVICE_CACHE_DB = "higo-pella-notices";
 const NOTICE_DEVICE_CACHE_STORE = "snapshots";
 const NOTICE_DEVICE_CACHE_KEY = "current";
 const NOTICE_DEVICE_CACHE_VERSION = 1;
+const NOTICE_DEVICE_CACHE_TTL_MS = 60 * 1000;
 const NOTICE_REFRESH_TIMEOUT_MS = 10000;
 
 function openNoticeDeviceCache() {

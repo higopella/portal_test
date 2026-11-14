@@ -102,14 +102,16 @@ function initCommonLayout(activeKey = "") {
   recordPageAccess();
 }
 
-const ACCESS_COUNT_INTERVAL_MS = 30 * 60 * 1000;
+const ACCESS_COUNT_INTERVAL_MS = 8 * 60 * 60 * 1000;
 
 function recordPageAccess() {
   if (typeof callGasApi !== "function") return;
+  const sitePath = typeof getSiteBasePath === "function" ? getSiteBasePath() : "/";
+  const storageKey = `higopella_last_access_count:${sitePath}`;
   const now = Date.now();
-  const lastRaw = localStorage.getItem("higopella_last_access_count");
+  const lastRaw = localStorage.getItem(storageKey);
   const last = Number(lastRaw);
   if (lastRaw && Number.isFinite(last) && now - last < ACCESS_COUNT_INTERVAL_MS) return;
-  localStorage.setItem("higopella_last_access_count", String(now));
+  localStorage.setItem(storageKey, String(now));
   callGasApi('recordAccess').catch(() => {});
 }
