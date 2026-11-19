@@ -82,6 +82,7 @@ async function handleGoogleCredential(response) {
 		if (result.status === 'authenticated') {
 			setLoginStatus('認証に成功しました。画面を準備しています...', 'success');
 			setUserLogin(true);
+			setUserRoles(result.user && Array.isArray(result.user.roles) ? result.user.roles : (result.user && result.user.role ? [result.user.role] : []));
 			recordLoginHistory();
 			showToast('ログインしました');
 			renderHomeView();
