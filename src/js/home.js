@@ -153,26 +153,41 @@ function getLocalDateString(date) {
 }
 
 async function initializeHomeScheduleCalendar() {
-	if (homeScheduleController) {
-		await homeScheduleController.refresh();
-		return;
-	}
 	const host = document.querySelector('#main-section [data-schedule-calendar]');
 	if (!host) return;
-	homeScheduleController = await initScheduleCalendar({
-		host,
-		defaultView: 'day',
-		loadEvents: async (start, end, forceRefresh) => {
-			const result = await callGasApi('getScheduleEvents', {
-				startDate: getLocalDateString(start),
-				endDate: getLocalDateString(end),
-				forceRefresh
-			});
-			if (!result.success) throw new Error(result.error || '予定の取得に失敗しました');
-			return result.events;
-		},
-		createEventElement: createHomeScheduleEvent
-	});
+	try {
+		if (homeScheduleController) {
+			await homeScheduleController.refresh();
+			return;
+		}
+		homeScheduleController = await initScheduleCalendar({
+			host,
+			defaultView: 'day',
+			loadEvents: async (start, end, forceRefresh) => {
+				const result = await callGasApi('getScheduleEvents', {
+					startDate: getLocalDateString(start),
+					endDate: getLocalDateString(end),
+					forceRefresh
+				});
+				if (!result.success) throw new Error(result.error || '予定の取得に失敗しました');
+				return { events: result.events, revision: result.revision };
+			},
+			createEventElement: createHomeScheduleEvent
+		});
+	} catch (error) {
+		console.warn('[カレンダー初期化失敗]', error);
+		host.textContent = '';
+		const message = document.createElement('div');
+		message.className = 'schedule-message schedule-message-error';
+		message.textContent = 'カレンダーを読み込めませんでした。';
+		const retry = document.createElement('button');
+		retry.type = 'button';
+		retry.className = 'btn btn-primary';
+		retry.textContent = '再読み込み';
+		retry.addEventListener('click', initializeHomeScheduleCalendar);
+		message.appendChild(retry);
+		host.appendChild(message);
+	}
 }
 
 function createHomeScheduleEvent(event, isAllDay) {
