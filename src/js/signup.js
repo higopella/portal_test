@@ -1,6 +1,4 @@
-const SIGNUP_GOOGLE_OAUTH_CLIENT_ID = '65097864960-vbe2ukqcoi9mpqc9capgtu9mak6vf4qs.apps.googleusercontent.com';
-
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   initializeSignupGoogleLogin();
 
   const profileForm = document.getElementById('signup-profile-form');
@@ -11,22 +9,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const externalToggle = document.getElementById('signup-external-toggle');
   if (externalToggle) externalToggle.addEventListener('click', toggleExternalMode);
+
+  const idToken = await getFreshIdToken();
+  if (idToken) handleSignupGoogleCredential({ credential: idToken });
 });
 
 function initializeSignupGoogleLogin() {
   const buttonContainer = document.getElementById('signup-google-button');
-  if (!buttonContainer) return;
-  if (!window.google || !google.accounts || !google.accounts.id) {
-    const googleScript = document.getElementById('google-identity-script');
-    if (googleScript) googleScript.addEventListener('load', initializeSignupGoogleLogin, { once: true });
-    return;
-  }
-
-  google.accounts.id.initialize({
-    client_id: SIGNUP_GOOGLE_OAUTH_CLIENT_ID,
-    callback: handleSignupGoogleCredential
+  if (!buttonContainer || buttonContainer.querySelector('button')) return;
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'btn btn-primary';
+  button.textContent = 'Googleで認証';
+  button.addEventListener('click', async () => {
+    button.disabled = true;
+    try {
+      handleSignupGoogleCredential({ credential: await signInWithFirebaseGoogle() });
+    } catch (error) {
+      showToast(getFirebaseLoginErrorMessage(error), 'error');
+    } finally {
+      button.disabled = false;
+    }
   });
-  google.accounts.id.renderButton(buttonContainer, { theme: 'outline', size: 'large', width: 280 });
+  buttonContainer.appendChild(button);
 }
 
 async function handleSignupGoogleCredential(response) {
@@ -51,6 +56,7 @@ async function handleSignupGoogleCredential(response) {
       return;
     }
     clearCurrentIdToken();
+    signOutFirebase();
     showToast(result.error || '登録を開始できません', 'error');
   } catch (error) {
     clearCurrentIdToken();
@@ -78,8 +84,11 @@ function toggleExternalMode() {
 async function requestSignupOtp(event) {
   event.preventDefault();
   const button = document.getElementById('btn-request-otp');
-  const idToken = getCurrentIdToken();
-  if (!idToken) return;
+  const idToken = await getFreshIdToken();
+  if (!idToken) {
+    showToast('Google認証からやり直してください', 'error');
+    return;
+  }
 
   const profile = {
     fullName: document.getElementById('signup-full-name').value.trim(),
@@ -143,8 +152,11 @@ async function verifySignupOtp(event) {
   const nickname = document.getElementById('signup-nickname').value.trim();
   const otp = document.getElementById('signup-otp').value.trim();
   const inviteCode = isExternalMode ? document.getElementById('signup-invite-code').value.trim() : '';
-  const idToken = getCurrentIdToken();
-  if (!idToken) return;
+  const idToken = await getFreshIdToken();
+  if (!idToken) {
+    showToast('Google認証からやり直してください', 'error');
+    return;
+  }
 
   await withButtonLoading(button, async () => {
     try {
@@ -177,7 +189,7 @@ function getEmailFromIdToken(idToken) {
 
 async function finalizeSignupAsLoggedIn() {
   try {
-    const result = await callGasApi('authenticateGoogle', { idToken: getCurrentIdToken() });
+    const result = await callGasApi('authenticateGoogle', { idToken: await getFreshIdToken() });
     if (result.status === 'authenticated') {
       setUserLogin(true);
       setUserRoles(result.user && Array.isArray(result.user.roles) ? result.user.roles : (result.user && result.user.role ? [result.user.role] : []));

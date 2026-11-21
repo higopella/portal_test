@@ -18,7 +18,7 @@ function getSiteBasePath() {
 async function callGasApi(action, data = {}) {
   try {
     const payload = { action: action, data: data };
-    const idToken = typeof getCurrentIdToken === "function" ? getCurrentIdToken() : "";
+    const idToken = typeof getFreshIdToken === "function" ? await getFreshIdToken() : "";
     if (idToken) payload.auth = { idToken: idToken };
     const response = await fetch(CONFIG.GAS_API_URL, {
       method: "POST",

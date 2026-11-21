@@ -1,6 +1,14 @@
-const GOOGLE_OAUTH_CLIENT_ID = '65097864960-vbe2ukqcoi9mpqc9capgtu9mak6vf4qs.apps.googleusercontent.com';
-const LOGIN_HISTORY_TTL_MS = 14 * 24 * 60 * 60 * 1000;
 const SESSION_VERIFIED_TTL_MS = 10 * 60 * 1000;
+const FIREBASE_READY_TIMEOUT_MS = 10000;
+
+(function loadFirebaseAuthModule() {
+  if (document.getElementById('firebase-auth-module')) return;
+  const script = document.createElement('script');
+  script.type = 'module';
+  script.id = 'firebase-auth-module';
+  script.src = new URL('firebase-auth.js', document.currentScript ? document.currentScript.src : window.location.href).href;
+  document.head.appendChild(script);
+})();
 
 const CONFIG = {
   GAS_API_URL: (typeof GAS_API_URLS !== 'undefined' && GAS_API_URLS[SITE_ENV]) || "https://script.google.com/macros/s/AKfycbynzAVfuPKHqT9jkKX-JPh5l42JCbR6d6d0sb9PT_TAilMhtDSY2PW2hOMdEPEMXBgT/exec",
@@ -103,7 +111,9 @@ function logoutUser() {
   setUserLogin(false);
   setAdminLogin(false);
   clearLoginHistory();
-  window.location.replace(typeof getSiteBasePath === 'function' ? getSiteBasePath() : '/');
+  signOutFirebase().finally(() => {
+    window.location.replace(typeof getSiteBasePath === 'function' ? getSiteBasePath() : '/');
+  });
 }
 
 function recordLoginHistory() {
@@ -114,96 +124,85 @@ function clearLoginHistory() {
   localStorage.removeItem(CONFIG.STORAGE_KEYS.LAST_LOGIN_AT);
 }
 
-function hasValidLoginHistory() {
-  const raw = localStorage.getItem(CONFIG.STORAGE_KEYS.LAST_LOGIN_AT);
-  if (!raw) return false;
-  const lastLoginAt = Number(raw);
-  return Number.isFinite(lastLoginAt) && Date.now() - lastLoginAt <= LOGIN_HISTORY_TTL_MS;
-}
+let firebaseReadyPromise = null;
 
-let gisInitialized = false;
-let gisCredentialHandler = null;
-
-function initGoogleIdentity(callback) {
-  if (!window.google || !google.accounts || !google.accounts.id) return false;
-  gisCredentialHandler = callback;
-  if (!gisInitialized) {
-    gisInitialized = true;
-    google.accounts.id.initialize({
-      client_id: GOOGLE_OAUTH_CLIENT_ID,
-      auto_select: !shouldSkipAutoAuth(),
-      callback: (response) => {
-        if (gisCredentialHandler) gisCredentialHandler(response);
-      }
+function waitForFirebase() {
+  if (window.higopellaFirebase) return Promise.resolve(window.higopellaFirebase);
+  if (!firebaseReadyPromise) {
+    firebaseReadyPromise = new Promise((resolve) => {
+      const timer = setTimeout(() => resolve(window.higopellaFirebase || null), FIREBASE_READY_TIMEOUT_MS);
+      window.addEventListener('higopella-firebase-ready', () => {
+        clearTimeout(timer);
+        resolve(window.higopellaFirebase);
+      }, { once: true });
     });
   }
-  return true;
+  return firebaseReadyPromise;
 }
 
-function waitForGisReady(timeoutMs = 5000) {
-  return new Promise((resolve) => {
-    if (window.google && google.accounts && google.accounts.id) {
-      resolve(true);
-      return;
-    }
-    const startedAt = Date.now();
-    const timer = setInterval(() => {
-      if (window.google && google.accounts && google.accounts.id) {
-        clearInterval(timer);
-        resolve(true);
-      } else if (Date.now() - startedAt >= timeoutMs) {
-        clearInterval(timer);
-        resolve(false);
-      }
-    }, 100);
-  });
+async function getFirebaseUser() {
+  const firebase = await waitForFirebase();
+  if (!firebase) return null;
+  await firebase.waitForInitialUser();
+  return firebase.getCurrentUser();
 }
 
-function requestSilentIdToken(timeoutMs = 6000) {
-  return new Promise((resolve) => {
-    let settled = false;
-    const finish = (token) => {
-      if (settled) return;
-      settled = true;
-      resolve(token);
-    };
-    if (!initGoogleIdentity((response) => finish(response && response.credential ? response.credential : null))) {
-      finish(null);
-      return;
-    }
-    try {
-      google.accounts.id.prompt(() => {});
-    } catch (error) {
-      finish(null);
-      return;
-    }
-    setTimeout(() => finish(null), timeoutMs);
-  });
+// Firebase SDKが期限切れ前に自動更新するため、GAS呼び出しのたびに取得し直す
+async function getFreshIdToken() {
+  const user = await getFirebaseUser();
+  if (!user) return '';
+  try {
+    const token = await user.getIdToken();
+    setCurrentIdToken(token);
+    return token;
+  } catch (error) {
+    return '';
+  }
 }
 
-function shouldSkipAutoAuth() {
-  return document.body && document.body.dataset.skipAutoAuth === 'true';
+async function signInWithFirebaseGoogle() {
+  const firebase = await waitForFirebase();
+  if (!firebase) throw new Error('Firebaseを読み込めませんでした');
+  await firebase.signInWithGoogle();
+  const token = await getFreshIdToken();
+  if (!token) throw new Error('ログイン情報を取得できませんでした');
+  return token;
+}
+
+async function signOutFirebase() {
+  const firebase = await waitForFirebase();
+  if (!firebase) return;
+  try {
+    await firebase.signOutUser();
+  } catch (error) {
+    // Local sign-out state is already cleared.
+  }
+}
+
+function getFirebaseLoginErrorMessage(error) {
+  const code = error && error.code;
+  if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') return 'ログインがキャンセルされました。';
+  if (code === 'auth/popup-blocked') return 'ポップアップがブロックされました。許可してから再度お試しください。';
+  if (code === 'auth/unauthorized-domain') return 'このページからはログインできません（承認済みドメイン未設定）。';
+  return 'Googleログインに失敗しました。';
 }
 
 async function trySilentReauth() {
-  if (shouldSkipAutoAuth()) return false;
-  if (!hasValidLoginHistory()) return false;
-  if (!await waitForGisReady()) return false;
-  const token = await requestSilentIdToken();
-  if (!token) return false;
-  setCurrentIdToken(token);
-  return true;
+  return Boolean(await getFreshIdToken());
 }
 
 async function verifySessionWithGas() {
   try {
-    const result = await callGasApi('authenticateGoogle', { idToken: getCurrentIdToken() });
-    if (result.status === 'authenticated') {
-      setUserLogin(true);
-      setUserRoles(result.user && Array.isArray(result.user.roles) ? result.user.roles : (result.user && result.user.role ? [result.user.role] : []));
-      recordLoginHistory();
-      markSessionVerified();
-      return true;
+    const idToken = await getFreshIdToken();
+    if (idToken) {
+      const result = await callGasApi('authenticateGoogle', { idToken });
+      if (result.status === 'authenticated') {
+        setUserLogin(true);
+        setUserRoles(result.user && Array.isArray(result.user.roles) ? result.user.roles : (result.user && result.user.role ? [result.user.role] : []));
+        recordLoginHistory();
+        markSessionVerified();
+        return true;
+      }
     }
   } catch (error) {
     // Treat communication and authentication failures as logged out.
