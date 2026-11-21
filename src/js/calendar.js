@@ -1,4 +1,6 @@
 const SCHEDULE_TEMPLATE_URL = "src/calendar.html";
+const SCHEDULE_REVISION_POLL_MS = 2 * 60 * 1000;
+const SCHEDULE_REVISION_MIN_GAP_MS = 30 * 1000;
 
 function getScheduleTemplateUrl() {
   const host = document.querySelector("[data-schedule-calendar]");
@@ -24,6 +26,7 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, defa
 
   const state = { view: defaultView, anchorDate: new Date() };
   let latestRequestId = 0;
+  let knownRevision = "";
   const cacheSessionId = `${Date.now()}-${Math.random()}`;
   const getDates = () => getScheduleCalendarDates(state.view, state.anchorDate);
   const getRequestRange = () => {
@@ -37,13 +40,13 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, defa
     return { start: dates[0], end: dates[dates.length - 1] };
   };
 
-  const mergeScheduleEvents = (baseEvents, newEvents) => {
-    const merged = new Map();
-    [...(baseEvents || []), ...(newEvents || [])].forEach((event) => {
-      const key = `${event.room}|${event.start}|${event.end}|${event.title}`;
-      merged.set(key, event);
+  // 取得した期間の予定は置き換える（結合すると他の人が削除した予定が残る）
+  const replaceRangeEvents = (baseEvents, newEvents, start, end) => {
+    const outside = (baseEvents || []).filter((event) => {
+      const eventDate = String(event.start || "").slice(0, 10);
+      return eventDate < start || eventDate > end;
     });
-    return [...merged.values()];
+    return [...outside, ...(newEvents || [])];
   };
 
   const renderEvents = (events, dates) => {
@@ -61,7 +64,7 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, defa
     onRendered?.(state, dates);
   };
 
-  async function refresh(forceRefresh = false) {
+  async function refresh(forceRefresh = false, ignoreFreshCache = false) {
     const requestId = ++latestRequestId;
     const dates = getDates();
     const range = getRequestRange();
@@ -75,7 +78,10 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, defa
       renderEvents(cached.events, dates);
       const cacheCoversRange = cached.windowStart <= requestedStart && cached.windowEnd >= requestedEnd;
       const cacheIsFresh = Date.now() - Number(cached.fetchedAt || 0) < SCHEDULE_DEVICE_CACHE_TTL_MS;
-      if (!forceRefresh && cacheCoversRange && cacheIsFresh) return;
+      if (!forceRefresh && !ignoreFreshCache && cacheCoversRange && cacheIsFresh) {
+        if (cached.revision) knownRevision = cached.revision;
+        return;
+      }
     } else {
       container.textContent = "";
       const loading = document.createElement("div");
@@ -85,9 +91,11 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, defa
     }
     const networkPromise = loadEvents(range.start, range.end, forceRefresh);
     try {
-      const activeEvents = await withScheduleRefreshTimeout(networkPromise);
+      const loaded = await withScheduleRefreshTimeout(networkPromise);
       if (requestId !== latestRequestId) return;
-      const mergedEvents = mergeScheduleEvents(cached?.events || [], activeEvents);
+      const activeEvents = Array.isArray(loaded) ? loaded : (loaded?.events || []);
+      if (loaded?.revision) knownRevision = loaded.revision;
+      const mergedEvents = replaceRangeEvents(cached?.events, activeEvents, requestedStart, requestedEnd);
       renderEvents(mergedEvents, dates);
       await writeScheduleDeviceCache({
         version: SCHEDULE_DEVICE_CACHE_VERSION,
@@ -96,6 +104,7 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, defa
         windowStart: getScheduleDateString(range.start),
         windowEnd: getScheduleDateString(range.end),
         fetchedAt: Date.now(),
+        revision: knownRevision,
         events: mergedEvents
       });
 
@@ -130,6 +139,30 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, defa
     refresh();
   });
   await refresh();
+
+  let revisionCheckInFlight = false;
+  let lastRevisionCheckAt = 0;
+  // 表示中のみ変更番号だけを確認し、変わった時だけ予定を取り直す
+  async function checkScheduleRevision() {
+    if (document.hidden || revisionCheckInFlight || !knownRevision || typeof callGasApi !== "function") return;
+    revisionCheckInFlight = true;
+    lastRevisionCheckAt = Date.now();
+    try {
+      const result = await callGasApi("getScheduleRevision");
+      if (result?.success && result.revision && result.revision !== knownRevision) {
+        knownRevision = result.revision;
+        await refresh(false, true);
+      }
+    } catch (error) {
+      // Next poll retries.
+    } finally {
+      revisionCheckInFlight = false;
+    }
+  }
+  setInterval(checkScheduleRevision, SCHEDULE_REVISION_POLL_MS);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && Date.now() - lastRevisionCheckAt >= SCHEDULE_REVISION_MIN_GAP_MS) checkScheduleRevision();
+  });
 
   return { refresh, state };
 }

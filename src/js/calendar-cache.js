@@ -5,15 +5,24 @@ const SCHEDULE_DEVICE_CACHE_STORAGE_KEY = "higo-pella-schedule-cache";
 const SCHEDULE_DEVICE_CACHE_VERSION = 9;
 const SCHEDULE_DEVICE_CACHE_TTL_MS = 60 * 1000;
 const SCHEDULE_REFRESH_TIMEOUT_MS = 15000;
+const SCHEDULE_DEVICE_CACHE_OPEN_TIMEOUT_MS = 3000;
 
+// iOSでは indexedDB.open が完了しないことがあるため打ち切る
 function openScheduleDeviceCache() {
   return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("IndexedDBを開けませんでした")), SCHEDULE_DEVICE_CACHE_OPEN_TIMEOUT_MS);
     const request = indexedDB.open(SCHEDULE_DEVICE_CACHE_DB, 1);
     request.onupgradeneeded = () => {
       request.result.createObjectStore(SCHEDULE_DEVICE_CACHE_STORE);
     };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      clearTimeout(timer);
+      resolve(request.result);
+    };
+    request.onerror = () => {
+      clearTimeout(timer);
+      reject(request.error);
+    };
   });
 }
 

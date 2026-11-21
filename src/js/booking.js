@@ -73,7 +73,7 @@ async function initializeBookingScheduleCalendar(authenticationReady) {
 				forceRefresh
 			});
 			if (!result.success) throw new Error(result.error || '予定の取得に失敗しました');
-			return result.events;
+			return { events: result.events, revision: result.revision };
 		},
 		createEventElement: createScheduleEventElement
 	});

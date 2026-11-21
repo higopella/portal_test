@@ -4,13 +4,21 @@ const NOTICE_DEVICE_CACHE_KEY = "current";
 const NOTICE_DEVICE_CACHE_VERSION = 1;
 const NOTICE_DEVICE_CACHE_TTL_MS = 60 * 1000;
 const NOTICE_REFRESH_TIMEOUT_MS = 10000;
+const NOTICE_DEVICE_CACHE_OPEN_TIMEOUT_MS = 3000;
 
 function openNoticeDeviceCache() {
   return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("IndexedDBを開けませんでした")), NOTICE_DEVICE_CACHE_OPEN_TIMEOUT_MS);
     const request = indexedDB.open(NOTICE_DEVICE_CACHE_DB, 1);
     request.onupgradeneeded = () => request.result.createObjectStore(NOTICE_DEVICE_CACHE_STORE);
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      clearTimeout(timer);
+      resolve(request.result);
+    };
+    request.onerror = () => {
+      clearTimeout(timer);
+      reject(request.error);
+    };
   });
 }
 
