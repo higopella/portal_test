@@ -57,6 +57,11 @@
 			font-weight: bold;
 		}
 		.log-scroll { max-height: 480px; overflow-y: auto; }
+		.booking-log-table th:nth-child(3), .booking-log-table td:nth-child(3) { width: 104px; white-space: pre-line; }
+		.booking-log-table th:nth-child(4), .booking-log-table td:nth-child(4) { width: 220px; }
+		.booking-log-table th:nth-child(5), .booking-log-table td:nth-child(5) { width: 52px; }
+		.booking-log-table th:nth-child(6), .booking-log-table td:nth-child(6) { width: 56px; }
+		.booking-log-table th:nth-child(7), .booking-log-table td:nth-child(7) { width: 72px; }
 		.log-scroll thead th { position: sticky; top: 0; z-index: 1; }
 		.admin-tabs { display: flex; flex-wrap: nowrap; gap: 6px; overflow-x: auto; max-width: 100%; min-width: 0; padding-right: 8px; -webkit-overflow-scrolling: touch; }
 		.admin-tab { flex: 0 0 auto; padding: 10px 4px; border: 1px solid var(--border); border-radius: var(--radius); background-color: var(--card); color: var(--text-sub); font-size: 0.8rem; font-weight: bold; cursor: pointer; white-space: nowrap; text-align: center; }
@@ -67,7 +72,14 @@
 		.role-switcher { display: flex; gap: 6px; margin-bottom: 4px; }
 		.role-switch-link { flex: 1; text-align: center; padding: 8px 4px; border: 1px solid var(--border); border-radius: var(--radius); text-decoration: none; color: var(--text-sub); font-size: 0.85rem; font-weight: bold; background: var(--card); }
 		.role-switch-link.current { background: var(--primary); color: #fff; border-color: var(--primary); }
-		.user-item { flex-wrap: wrap; }
+		.user-item { flex-direction: column; align-items: stretch; }
+		.user-item-header { display: flex; align-items: center; gap: 6px; }
+		.user-info-button { width: 28px; height: 28px; padding: 0; border: 1px solid var(--border); border-radius: 50%; background: var(--card); color: var(--primary-dark); font-size: 1rem; line-height: 1; cursor: pointer; }
+		.user-info-button:hover, .user-info-button:focus-visible { background: var(--primary-light); }
+		.user-delete-button { margin-top: 8px; }
+		.user-confirm-message { margin: 0; white-space: pre-line; font-size: 0.9rem; }
+		.user-confirm-actions { display: flex; justify-content: space-between; gap: 8px; margin-top: 8px; }
+		.user-confirm-actions.is-confirm-first { margin-top: 48px; }
 		.user-item-name { font-weight: bold; font-size: 0.9rem; }
 		.user-item-email { font-size: 0.78rem; color: var(--text-sub); word-break: break-all; }
 		.user-item-meta { font-size: 0.76rem; color: var(--text-sub); word-break: break-all; }

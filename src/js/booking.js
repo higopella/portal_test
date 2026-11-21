@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 	document.getElementById('tab-btn-create').addEventListener('click', () => switchTab('create'));
 	document.getElementById('tab-btn-search').addEventListener('click', () => switchTab('search'));
 	document.getElementById('form-booking').addEventListener('submit', (event) => { event.preventDefault(); handleAddBooking(); });
+	document.getElementById('btn-cancel-edit').addEventListener('click', exitEditBooking);
 	document.getElementById('form-search').addEventListener('submit', (event) => { event.preventDefault(); handleSearch(); });
 	document.getElementById('book-start-time').addEventListener('change', updateEndTimePreview);
 	document.getElementById('book-duration').addEventListener('change', updateEndTimePreview);
@@ -63,7 +64,7 @@ function getLocalDateString(date) {
 
 async function initializeBookingScheduleCalendar(authenticationReady) {
 	const host = document.querySelector('[data-schedule-calendar]');
-	await initScheduleCalendar({
+	bookingScheduleController = await initScheduleCalendar({
 		host,
 		loadEvents: async (start, end, forceRefresh) => {
 			if (!await authenticationReady) throw new Error('認証が必要です');
@@ -102,8 +103,59 @@ function createScheduleEventElement(event, isAllDay) {
 		transfer.textContent = event.transferStatus;
 		eventElement.appendChild(transfer);
 	}
-	eventElement.addEventListener('click', () => showScheduleEventDetail(event));
+	const editable = event.id && !event.adminBooking && !event.isAllDay && ALL_ROOMS.indexOf(event.room) !== -1;
+	eventElement.addEventListener('click', () => showScheduleEventDetail(event, editable ? { onEdit: startEditBooking } : {}));
 	return eventElement;
+}
+
+let bookingScheduleController = null;
+let editingBooking = null;
+
+function getMinutesBetween(start, end) {
+	return Math.round((new Date(end.replace(/-/g, '/').replace('T', ' ')) - new Date(start.replace(/-/g, '/').replace('T', ' '))) / 60000);
+}
+
+function startEditBooking(event) {
+	const date = String(event.start).slice(0, 10);
+	const duration = getMinutesBetween(event.start, event.end);
+	editingBooking = { eventId: event.id, date, room: event.room, startTime: event.startTime, duration };
+	switchTab('create');
+	document.getElementById('book-date').value = date;
+	document.getElementById('book-start-time').value = event.startTime;
+	document.getElementById('book-duration').value = String(duration);
+	const roomSelect = document.getElementById('book-room');
+	if (!Array.from(roomSelect.options).some((option) => option.value === event.room)) {
+		roomSelect.appendChild(new Option(SCHEDULE_ROOM_NAMES[event.room] || event.room, event.room));
+	}
+	roomSelect.value = event.room;
+	document.getElementById('book-band-name').value = event.title || '';
+	document.getElementById('book-rep-name').value = event.repName || '';
+	const transferSelect = document.getElementById('book-transfer');
+	transferSelect.value = Array.from(transferSelect.options).some((option) => option.value === event.transferStatus) ? event.transferStatus : '';
+	document.getElementById('btn-submit-booking').textContent = '変更を保存';
+	document.getElementById('btn-cancel-edit').hidden = false;
+	document.getElementById('tab-btn-create').textContent = '予約の編集';
+	showBookingError('');
+	updateEndTimePreview();
+	loadAvailableTimeSlots();
+	document.getElementById('panel-create').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function exitEditBooking() {
+	editingBooking = null;
+	document.getElementById('form-booking').reset();
+	applyEnabledRoomsToForm();
+	document.getElementById('btn-submit-booking').textContent = '予約';
+	document.getElementById('btn-cancel-edit').hidden = true;
+	document.getElementById('tab-btn-create').textContent = '新規予約';
+	document.getElementById('available-time-slots').hidden = true;
+	showBookingError('');
+	updateEndTimePreview();
+}
+
+function isEditScheduleUnchanged(date, room, startTime, duration) {
+	return editingBooking && editingBooking.date === date && editingBooking.room === room &&
+		editingBooking.startTime === startTime && editingBooking.duration === duration;
 }
 
 function getScheduleRoomClass(room) {
@@ -258,6 +310,33 @@ async function handleAddBooking() {
 	}
 	if (duration < 1 || duration > 120) {
 		showBookingError('利用分数は1〜120分で入力してください');
+		return;
+	}
+
+	if (editingBooking) {
+		if (!isEditScheduleUnchanged(date, room, startTime, duration)) {
+			const scheduleError = getBookingValidationError();
+			if (scheduleError) {
+				showBookingError(scheduleError);
+				return;
+			}
+		}
+		const updateData = { eventId: editingBooking.eventId, date, room, startTime, duration, bandName, repName, transferStatus };
+		let updated = false;
+		await withButtonLoading(btn, async () => {
+			const res = await callGasApi('updateBooking', updateData);
+			if (res.success) {
+				updated = true;
+				await clearScheduleDeviceCache();
+				showToast('予約を変更しました');
+			} else {
+				showBookingError(res.error || '変更に失敗しました');
+			}
+		}, '保存中...');
+		if (updated) {
+			exitEditBooking();
+			bookingScheduleController?.refresh(true);
+		}
 		return;
 	}
 

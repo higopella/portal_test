@@ -401,6 +401,28 @@ body {
   color: var(--text);
 }
 
+.modal-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  margin-left: 8px;
+  margin-right: auto;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--primary-dark);
+  cursor: pointer;
+}
+
+.modal-edit-btn:hover,
+.modal-edit-btn:focus-visible {
+  background: var(--primary-light);
+}
+
 .modal-body {
   padding: 16px;
   display: flex;

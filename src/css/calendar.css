@@ -5,10 +5,14 @@
   text-align: center;
 }
 
+/* 画面に収め、ページスクロールで曜日・終日の行がツールバーの下に隠れないようにする */
 .schedule-calendar {
+  --schedule-chrome-height: 100px;
   position: relative;
   display: block;
-  height: 680px;
+  height: calc(100vh - var(--header-height) - var(--schedule-chrome-height));
+  height: calc(100dvh - var(--header-height) - var(--schedule-chrome-height));
+  min-height: 320px;
   overflow: auto;
   background: #fbfdff;
   -webkit-overflow-scrolling: touch;
@@ -495,6 +499,7 @@
   }
 
   .schedule-calendar {
+    --schedule-chrome-height: calc(160px + env(safe-area-inset-bottom));
     padding-bottom: 8px;
   }
 

@@ -380,6 +380,25 @@ async function handleAddMainEvent() {
 	}, '登録中...');
 }
 
+const LOG_COLUMN_COUNT = 7;
+
+// 練習日・開始時刻・分数から「12/14\n13:00-15:00」を作る
+function formatLogStart(dateValue, startValue, durationValue) {
+	const date = String(dateValue || '').trim();
+	const start = String(startValue || '').trim();
+	const dateMatch = date.match(/^\d{4}[-/](\d{1,2})[-/](\d{1,2})/);
+	const dateText = dateMatch ? `${Number(dateMatch[1])}/${Number(dateMatch[2])}` : (date === '-' ? '' : date);
+	let timeText = start === '-' ? '' : start;
+	const startMatch = start.match(/^(\d{1,2}):(\d{2})$/);
+	const durationMatch = String(durationValue || '').trim().match(/^(\d+)分?$/);
+	if (startMatch && durationMatch) {
+		const endMinutes = (Number(startMatch[1]) * 60 + Number(startMatch[2]) + Number(durationMatch[1])) % (24 * 60);
+		const end = `${String(Math.floor(endMinutes / 60)).padStart(2, '0')}:${String(endMinutes % 60).padStart(2, '0')}`;
+		timeText = `${start}-${end}`;
+	}
+	return [dateText, timeText].filter(Boolean).join('\n') || '-';
+}
+
 async function fetchLogs() {
 	const tbody = document.getElementById('log-table-body');
 	if (!tbody) return;
@@ -389,7 +408,7 @@ async function fetchLogs() {
 			tbody.textContent = '';
 			const row = document.createElement('tr');
 			const cell = document.createElement('td');
-			cell.colSpan = 8;
+			cell.colSpan = LOG_COLUMN_COUNT;
 			cell.className = 'table-message';
 			cell.textContent = 'ログはありません';
 			row.appendChild(cell);
@@ -400,18 +419,27 @@ async function fetchLogs() {
 		tbody.textContent = '';
 		res.logs.forEach((rowData) => {
 			const row = document.createElement('tr');
-			for (let i = 0; i < 8; i += 1) {
+			const values = [
+				rowData[0],
+				rowData[1],
+				formatLogStart(rowData[2], rowData[3], rowData[5]),
+				rowData[4],
+				rowData[5],
+				rowData[6],
+				rowData[7]
+			];
+			values.forEach((value) => {
 				const cell = document.createElement('td');
-				cell.textContent = rowData[i] ?? '';
+				cell.textContent = value ?? '';
 				row.appendChild(cell);
-			}
+			});
 			tbody.appendChild(row);
 		});
 	} catch(e) {
 		tbody.textContent = '';
 		const row = document.createElement('tr');
 		const cell = document.createElement('td');
-		cell.colSpan = 8;
+		cell.colSpan = LOG_COLUMN_COUNT;
 		cell.className = 'table-message table-message-error';
 		cell.textContent = '取得失敗';
 		row.appendChild(cell);
@@ -582,20 +610,109 @@ const ROLE_SORT_ORDER = { user: 0, higopelive: 1, kanbu: 2 };
 const ASSIGNABLE_ROLES = ['kanbu', 'higopelive'];
 const MAX_ROLE_SELECTS = ASSIGNABLE_ROLES.length;
 
-function buildUserMetaLines(user) {
-	const lines = [];
-	const identity = [
-		user.fullName ? (user.furigana ? `${user.fullName}（${user.furigana}）` : user.fullName) : '',
-		user.generation ? `${user.generation}期` : '',
-		[user.faculty, user.department].filter(Boolean).join(' ')
-	].filter(Boolean).join(' / ');
-	if (identity) lines.push(identity);
-	const contact = [
-		user.studentId ? `学籍番号: ${user.studentId}` : '',
-		user.favoriteArtist ? `好きな: ${user.favoriteArtist}` : ''
-	].filter(Boolean).join(' / ');
-	if (contact) lines.push(contact);
-	return lines;
+function getUserDetailRows(user) {
+	return [
+		['氏名', user.fullName],
+		['ふりがな', user.furigana],
+		['期', user.generation ? `${user.generation}期` : ''],
+		['学籍番号', user.studentId],
+		['学部', user.faculty],
+		['学科', user.department],
+		['好きなアーティスト', user.favoriteArtist],
+		['学校メール', user.schoolEmail],
+		['権限', (user.roles || []).join(', ')],
+		['状態', user.status]
+	];
+}
+
+function showUserInfoModal(user) {
+	const body = document.createElement('div');
+	body.className = 'user-info-body';
+	getUserDetailRows(user).forEach(([label, value]) => {
+		const row = document.createElement('div');
+		row.className = 'modal-row';
+		const labelEl = document.createElement('span');
+		labelEl.className = 'modal-row-label';
+		labelEl.textContent = label;
+		const valueEl = document.createElement('span');
+		valueEl.className = 'modal-row-value';
+		valueEl.textContent = value || '-';
+		row.appendChild(labelEl);
+		row.appendChild(valueEl);
+		body.appendChild(row);
+	});
+	if (user.roles.indexOf('admin') === -1) {
+		const deleteBtn = document.createElement('button');
+		deleteBtn.type = 'button';
+		deleteBtn.className = 'btn btn-danger user-delete-button';
+		deleteBtn.textContent = 'このアカウントを削除';
+		deleteBtn.addEventListener('click', () => handleDeleteUser(user));
+		body.appendChild(deleteBtn);
+	}
+	showModal(`${user.internalUserId} ${user.nickname}`, body);
+}
+
+// 確認ボタンの位置を変えられる確認ダイアログ（連打での誤削除を防ぐ）
+function showDangerConfirm(title, message, confirmText, confirmFirst) {
+	return new Promise((resolve) => {
+		const body = document.createElement('div');
+		const text = document.createElement('p');
+		text.className = 'user-confirm-message';
+		text.textContent = message;
+		const actions = document.createElement('div');
+		actions.className = `user-confirm-actions${confirmFirst ? ' is-confirm-first' : ''}`;
+		const cancelBtn = document.createElement('button');
+		cancelBtn.type = 'button';
+		cancelBtn.className = 'btn';
+		cancelBtn.textContent = 'キャンセル';
+		const okBtn = document.createElement('button');
+		okBtn.type = 'button';
+		okBtn.className = 'btn btn-danger';
+		okBtn.textContent = confirmText;
+		okBtn.disabled = true;
+		setTimeout(() => { okBtn.disabled = false; }, 800);
+		if (confirmFirst) {
+			actions.appendChild(okBtn);
+			actions.appendChild(cancelBtn);
+		} else {
+			actions.appendChild(cancelBtn);
+			actions.appendChild(okBtn);
+		}
+		body.appendChild(text);
+		body.appendChild(actions);
+		let settled = false;
+		const finish = (value) => {
+			if (settled) return;
+			settled = true;
+			closeModal();
+			resolve(value);
+		};
+		cancelBtn.addEventListener('click', () => finish(false));
+		okBtn.addEventListener('click', () => finish(true));
+		showModal(title, body);
+		const overlay = document.getElementById('app-modal-overlay');
+		overlay?.querySelector('.btn-close')?.addEventListener('click', () => finish(false));
+		overlay?.addEventListener('click', (e) => { if (e.target === overlay) finish(false); });
+	});
+}
+
+async function handleDeleteUser(user) {
+	const label = `${user.internalUserId} ${user.nickname}`;
+	const first = await showDangerConfirm('アカウント削除の確認（1/2）', `「${label}」のアカウントを削除しますか？`, '削除する', false);
+	if (!first) return;
+	const second = await showDangerConfirm('アカウント削除の最終確認（2/2）', `本当に「${label}」を削除しますか？\n削除すると台帳から消え、元に戻せません。`, '本当に削除する', true);
+	if (!second) return;
+	try {
+		const res = await callGasApi('deleteUser', { internalUserId: user.internalUserId });
+		if (res.success) {
+			showToast('アカウントを削除しました');
+			fetchUsers();
+		} else {
+			showToast(res.error || '削除に失敗しました', 'error');
+		}
+	} catch (e) {
+		showToast('削除に失敗しました', 'error');
+	}
 }
 
 function createUserRow(user) {
@@ -603,21 +720,19 @@ function createUserRow(user) {
 	item.className = 'admin-notice-item user-item';
 
 	const info = document.createElement('div');
-	info.className = 'admin-notice-text';
-	const name = document.createElement('div');
+	info.className = 'user-item-header';
+	const name = document.createElement('span');
 	name.className = 'user-item-name';
-	name.textContent = `${user.internalUserId} ${user.nickname}`;
-	const email = document.createElement('div');
-	email.className = 'user-item-email';
-	email.textContent = user.schoolEmail;
+	name.textContent = [user.internalUserId, user.nickname, user.generation ? `${user.generation}期` : ''].filter(Boolean).join(' ');
+	const infoBtn = document.createElement('button');
+	infoBtn.type = 'button';
+	infoBtn.className = 'user-info-button';
+	infoBtn.textContent = 'ⓘ';
+	infoBtn.title = 'ユーザー情報';
+	infoBtn.setAttribute('aria-label', `${user.nickname}のユーザー情報`);
+	infoBtn.addEventListener('click', () => showUserInfoModal(user));
 	info.appendChild(name);
-	info.appendChild(email);
-	buildUserMetaLines(user).forEach((text) => {
-		const meta = document.createElement('div');
-		meta.className = 'user-item-meta';
-		meta.textContent = text;
-		info.appendChild(meta);
-	});
+	info.appendChild(infoBtn);
 	item.appendChild(info);
 
 	const roleArea = document.createElement('div');
@@ -682,6 +797,8 @@ function createRoleSelectRow(value, selectWrap, addBtn) {
 	removeBtn.textContent = '×';
 	removeBtn.title = 'このロールを削除';
 	removeBtn.addEventListener('click', () => {
+		const role = select.value;
+		if (!confirm(`権限「${role}」を本当に削除しますか？\n（「保存」を押すと反映されます）`)) return;
 		row.remove();
 		refreshRoleSelects(selectWrap);
 		updateRoleAddBtn(selectWrap, addBtn);

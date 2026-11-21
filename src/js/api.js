@@ -15,10 +15,23 @@ function getSiteBasePath() {
   return firstSegment ? '/' + firstSegment + '/' : '/';
 }
 
+// GAS側で認証しない読み取り専用のAPI（ログイン状態の読み込みを待たない）
+const TOKENLESS_ACTIONS = ['getScheduleEvents', 'getScheduleRevision', 'getEnabledRooms'];
+const ID_TOKEN_WAIT_TIMEOUT_MS = 3000;
+
+// 端末によってはFirebaseのログイン状態読み込みが終わらないため、待ち時間を打ち切る
+function getIdTokenWithTimeout() {
+  if (typeof getFreshIdToken !== "function") return Promise.resolve("");
+  return Promise.race([
+    getFreshIdToken().catch(() => ""),
+    new Promise((resolve) => setTimeout(() => resolve(""), ID_TOKEN_WAIT_TIMEOUT_MS))
+  ]);
+}
+
 async function callGasApi(action, data = {}) {
   try {
     const payload = { action: action, data: data };
-    const idToken = typeof getFreshIdToken === "function" ? await getFreshIdToken() : "";
+    const idToken = TOKENLESS_ACTIONS.includes(action) ? "" : await getIdTokenWithTimeout();
     if (idToken) payload.auth = { idToken: idToken };
     const response = await fetch(CONFIG.GAS_API_URL, {
       method: "POST",
