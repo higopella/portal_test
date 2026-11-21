@@ -27,14 +27,9 @@ function renderHomeView() {
 
 document.addEventListener('DOMContentLoaded', async () => {
 	let hasAuthenticatedSession = false;
-	if (getCurrentIdToken() || hasValidLoginHistory()) {
-		setLoginStatus('ログイン状態を確認しています...', 'loading');
-		if (!getCurrentIdToken()) {
-			await trySilentReauth();
-		}
-		if (getCurrentIdToken()) {
-			hasAuthenticatedSession = await verifySessionWithGas();
-		}
+	setLoginStatus('ログイン状態を確認しています...', 'loading');
+	if (await getFirebaseUser()) {
+		hasAuthenticatedSession = await verifySessionWithGas();
 	}
 	initializeGoogleLogin(hasAuthenticatedSession);
 
@@ -50,15 +45,30 @@ async function loadHomeDataInOrder() {
 function initializeGoogleLogin(hasAuthenticatedSession = false) {
 	const buttonContainer = document.getElementById('google-login-button');
 	if (!buttonContainer) return;
-	if (!initGoogleIdentity(handleGoogleCredential)) {
-		setLoginStatus('Googleログインを準備しています。');
-		const googleScript = document.getElementById('google-identity-script');
-		if (googleScript) googleScript.addEventListener('load', initializeGoogleLogin, { once: true });
-		return;
+	if (!buttonContainer.querySelector('button')) {
+		const button = document.createElement('button');
+		button.type = 'button';
+		button.className = 'btn btn-primary';
+		button.textContent = 'Googleでログイン';
+		button.addEventListener('click', handleGoogleLoginClick);
+		buttonContainer.appendChild(button);
 	}
-
-	google.accounts.id.renderButton(buttonContainer, { theme: 'outline', size: 'large', width: 280 });
 	if (!hasAuthenticatedSession) setLoginStatus('Googleアカウントでログインしてください。');
+}
+
+async function handleGoogleLoginClick(event) {
+	const button = event.currentTarget;
+	button.disabled = true;
+	try {
+		const idToken = await signInWithFirebaseGoogle();
+		await handleGoogleCredential({ credential: idToken });
+	} catch (error) {
+		const message = getFirebaseLoginErrorMessage(error);
+		setLoginStatus(message, 'error');
+		showToast(message, 'error');
+	} finally {
+		button.disabled = false;
+	}
 }
 
 function setLoginStatus(message, type = '') {
@@ -94,6 +104,7 @@ async function handleGoogleCredential(response) {
 			return;
 		}
 		clearCurrentIdToken();
+		signOutFirebase();
 		setLoginStatus(result.error || 'ログインできません。', 'error');
 		showToast(result.error || 'ログインできません', 'error');
 	} catch (error) {
