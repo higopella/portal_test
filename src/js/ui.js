@@ -506,6 +506,8 @@ function showScheduleEventDetail(event, options = {}) {
     ["代表者", event.repName || "-"],
     ["譲ります", event.transferStatus || "なし"]
   ];
+  if (event.transferredFrom) rows.push(["譲渡元", event.transferredFrom]);
+  if (event.transferredTo) rows.push(["譲渡先", event.transferredTo]);
   rows.forEach(([label, value]) => {
     const row = document.createElement("div");
     row.className = "modal-row";
@@ -519,6 +521,22 @@ function showScheduleEventDetail(event, options = {}) {
     row.appendChild(valueEl);
     body.appendChild(row);
   });
+  if (typeof options.onTransfer === "function") {
+    const transferBtn = document.createElement("button");
+    transferBtn.type = "button";
+    transferBtn.className = "btn btn-primary full-width";
+    transferBtn.textContent = "譲る";
+    transferBtn.addEventListener("click", () => options.onTransfer(event));
+    body.appendChild(transferBtn);
+  }
+  if (typeof options.onCancelTransfer === "function") {
+    const cancelTransferBtn = document.createElement("button");
+    cancelTransferBtn.type = "button";
+    cancelTransferBtn.className = "btn btn-danger full-width";
+    cancelTransferBtn.textContent = "譲渡を取り消す";
+    cancelTransferBtn.addEventListener("click", () => options.onCancelTransfer(event));
+    body.appendChild(cancelTransferBtn);
+  }
   showModal("予約の詳細", body);
   if (typeof options.onEdit === "function") {
     const editBtn = document.createElement("button");

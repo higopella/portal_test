@@ -82,6 +82,18 @@
 		}
 		.available-time-row + .available-time-row { margin-top: 3px; }
 		.available-time-row span:first-child { font-weight: 700; color: var(--primary-dark); }
+		.transfer-form { display: flex; flex-direction: column; gap: 10px; }
+		.transfer-summary { margin: 0; font-size: 0.88rem; font-weight: 600; }
+		.transfer-time-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+		.transfer-time-label { display: flex; flex-direction: column; gap: 2px; font-size: 0.78rem; color: var(--text-sub); }
+		.transfer-bar { display: flex; height: 14px; overflow: hidden; border: 1px solid var(--border); border-radius: 7px; }
+		.transfer-bar-part { background: var(--primary-light); }
+		.transfer-bar-part + .transfer-bar-part { border-left: 1px solid #fff; }
+		.transfer-bar-part.is-receiver { background: #f59e0b; }
+		.transfer-preview { font-size: 0.82rem; white-space: pre-line; color: var(--text); }
+		.transfer-actions { display: flex; justify-content: space-between; gap: 8px; }
+		.transfer-form .form-group { margin-bottom: 0; }
+		.transfer-form .booking-form-error { position: static; margin-bottom: 0; }
 		.duration-presets {
 			display: flex;
 			flex-wrap: wrap;

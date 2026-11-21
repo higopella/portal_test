@@ -104,8 +104,180 @@ function createScheduleEventElement(event, isAllDay) {
 		eventElement.appendChild(transfer);
 	}
 	const editable = event.id && !event.adminBooking && !event.isAllDay && ALL_ROOMS.indexOf(event.room) !== -1;
-	eventElement.addEventListener('click', () => showScheduleEventDetail(event, editable ? { onEdit: startEditBooking } : {}));
+	eventElement.addEventListener('click', () => {
+		const options = {};
+		if (editable) {
+			options.onEdit = startEditBooking;
+			if (new Date(String(event.end).replace(/-/g, '/').replace('T', ' ')) > new Date()) options.onTransfer = showTransferForm;
+			if (event.transferReceived) options.onCancelTransfer = (target) => handleCancelTransfer(target.id);
+		}
+		showScheduleEventDetail(event, options);
+	});
 	return eventElement;
+}
+
+function buildTransferSegments(event, transferStart, transferEnd, receiverName) {
+	const start = getTimeMinutes(event.startTime);
+	const end = getTimeMinutes(event.endTime);
+	const segments = [];
+	if (transferStart > start) segments.push({ from: start, to: transferStart, label: `${event.title}（譲りました）`, isReceiver: false });
+	segments.push({ from: transferStart, to: transferEnd, label: `${receiverName || '譲る相手'}（譲られました）`, isReceiver: true });
+	if (transferEnd < end) segments.push({ from: transferEnd, to: end, label: `${event.title}（譲りました）`, isReceiver: false });
+	return segments;
+}
+
+function showTransferForm(event) {
+	const start = getTimeMinutes(event.startTime);
+	const end = getTimeMinutes(event.endTime);
+	const middle = start + Math.floor((end - start) / 2);
+	const body = document.createElement('div');
+	body.className = 'transfer-form';
+
+	const summary = document.createElement('p');
+	summary.className = 'transfer-summary';
+	summary.textContent = `予約: ${event.startTime}-${event.endTime} ${event.title}${event.transferStatus ? `（${event.transferStatus}）` : ''}`;
+
+	const presets = document.createElement('div');
+	presets.className = 'duration-presets';
+	const timeRow = document.createElement('div');
+	timeRow.className = 'transfer-time-row';
+	const createTimeInput = (label, value) => {
+		const wrap = document.createElement('label');
+		wrap.className = 'transfer-time-label';
+		wrap.textContent = label;
+		const input = document.createElement('input');
+		input.type = 'time';
+		input.step = '60';
+		input.min = event.startTime;
+		input.max = event.endTime;
+		input.className = 'form-control';
+		input.value = formatTimeMinutes(value);
+		wrap.appendChild(input);
+		timeRow.appendChild(wrap);
+		return input;
+	};
+	const isSecondHalf = event.transferStatus === '後半';
+	const fromInput = createTimeInput('譲る開始', isSecondHalf ? middle : start);
+	const toInput = createTimeInput('譲る終了', isSecondHalf ? end : middle);
+	[['前半', start, middle], ['後半', middle, end]].forEach(([label, from, to]) => {
+		const button = document.createElement('button');
+		button.type = 'button';
+		button.className = 'duration-preset';
+		button.textContent = label;
+		button.addEventListener('click', () => {
+			fromInput.value = formatTimeMinutes(from);
+			toInput.value = formatTimeMinutes(to);
+			updatePreview();
+		});
+		presets.appendChild(button);
+	});
+
+	const bar = document.createElement('div');
+	bar.className = 'transfer-bar';
+	const createTextInput = (labelText, placeholder) => {
+		const group = document.createElement('div');
+		group.className = 'form-group';
+		const label = document.createElement('label');
+		label.className = 'form-label';
+		label.textContent = labelText;
+		const input = document.createElement('input');
+		input.type = 'text';
+		input.className = 'form-control';
+		input.placeholder = placeholder;
+		label.appendChild(input);
+		group.appendChild(label);
+		body.appendChild(group);
+		return input;
+	};
+	const preview = document.createElement('div');
+	preview.className = 'transfer-preview';
+	const error = document.createElement('div');
+	error.className = 'booking-form-error';
+	error.hidden = true;
+
+	body.append(summary, presets, timeRow, bar);
+	const bandInput = createTextInput('譲る相手のバンド名', '例: バンドB');
+	const repInput = createTextInput('譲る相手の代表者名', '例: 肥後');
+	body.append(preview, error);
+
+	const actions = document.createElement('div');
+	actions.className = 'transfer-actions';
+	const cancelBtn = document.createElement('button');
+	cancelBtn.type = 'button';
+	cancelBtn.className = 'btn';
+	cancelBtn.textContent = 'キャンセル';
+	cancelBtn.addEventListener('click', closeModal);
+	const submitBtn = document.createElement('button');
+	submitBtn.type = 'button';
+	submitBtn.className = 'btn btn-primary';
+	submitBtn.textContent = '譲る';
+	actions.append(cancelBtn, submitBtn);
+	body.appendChild(actions);
+
+	const getRange = () => {
+		if (!fromInput.value || !toInput.value) return null;
+		const from = getTimeMinutes(fromInput.value);
+		const to = getTimeMinutes(toInput.value);
+		return from >= start && to <= end && from < to ? { from, to } : null;
+	};
+	function updatePreview() {
+		const range = getRange();
+		bar.textContent = '';
+		preview.textContent = '';
+		if (!range) {
+			preview.textContent = `譲る時間は${event.startTime}〜${event.endTime}の範囲で、開始より後の終了時刻を指定してください`;
+			return;
+		}
+		const segments = buildTransferSegments(event, range.from, range.to, bandInput.value.trim());
+		segments.forEach((segment) => {
+			const part = document.createElement('span');
+			part.className = `transfer-bar-part${segment.isReceiver ? ' is-receiver' : ''}`;
+			part.style.flexGrow = String(segment.to - segment.from);
+			bar.appendChild(part);
+		});
+		preview.textContent = segments.map((segment) => `${formatTimeMinutes(segment.from)}-${formatTimeMinutes(segment.to)} ${segment.label}`).join('\n');
+	}
+	[fromInput, toInput, bandInput].forEach((input) => input.addEventListener('input', updatePreview));
+
+	submitBtn.addEventListener('click', async () => {
+		const range = getRange();
+		const bandName = bandInput.value.trim();
+		const repName = repInput.value.trim();
+		const message = !range ? `譲る時間は${event.startTime}〜${event.endTime}の範囲で指定してください`
+			: (!bandName || !repName) ? '譲る相手のバンド名と代表者名を入力してください' : '';
+		error.textContent = message;
+		error.hidden = !message;
+		if (message) return;
+		let transferred = false;
+		await withButtonLoading(submitBtn, async () => {
+			try {
+				const res = await callGasApi('transferBooking', {
+					eventId: event.id,
+					transferStart: formatTimeMinutes(range.from),
+					transferEnd: formatTimeMinutes(range.to),
+					bandName,
+					repName
+				});
+				if (res.success) {
+					transferred = true;
+				} else {
+					error.textContent = res.error || '譲渡に失敗しました';
+					error.hidden = false;
+				}
+			} catch (e) {
+				error.textContent = '譲渡に失敗しました';
+				error.hidden = false;
+			}
+		}, '処理中...');
+		if (!transferred) return;
+		closeModal();
+		showToast('予約を譲渡しました');
+		await clearScheduleDeviceCache();
+		bookingScheduleController?.refresh(true);
+	});
+
+	showModal('予約を譲る', body);
+	updatePreview();
 }
 
 let bookingScheduleController = null;
@@ -279,13 +451,14 @@ async function loadAvailableTimeSlots() {
 		container.textContent = '';
 		const roomLabels = { '①': '部室', '②': '機材庫', '③': '教室' };
 		const enabled = Array.isArray(window.enabledRooms) ? window.enabledRooms : ['①', '②', '③'];
+		const otherEvents = (result.events || []).filter((event) => !editingBooking || event.id !== editingBooking.eventId);
 		enabled.forEach((room) => {
 			const row = document.createElement('div');
 			row.className = 'available-time-row';
 			const label = document.createElement('span');
 			label.textContent = roomLabels[room];
 			const value = document.createElement('span');
-			value.textContent = buildAvailableSlots(result.events || [], room).join('、') || '空きなし';
+			value.textContent = buildAvailableSlots(otherEvents, room).join('、') || '空きなし';
 			row.append(label, value);
 			container.appendChild(row);
 		});
@@ -416,7 +589,7 @@ async function handleSearch() {
 			deleteBtn.type = 'button';
 			deleteBtn.className = 'btn btn-danger delete-booking-button';
 			deleteBtn.textContent = '削除';
-			deleteBtn.addEventListener('click', () => handleDeleteBooking(ev.id, deleteBtn));
+			deleteBtn.addEventListener('click', () => handleDeleteBooking(ev.id, deleteBtn, ev.transferReceived));
 			info.appendChild(title);
 			info.appendChild(time);
 			card.appendChild(info);
@@ -426,7 +599,36 @@ async function handleSearch() {
 	}, '検索中...');
 }
 
-async function handleDeleteBooking(eventId, buttonEl) {
+async function handleCancelTransfer(eventId, buttonEl) {
+	if (!confirm('譲渡を取り消しますか？\n譲られた予約を削除し、元の予約が変更されていなければ時間を戻します。')) return false;
+	let cancelled = false;
+	const run = async () => {
+		try {
+			const res = await callGasApi('cancelTransfer', { eventId });
+			if (!res.success) {
+				showToast(res.error || '取り消しに失敗しました', 'error');
+				return;
+			}
+			cancelled = true;
+			showToast(res.restored ? '譲渡を取り消し、元の予約に時間を戻しました' : '譲渡を取り消しました（元の予約が変更・削除されていたため時間は戻していません）');
+		} catch (e) {
+			showToast('取り消しに失敗しました', 'error');
+		}
+	};
+	if (buttonEl) await withButtonLoading(buttonEl, run, '処理中...');
+	else await run();
+	if (!cancelled) return false;
+	closeModal();
+	await clearScheduleDeviceCache();
+	bookingScheduleController?.refresh(true);
+	return true;
+}
+
+async function handleDeleteBooking(eventId, buttonEl, transferReceived) {
+	if (transferReceived) {
+		if (await handleCancelTransfer(eventId, buttonEl)) buttonEl.closest('.event-card')?.remove();
+		return;
+	}
 	if (!confirm('本当にこの予約を削除しますか？')) return;
 
 	await withButtonLoading(buttonEl, async () => {
