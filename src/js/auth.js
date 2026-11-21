@@ -184,7 +184,9 @@ function getFirebaseLoginErrorMessage(error) {
   if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') return 'ログインがキャンセルされました。';
   if (code === 'auth/popup-blocked') return 'ポップアップがブロックされました。許可してから再度お試しください。';
   if (code === 'auth/unauthorized-domain') return 'このページからはログインできません（承認済みドメイン未設定）。';
-  return 'Googleログインに失敗しました。';
+  if (code === 'auth/operation-not-allowed') return 'Googleログインが有効になっていません（Firebaseの設定を確認してください）。';
+  console.warn('[Firebaseログイン失敗]', error);
+  return code ? `Googleログインに失敗しました（${code}）。` : 'Googleログインに失敗しました。';
 }
 
 async function trySilentReauth() {
