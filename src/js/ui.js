@@ -497,7 +497,7 @@ function getScheduleDateString(date) {
   return `${date.getFullYear()}-${month}-${day}`;
 }
 
-function showScheduleEventDetail(event) {
+function showScheduleEventDetail(event, options = {}) {
   const body = document.createElement("div");
   const rows = [
     ["時間", event.isAllDay ? "終日" : `${event.startTime} - ${event.endTime}`],
@@ -520,4 +520,17 @@ function showScheduleEventDetail(event) {
     body.appendChild(row);
   });
   showModal("予約の詳細", body);
+  if (typeof options.onEdit === "function") {
+    const editBtn = document.createElement("button");
+    editBtn.type = "button";
+    editBtn.className = "modal-edit-btn";
+    editBtn.title = "予定を編集";
+    editBtn.setAttribute("aria-label", "予定を編集");
+    editBtn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm17.71-10.21a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';
+    editBtn.addEventListener("click", () => {
+      closeModal();
+      options.onEdit(event);
+    });
+    document.querySelector("#app-modal-overlay .modal-title")?.after(editBtn);
+  }
 }
