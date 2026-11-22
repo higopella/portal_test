@@ -353,6 +353,7 @@ function initScheduleZoom(container) {
 
   // リサイズ時に下限を下回らないよう補正
   window.addEventListener('resize', () => {
+    syncScheduleTitleHeights(scrollContainer);
     applyScheduleHeightLimits(scrollContainer, false);
     scheduleRelayoutZoom(scrollContainer);
   });
@@ -498,6 +499,7 @@ function renderScheduleCalendar(container, events, dates, view, createEventEleme
   });
   scrollLayout.appendChild(grid);
   container.appendChild(scrollLayout);
+  syncScheduleTitleHeights(container);
   startScheduleCurrentTimeUpdates();
   initScheduleZoom(container);
   applyScheduleHeightLimits(container, true);
@@ -506,6 +508,15 @@ function renderScheduleCalendar(container, events, dates, view, createEventEleme
     scrollScheduleToToday(container, className);
     scrollScheduleToCurrentTime(container);
   });
+}
+
+// 終日予定の数で曜日行の高さが列ごとに変わるため、最も高い列に全列と時間軸をそろえる
+function syncScheduleTitleHeights(container) {
+  const titles = container.querySelectorAll(".schedule-day-title");
+  if (titles.length === 0) return;
+  container.style.removeProperty("--schedule-title-height");
+  const maxHeight = Math.max(44, ...Array.from(titles, (title) => Math.ceil(title.getBoundingClientRect().height)));
+  container.style.setProperty("--schedule-title-height", `${maxHeight}px`);
 }
 
 function getScheduleDateString(date) {
