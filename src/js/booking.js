@@ -116,8 +116,7 @@ function createScheduleEventElement(event, isAllDay) {
 		if (editable) {
 			options.onEdit = startEditBooking;
 			if (new Date(String(event.end).replace(/-/g, '/').replace('T', ' ')) > new Date()) options.onTransfer = showTransferForm;
-			if (event.transferReceived) options.onCancelTransfer = (target) => handleCancelTransfer(target.id);
-			else options.onDelete = handleDeleteBooking;
+			options.onDelete = handleDeleteBooking;
 		}
 		showScheduleEventDetail(event, options);
 	});
@@ -555,31 +554,6 @@ async function handleAddBooking() {
 		closeModal();
 		bookingScheduleController?.refresh(true);
 	}
-}
-
-async function handleCancelTransfer(eventId, buttonEl) {
-	if (!confirm('譲渡を取り消しますか？\n譲られた予約を削除し、元の予約が変更されていなければ時間を戻します。')) return false;
-	let cancelled = false;
-	const run = async () => {
-		try {
-			const res = await callGasApi('cancelTransfer', { eventId });
-			if (!res.success) {
-				showToast(res.error || '取り消しに失敗しました', 'error');
-				return;
-			}
-			cancelled = true;
-			showToast(res.restored ? '譲渡を取り消し、元の予約に時間を戻しました' : '譲渡を取り消しました（元の予約が変更・削除されていたため時間は戻していません）');
-		} catch (e) {
-			showToast('取り消しに失敗しました', 'error');
-		}
-	};
-	if (buttonEl) await withButtonLoading(buttonEl, run, '処理中...');
-	else await run();
-	if (!cancelled) return false;
-	closeModal();
-	await clearScheduleDeviceCache();
-	bookingScheduleController?.refresh(true);
-	return true;
 }
 
 async function handleDeleteBooking(event, buttonEl) {

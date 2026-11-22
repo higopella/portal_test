@@ -474,3 +474,15 @@ body {
   font-size: 0.85rem;
   white-space: nowrap;
 }
+
+.modal-text-danger-btn {
+  align-self: flex-end;
+  margin-top: 16px;
+  padding: 4px 2px;
+  border: 0;
+  background: none;
+  color: var(--danger);
+  font-size: 0.82rem;
+  text-decoration: underline;
+  cursor: pointer;
+}

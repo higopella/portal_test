@@ -374,6 +374,9 @@ function getScheduleCalendarDates(view, anchorDate) {
     return dates;
   }
   if (view === "day") return [anchor];
+  if (view === "3day") {
+    return Array.from({ length: 3 }, (_, index) => new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate() + index));
+  }
   const start = new Date(anchor);
   start.setDate(start.getDate() - start.getDay());
   return Array.from({ length: 7 }, (_, index) => {
@@ -394,7 +397,8 @@ function formatSchedulePeriod(view, dates) {
     return `${dates[14].getFullYear()}年${dates[14].getMonth() + 1}月`;
   }
   if (view === "day") return formatScheduleDate(dates[0], true);
-  return `${dates[0].getMonth() + 1}/${dates[0].getDate()}-${dates[6].getMonth() + 1}/${dates[6].getDate()}`;
+  const last = dates[dates.length - 1];
+  return `${dates[0].getMonth() + 1}/${dates[0].getDate()}-${last.getMonth() + 1}/${last.getDate()}`;
 }
 
 function createScheduleMonthEvent(event, createEventElement) {
@@ -459,7 +463,9 @@ function renderScheduleCalendar(container, events, dates, view, createEventEleme
     heading.className = `${className}-day-title schedule-day-title`;
     const dateLabel = document.createElement("span");
     dateLabel.className = `${className}-day-title-date schedule-day-title-date`;
-    dateLabel.textContent = formatScheduleDate(date);
+    dateLabel.textContent = view === "week"
+      ? `${date.getDate()}(${["日", "月", "火", "水", "木", "金", "土"][date.getDay()]})`
+      : formatScheduleDate(date);
     heading.appendChild(dateLabel);
     const dayEvents = eventsByDate[getScheduleDateString(date)] || [];
     const allDayEvents = dayEvents.filter((event) => event.isAllDay);
@@ -544,18 +550,10 @@ function showScheduleEventDetail(event, options = {}) {
     }
     body.appendChild(row);
   });
-  if (typeof options.onCancelTransfer === "function") {
-    const cancelTransferBtn = document.createElement("button");
-    cancelTransferBtn.type = "button";
-    cancelTransferBtn.className = "btn btn-danger full-width";
-    cancelTransferBtn.textContent = "譲渡を取り消す";
-    cancelTransferBtn.addEventListener("click", () => options.onCancelTransfer(event));
-    body.appendChild(cancelTransferBtn);
-  }
   if (typeof options.onDelete === "function") {
     const deleteBtn = document.createElement("button");
     deleteBtn.type = "button";
-    deleteBtn.className = "btn btn-danger full-width";
+    deleteBtn.className = "modal-text-danger-btn";
     deleteBtn.textContent = "この予約を削除";
     deleteBtn.addEventListener("click", () => options.onDelete(event, deleteBtn));
     body.appendChild(deleteBtn);

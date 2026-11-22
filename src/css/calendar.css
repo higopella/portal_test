@@ -19,10 +19,12 @@
   touch-action: manipulation;
 }
 
+/* 日・3日・週とも端末の横幅に収める（横スクロールなし） */
 .schedule-grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(170px, 1fr));
-  min-width: 1190px;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  width: 100%;
+  min-width: 0;
   gap: 0;
 }
 
@@ -32,8 +34,56 @@
 }
 
 .schedule-calendar[data-schedule-view="day"] .schedule-grid {
-  grid-template-columns: minmax(340px, 1fr);
-  min-width: 340px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.schedule-calendar[data-schedule-view="3day"] .schedule-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* 狭い列でも曜日行の高さを時間軸とそろえる */
+.schedule-calendar[data-schedule-view="week"] .schedule-day-title,
+.schedule-calendar[data-schedule-view="3day"] .schedule-day-title {
+  height: 44px;
+  min-height: 0;
+  padding: 4px;
+  overflow: hidden;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: 2px;
+}
+
+.schedule-calendar[data-schedule-view="week"] .schedule-day-title-date,
+.schedule-calendar[data-schedule-view="3day"] .schedule-day-title-date {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.schedule-calendar[data-schedule-view="week"] .schedule-allday-chips,
+.schedule-calendar[data-schedule-view="3day"] .schedule-allday-chips {
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.schedule-calendar[data-schedule-view="week"] .schedule-day-title {
+  padding: 4px 0;
+  font-size: 0.66rem;
+}
+
+.schedule-calendar[data-schedule-view="week"] .schedule-allday-chip {
+  padding: 0 3px;
+  font-size: 0.6rem;
+}
+
+.schedule-calendar[data-schedule-view="week"] .schedule-event {
+  padding: 2px;
+  border-left-width: 2px;
+  font-size: 0.6rem;
+  line-height: 1.2;
 }
 
 .schedule-day {
@@ -276,8 +326,9 @@
 
 .schedule-scroll-layout {
   display: grid;
-  grid-template-columns: 34px max-content;
-  min-width: max-content;
+  grid-template-columns: 34px minmax(0, 1fr);
+  width: 100%;
+  min-width: 0;
 }
 
 .schedule-time-axis {
@@ -461,18 +512,6 @@
     flex-wrap: nowrap;
   }
 
-  .schedule-calendar[data-schedule-view="day"] .schedule-scroll-layout {
-    grid-template-columns: 34px minmax(0, 1fr);
-    width: 100%;
-    min-width: 0;
-  }
-
-  .schedule-calendar[data-schedule-view="day"] .schedule-grid {
-    width: 100%;
-    min-width: 0;
-    grid-template-columns: minmax(0, 1fr);
-  }
-
   .schedule-toolbar > .schedule-today-btn {
     flex-shrink: 0;
   }
@@ -508,7 +547,7 @@
   }
 
   .schedule-view-tab {
-    min-width: 78px;
+    min-width: 64px;
     min-height: 52px;
   }
 }
@@ -516,17 +555,5 @@
 @media (min-width: 761px) {
   .schedule-view-tabs {
     display: none;
-  }
-
-  .schedule-calendar[data-schedule-view="day"] .schedule-scroll-layout {
-    grid-template-columns: 34px minmax(0, 1fr);
-    width: 100%;
-    min-width: 0;
-  }
-
-  .schedule-calendar[data-schedule-view="day"] .schedule-grid {
-    width: 100%;
-    min-width: 0;
-    grid-template-columns: minmax(0, 1fr);
   }
 }

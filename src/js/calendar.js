@@ -190,5 +190,6 @@ function watchScheduleStickyOffset(host, container) {
 function moveScheduleAnchorDate(state, direction) {
   if (state.view === "month") state.anchorDate.setMonth(state.anchorDate.getMonth() + direction);
   else if (state.view === "day") state.anchorDate.setDate(state.anchorDate.getDate() + direction);
+  else if (state.view === "3day") state.anchorDate.setDate(state.anchorDate.getDate() + direction * 3);
   else state.anchorDate.setDate(state.anchorDate.getDate() + direction * 7);
 }
