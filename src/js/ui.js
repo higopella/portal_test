@@ -1,3 +1,8 @@
+// iOS Safariはviewportの拡大禁止を無視するため、ピンチ拡大のジェスチャーを止める（カレンダーはタッチイベントで独自にズーム）
+["gesturestart", "gesturechange", "gestureend"].forEach((type) => {
+  document.addEventListener(type, (event) => event.preventDefault(), { passive: false });
+});
+
 function toggleDrawerMenu(isOpen) {
   const drawer = document.getElementById("drawer-menu");
   const overlay = document.getElementById("drawer-overlay");

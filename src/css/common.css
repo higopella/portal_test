@@ -22,6 +22,11 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* ブラウザのピンチ・ダブルタップ拡大を止める（カレンダーの時間ズームは独自処理のため影響なし） */
+html {
+  touch-action: pan-x pan-y;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background-color: var(--bg);

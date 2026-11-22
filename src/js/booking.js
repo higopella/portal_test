@@ -542,9 +542,11 @@ async function handleAddBooking() {
 
 	const payloadData = { date, room, startTime, duration, bandName, repName, transferStatus };
 
+	let added = false;
 	await withButtonLoading(btn, async () => {
 		const res = await callGasApi('addEventToCalendar', payloadData);
 		if (res.success) {
+			added = true;
 			await clearScheduleDeviceCache();
 			showToast('予約が完了しました');
 			document.getElementById('form-booking').reset();
@@ -554,6 +556,7 @@ async function handleAddBooking() {
 			showBookingError(res.error || '予約に失敗しました');
 		}
 	}, '予約中...');
+	if (added) bookingScheduleController?.refresh(true);
 }
 
 async function handleSearch() {

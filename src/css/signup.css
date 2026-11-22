@@ -74,6 +74,12 @@
   font-size: 0.75rem;
 }
 
+.signup-required {
+  margin-left: 2px;
+  color: var(--danger);
+  font-weight: 700;
+}
+
 .signup-submit {
   width: 100%;
 }

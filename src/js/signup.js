@@ -78,6 +78,8 @@ function toggleExternalMode() {
     const el = document.getElementById(id);
     if (el) el.required = !isExternalMode;
   });
+  document.querySelectorAll('#signup-profile-form [data-internal-only]').forEach((el) => el.classList.toggle('is-hidden', isExternalMode));
+  document.querySelectorAll('#signup-profile-form [data-external-only]').forEach((el) => el.classList.toggle('is-hidden', !isExternalMode));
   if (!isExternalMode) document.getElementById('signup-invite-code').value = '';
 }
 

@@ -23,6 +23,7 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, defa
   const periodLabel = host.querySelector("[data-schedule-period]");
   const bookingLink = host.querySelector(".schedule-booking-link");
   if (bookingLink) bookingLink.href = getScheduleBookingUrl();
+  watchScheduleStickyOffset(host, container);
 
   const state = { view: defaultView, anchorDate: new Date() };
   let latestRequestId = 0;
@@ -165,6 +166,25 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, defa
   });
 
   return { refresh, state };
+}
+
+// ページスクロールでカレンダー上端がツールバーの下に潜った分だけ、曜日・終日の行を下げて見える位置に留める
+function watchScheduleStickyOffset(host, container) {
+  const toolbar = host.querySelector(".schedule-toolbar");
+  if (!toolbar || !container) return;
+  let frame = 0;
+  const update = () => {
+    frame = 0;
+    const hidden = toolbar.getBoundingClientRect().bottom - container.getBoundingClientRect().top;
+    const offset = Math.max(0, Math.min(hidden, container.clientHeight - 80));
+    container.style.setProperty("--schedule-sticky-offset", `${Math.round(offset)}px`);
+  };
+  const schedule = () => {
+    if (!frame) frame = requestAnimationFrame(update);
+  };
+  document.addEventListener("scroll", schedule, { capture: true, passive: true });
+  window.addEventListener("resize", schedule);
+  update();
 }
 
 function moveScheduleAnchorDate(state, direction) {

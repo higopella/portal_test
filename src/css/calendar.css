@@ -50,7 +50,7 @@
 
 .schedule-day-title {
   position: sticky;
-  top: 0;
+  top: var(--schedule-sticky-offset, 0px);
   z-index: 12;
   min-height: 44px;
   margin: 0;
@@ -257,7 +257,7 @@
 
 .schedule-weekday-row {
   position: sticky;
-  top: 0;
+  top: var(--schedule-sticky-offset, 0px);
   z-index: 14;
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -296,7 +296,7 @@
 
 .schedule-time-axis-header {
   position: sticky;
-  top: 0;
+  top: var(--schedule-sticky-offset, 0px);
   z-index: 13;
   height: 44px;
   border-bottom: 1px solid var(--border);
