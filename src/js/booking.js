@@ -12,11 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const isAuthenticated = await requirePageAuthentication();
 	resolveAuthentication(isAuthenticated);
 	if (!isAuthenticated) return;
-	document.getElementById('tab-btn-create').addEventListener('click', () => switchTab('create'));
-	document.getElementById('tab-btn-search').addEventListener('click', () => switchTab('search'));
 	document.getElementById('form-booking').addEventListener('submit', (event) => { event.preventDefault(); handleAddBooking(); });
-	document.getElementById('btn-cancel-edit').addEventListener('click', exitEditBooking);
-	document.getElementById('form-search').addEventListener('submit', (event) => { event.preventDefault(); handleSearch(); });
 	document.getElementById('book-start-time').addEventListener('change', updateEndTimePreview);
 	document.getElementById('book-duration').addEventListener('change', updateEndTimePreview);
 	document.getElementById('book-start-time').addEventListener('input', validateBookingInputs);
@@ -32,6 +28,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 		});
 	});
 	updateEndTimePreview();
+	const params = new URLSearchParams(window.location.search);
+	if (params.get('new') === '1') {
+		history.replaceState(null, '', window.location.pathname);
+		openBookingForm();
+	}
 	await calendarReady;
 });
 
@@ -80,13 +81,19 @@ async function initializeBookingScheduleCalendar(authenticationReady) {
 	});
 	host.querySelector('.schedule-booking-link')?.addEventListener('click', (event) => {
 		event.preventDefault();
-		switchTab('create');
-		const panel = document.getElementById('panel-create');
-		const tabNav = document.querySelector('.booking-form-card .tab-nav');
-		const target = window.matchMedia('(max-width: 760px)').matches && tabNav ? tabNav : panel;
-		const headerHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-height'), 10) || 0;
-		const targetTop = target.getBoundingClientRect().top + window.scrollY - headerHeight - 8;
-		window.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
+		openBookingForm();
+	});
+}
+
+function openBookingForm() {
+	const form = document.getElementById('form-booking');
+	if (!form) return;
+	showModal(editingBooking ? '予約の編集' : '新規予約', form, {
+		wide: true,
+		onClose: () => {
+			document.getElementById('booking-form-holder').appendChild(form);
+			if (editingBooking) exitEditBooking();
+		}
 	});
 }
 
@@ -110,6 +117,7 @@ function createScheduleEventElement(event, isAllDay) {
 			options.onEdit = startEditBooking;
 			if (new Date(String(event.end).replace(/-/g, '/').replace('T', ' ')) > new Date()) options.onTransfer = showTransferForm;
 			if (event.transferReceived) options.onCancelTransfer = (target) => handleCancelTransfer(target.id);
+			else options.onDelete = handleDeleteBooking;
 		}
 		showScheduleEventDetail(event, options);
 	});
@@ -291,7 +299,6 @@ function startEditBooking(event) {
 	const date = String(event.start).slice(0, 10);
 	const duration = getMinutesBetween(event.start, event.end);
 	editingBooking = { eventId: event.id, date, room: event.room, startTime: event.startTime, duration };
-	switchTab('create');
 	document.getElementById('book-date').value = date;
 	document.getElementById('book-start-time').value = event.startTime;
 	document.getElementById('book-duration').value = String(duration);
@@ -305,12 +312,10 @@ function startEditBooking(event) {
 	const transferSelect = document.getElementById('book-transfer');
 	transferSelect.value = Array.from(transferSelect.options).some((option) => option.value === event.transferStatus) ? event.transferStatus : '';
 	document.getElementById('btn-submit-booking').textContent = '変更を保存';
-	document.getElementById('btn-cancel-edit').hidden = false;
-	document.getElementById('tab-btn-create').textContent = '予約の編集';
 	showBookingError('');
 	updateEndTimePreview();
 	loadAvailableTimeSlots();
-	document.getElementById('panel-create').scrollIntoView({ behavior: 'smooth', block: 'start' });
+	openBookingForm();
 }
 
 function exitEditBooking() {
@@ -318,8 +323,6 @@ function exitEditBooking() {
 	document.getElementById('form-booking').reset();
 	applyEnabledRoomsToForm();
 	document.getElementById('btn-submit-booking').textContent = '予約';
-	document.getElementById('btn-cancel-edit').hidden = true;
-	document.getElementById('tab-btn-create').textContent = '新規予約';
 	document.getElementById('available-time-slots').hidden = true;
 	showBookingError('');
 	updateEndTimePreview();
@@ -335,14 +338,6 @@ function getScheduleRoomClass(room) {
 	if (room === '③') return 'schedule-event-classroom';
 	if (room === 'メイン') return 'schedule-event-main';
 	return 'schedule-event-clubroom';
-}
-
-function switchTab(tabKey) {
-	const isCreate = tabKey === 'create';
-	document.getElementById('panel-create').style.display = isCreate ? 'block' : 'none';
-	document.getElementById('panel-search').style.display = isCreate ? 'none' : 'block';
-	document.getElementById('tab-btn-create').classList.toggle('active', isCreate);
-	document.getElementById('tab-btn-search').classList.toggle('active', !isCreate);
 }
 
 function updateEndTimePreview() {
@@ -507,7 +502,7 @@ async function handleAddBooking() {
 			}
 		}, '保存中...');
 		if (updated) {
-			exitEditBooking();
+			closeModal();
 			bookingScheduleController?.refresh(true);
 		}
 		return;
@@ -556,50 +551,10 @@ async function handleAddBooking() {
 			showBookingError(res.error || '予約に失敗しました');
 		}
 	}, '予約中...');
-	if (added) bookingScheduleController?.refresh(true);
-}
-
-async function handleSearch() {
-	const date = document.getElementById('search-date').value;
-	const bandName = document.getElementById('search-band-name').value.trim();
-	const btn = document.getElementById('btn-search-booking');
-	const resultsContainer = document.getElementById('search-results');
-
-	await withButtonLoading(btn, async () => {
-		const res = await callGasApi('findEvents', { date, bandName });
-
-		if (!res.success || !res.events || res.events.length === 0) {
-			resultsContainer.textContent = '';
-			const empty = document.createElement('div');
-			empty.className = 'search-message';
-			empty.textContent = '該当する予約が見つかりません';
-			resultsContainer.appendChild(empty);
-			return;
-		}
-
-		resultsContainer.textContent = '';
-		res.events.forEach((ev) => {
-			const card = document.createElement('div');
-			card.className = 'event-card';
-			const info = document.createElement('div');
-			const title = document.createElement('div');
-			title.className = 'event-title';
-			title.textContent = ev.title;
-			const time = document.createElement('div');
-			time.className = 'event-time';
-			time.textContent = `${ev.startStr} (${ev.duration}分)`;
-			const deleteBtn = document.createElement('button');
-			deleteBtn.type = 'button';
-			deleteBtn.className = 'btn btn-danger delete-booking-button';
-			deleteBtn.textContent = '削除';
-			deleteBtn.addEventListener('click', () => handleDeleteBooking(ev.id, deleteBtn, ev.transferReceived));
-			info.appendChild(title);
-			info.appendChild(time);
-			card.appendChild(info);
-			card.appendChild(deleteBtn);
-			resultsContainer.appendChild(card);
-		});
-	}, '検索中...');
+	if (added) {
+		closeModal();
+		bookingScheduleController?.refresh(true);
+	}
 }
 
 async function handleCancelTransfer(eventId, buttonEl) {
@@ -627,22 +582,24 @@ async function handleCancelTransfer(eventId, buttonEl) {
 	return true;
 }
 
-async function handleDeleteBooking(eventId, buttonEl, transferReceived) {
-	if (transferReceived) {
-		if (await handleCancelTransfer(eventId, buttonEl)) buttonEl.closest('.event-card')?.remove();
-		return;
-	}
-	if (!confirm('本当にこの予約を削除しますか？')) return;
-
+async function handleDeleteBooking(event, buttonEl) {
+	if (!confirm(`「${event.title}」（${event.startTime}-${event.endTime}）の予約を本当に削除しますか？`)) return;
+	let deleted = false;
 	await withButtonLoading(buttonEl, async () => {
-		const res = await callGasApi('deleteEventById', { eventId });
-		if (res.success) {
-			await clearScheduleDeviceCache();
-			showToast('予約を削除しました');
-			const card = buttonEl.closest('.event-card');
-			if (card) card.remove();
-		} else {
-			showToast(res.error || '削除に失敗しました', 'error');
+		try {
+			const res = await callGasApi('deleteEventById', { eventId: event.id });
+			if (res.success) {
+				deleted = true;
+				showToast('予約を削除しました');
+			} else {
+				showToast(res.error || '削除に失敗しました', 'error');
+			}
+		} catch (e) {
+			showToast('削除に失敗しました', 'error');
 		}
 	}, '削除中...');
+	if (!deleted) return;
+	closeModal();
+	await clearScheduleDeviceCache();
+	bookingScheduleController?.refresh(true);
 }

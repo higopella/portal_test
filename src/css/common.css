@@ -22,9 +22,11 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* ブラウザのピンチ・ダブルタップ拡大を止める（カレンダーの時間ズームは独自処理のため影響なし） */
-html {
-  touch-action: pan-x pan-y;
+/* ブラウザのピンチ・ダブルタップ拡大を止める（iOSはmanipulationでないとダブルタップ拡大が残るため全要素に指定） */
+html,
+body,
+body * {
+  touch-action: manipulation;
 }
 
 body {
@@ -392,6 +394,10 @@ body {
   overflow-y: auto;
 }
 
+.modal-panel-wide {
+  max-width: 480px;
+}
+
 .modal-header {
   display: flex;
   align-items: center;
@@ -451,4 +457,20 @@ body {
   font-size: 0.95rem;
   color: var(--text);
   word-break: break-word;
+}
+
+.modal-row-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.modal-inline-btn {
+  flex: 0 0 auto;
+  width: auto;
+  min-height: 30px;
+  padding: 2px 12px;
+  font-size: 0.85rem;
+  white-space: nowrap;
 }

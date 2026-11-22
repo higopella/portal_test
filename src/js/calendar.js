@@ -8,9 +8,9 @@ function getScheduleTemplateUrl() {
 }
 
 function getScheduleBookingUrl() {
+  if (window.location.pathname.includes("/booking/")) return "#";
   const host = document.querySelector("[data-schedule-calendar]");
-  if (host?.dataset.scheduleBookingUrl) return host.dataset.scheduleBookingUrl;
-  return window.location.pathname.includes("/booking/") ? "#" : "booking/";
+  return `${host?.dataset.scheduleBookingUrl || "booking/"}?new=1`;
 }
 
 async function initScheduleCalendar({ host, loadEvents, createEventElement, defaultView = "week", onRendered }) {

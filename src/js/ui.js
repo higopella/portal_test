@@ -66,14 +66,16 @@ function initScrollTopButton() {
   });
 }
 
-function showModal(titleText, contentElement) {
+let appModalOnClose = null;
+
+function showModal(titleText, contentElement, options = {}) {
   closeModal();
   const overlay = document.createElement("div");
   overlay.className = "modal-overlay";
   overlay.id = "app-modal-overlay";
 
   const modal = document.createElement("div");
-  modal.className = "modal-panel";
+  modal.className = `modal-panel${options.wide ? " modal-panel-wide" : ""}`;
 
   const header = document.createElement("div");
   header.className = "modal-header";
@@ -101,11 +103,15 @@ function showModal(titleText, contentElement) {
   });
 
   document.body.appendChild(overlay);
+  appModalOnClose = typeof options.onClose === "function" ? options.onClose : null;
 }
 
 function closeModal() {
   const existing = document.getElementById("app-modal-overlay");
   if (existing) existing.remove();
+  const onClose = appModalOnClose;
+  appModalOnClose = null;
+  onClose?.();
 }
 
 // カレンダー表示の共通規格（Home・予約ページで共有）
@@ -523,17 +529,21 @@ function showScheduleEventDetail(event, options = {}) {
     valueEl.className = "modal-row-value";
     valueEl.textContent = value;
     row.appendChild(labelEl);
-    row.appendChild(valueEl);
+    if (label === "譲ります" && typeof options.onTransfer === "function") {
+      const line = document.createElement("div");
+      line.className = "modal-row-line";
+      const transferBtn = document.createElement("button");
+      transferBtn.type = "button";
+      transferBtn.className = "btn btn-primary modal-inline-btn";
+      transferBtn.textContent = "譲る";
+      transferBtn.addEventListener("click", () => options.onTransfer(event));
+      line.append(valueEl, transferBtn);
+      row.appendChild(line);
+    } else {
+      row.appendChild(valueEl);
+    }
     body.appendChild(row);
   });
-  if (typeof options.onTransfer === "function") {
-    const transferBtn = document.createElement("button");
-    transferBtn.type = "button";
-    transferBtn.className = "btn btn-primary full-width";
-    transferBtn.textContent = "譲る";
-    transferBtn.addEventListener("click", () => options.onTransfer(event));
-    body.appendChild(transferBtn);
-  }
   if (typeof options.onCancelTransfer === "function") {
     const cancelTransferBtn = document.createElement("button");
     cancelTransferBtn.type = "button";
@@ -541,6 +551,14 @@ function showScheduleEventDetail(event, options = {}) {
     cancelTransferBtn.textContent = "譲渡を取り消す";
     cancelTransferBtn.addEventListener("click", () => options.onCancelTransfer(event));
     body.appendChild(cancelTransferBtn);
+  }
+  if (typeof options.onDelete === "function") {
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "btn btn-danger full-width";
+    deleteBtn.textContent = "この予約を削除";
+    deleteBtn.addEventListener("click", () => options.onDelete(event, deleteBtn));
+    body.appendChild(deleteBtn);
   }
   showModal("予約の詳細", body);
   if (typeof options.onEdit === "function") {

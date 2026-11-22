@@ -12,9 +12,7 @@ const TOUR_STEPS = {
 	],
 	booking: [
 		{ target: '[data-schedule-calendar]', title: 'カレンダー', text: '予定や部室の空き枠を確認できます' },
-		{ target: '.schedule-booking-link', title: 'カレンダーの＋ボタン', text: '練習場所の予約へ進みます' },
-		{ target: '#tab-btn-create', title: '新規予約', text: '新規予約ができます' },
-		{ target: '#tab-btn-search', title: '予約削除', text: '予約の削除ができます' }
+		{ target: '.schedule-booking-link', title: 'カレンダーの＋ボタン', text: '予約フォームが開きます。予定をタップすると編集・譲渡・削除ができます' }
 	],
 	searchYT: [
 		{ target: '#select-playlist', title: 'カテゴリ', text: '動画の種類で絞り込めます' },
