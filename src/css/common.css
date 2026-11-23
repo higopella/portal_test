@@ -398,6 +398,52 @@ body {
   max-width: 480px;
 }
 
+.app-progress {
+  position: fixed;
+  top: calc(var(--header-height) + 10px);
+  left: 50%;
+  z-index: 2500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.86);
+  color: #ffffff;
+  font-size: 0.85rem;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.app-progress[hidden] {
+  display: none;
+}
+
+.app-progress.is-error {
+  background: var(--danger);
+}
+
+.app-progress-spinner[hidden] {
+  display: none;
+}
+
+.app-progress-spinner {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: app-progress-spin 0.8s linear infinite;
+}
+
+@keyframes app-progress-spin {
+  to { transform: rotate(360deg); }
+}
+
 .modal-header {
   display: flex;
   align-items: center;

@@ -27,10 +27,20 @@ function renderHomeView() {
 
 document.addEventListener('DOMContentLoaded', async () => {
 	let hasAuthenticatedSession = false;
-	setLoginStatus('ログイン状態を確認しています...', 'loading');
+	const checkingMessage = hasLoginHistory() ? ACCOUNT_CHECKING_MESSAGE : 'ログイン状態を確認しています...';
+	setLoginStatus(checkingMessage, 'loading');
+	showProgressIndicator(checkingMessage);
 	if (await getFirebaseUser()) {
+		showProgressIndicator(ACCOUNT_CHECKING_MESSAGE);
 		hasAuthenticatedSession = await verifySessionWithGas();
+		if (!hasAuthenticatedSession) {
+			showProgressIndicator(ACCOUNT_CHECK_FAILED_MESSAGE, 'error');
+			setLoginStatus(`${ACCOUNT_CHECK_FAILED_MESSAGE}。もう一度ログインしてください。`, 'error');
+		}
+	} else {
+		hideProgressIndicator();
 	}
+	if (hasAuthenticatedSession) hideProgressIndicator();
 	initializeGoogleLogin(hasAuthenticatedSession);
 
 	renderHomeView();
@@ -58,16 +68,22 @@ function initializeGoogleLogin(hasAuthenticatedSession = false) {
 
 async function handleGoogleLoginClick(event) {
 	const button = event.currentTarget;
+	const originalText = button.textContent;
 	button.disabled = true;
+	button.textContent = 'ログイン中...';
+	setLoginStatus('Googleのログイン画面でアカウントを選んでください...', 'loading');
 	try {
 		const idToken = await signInWithFirebaseGoogle();
+		showProgressIndicator(ACCOUNT_CHECKING_MESSAGE);
 		await handleGoogleCredential({ credential: idToken });
 	} catch (error) {
 		const message = getFirebaseLoginErrorMessage(error);
+		hideProgressIndicator();
 		setLoginStatus(message, 'error');
 		showToast(message, 'error');
 	} finally {
 		button.disabled = false;
+		button.textContent = originalText;
 	}
 }
 
@@ -90,6 +106,7 @@ async function handleGoogleCredential(response) {
 	try {
 		const result = await callGasApi('authenticateGoogle', { idToken: response.credential });
 		if (result.status === 'authenticated') {
+			hideProgressIndicator();
 			setLoginStatus('認証に成功しました。画面を準備しています...', 'success');
 			setUserLogin(true);
 			setUserRoles(result.user && Array.isArray(result.user.roles) ? result.user.roles : (result.user && result.user.role ? [result.user.role] : []));
@@ -99,18 +116,21 @@ async function handleGoogleCredential(response) {
 			return;
 		}
 		if (result.status === 'unregistered') {
+			showProgressIndicator('アカウント登録画面へ移動しています...');
 			setLoginStatus('アカウントが未登録のため、登録画面へ移動します...', 'loading');
 			window.location.assign('signup/');
 			return;
 		}
 		clearCurrentIdToken();
 		signOutFirebase();
-		setLoginStatus(result.error || 'ログインできません。', 'error');
-		showToast(result.error || 'ログインできません', 'error');
+		showProgressIndicator(ACCOUNT_CHECK_FAILED_MESSAGE, 'error');
+		setLoginStatus(result.error || ACCOUNT_CHECK_FAILED_MESSAGE, 'error');
+		showToast(result.error || ACCOUNT_CHECK_FAILED_MESSAGE, 'error');
 	} catch (error) {
 		clearCurrentIdToken();
-		setLoginStatus('認証通信に失敗しました。もう一度お試しください。', 'error');
-		showToast('認証に失敗しました', 'error');
+		showProgressIndicator(ACCOUNT_CHECK_FAILED_MESSAGE, 'error');
+		setLoginStatus(`${ACCOUNT_CHECK_FAILED_MESSAGE}。通信状態を確認してもう一度お試しください。`, 'error');
+		showToast(ACCOUNT_CHECK_FAILED_MESSAGE, 'error');
 	}
 }
 

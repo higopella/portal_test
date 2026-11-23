@@ -124,6 +124,14 @@ function clearLoginHistory() {
   localStorage.removeItem(CONFIG.STORAGE_KEYS.LAST_LOGIN_AT);
 }
 
+// ログアウトせずに一度でもログインした端末か
+function hasLoginHistory() {
+  return Boolean(localStorage.getItem(CONFIG.STORAGE_KEYS.LAST_LOGIN_AT));
+}
+
+const ACCOUNT_CHECKING_MESSAGE = 'アカウントを確認しています...';
+const ACCOUNT_CHECK_FAILED_MESSAGE = 'アカウントが確認できませんでした';
+
 let firebaseReadyPromise = null;
 
 function waitForFirebase() {
@@ -223,19 +231,31 @@ function syncDrawerLogoutVisibility() {
 
 async function requirePageAuthentication() {
   const homePath = typeof getSiteBasePath === 'function' ? getSiteBasePath() : '/';
+  const showProgress = (message, type) => { if (typeof showProgressIndicator === 'function') showProgressIndicator(message, type); };
+  const hideProgress = () => { if (typeof hideProgressIndicator === 'function') hideProgressIndicator(); };
   if (!getCurrentIdToken()) {
+    showProgress(hasLoginHistory() ? ACCOUNT_CHECKING_MESSAGE : 'ログイン状態を確認しています...');
     await trySilentReauth();
   }
 
   if (!getCurrentIdToken()) {
+    showProgress('ログイン画面へ移動しています...');
     window.location.replace(homePath);
     return false;
   }
 
-  if (isSessionRecentlyVerified()) return true;
+  if (isSessionRecentlyVerified()) {
+    hideProgress();
+    return true;
+  }
 
-  if (await verifySessionWithGas()) return true;
+  showProgress(ACCOUNT_CHECKING_MESSAGE);
+  if (await verifySessionWithGas()) {
+    hideProgress();
+    return true;
+  }
 
-  window.location.replace(homePath);
+  showProgress(`${ACCOUNT_CHECK_FAILED_MESSAGE}。ログイン画面へ戻ります`, 'error');
+  setTimeout(() => window.location.replace(homePath), 2000);
   return false;
 }

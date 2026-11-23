@@ -10,8 +10,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   const externalToggle = document.getElementById('signup-external-toggle');
   if (externalToggle) externalToggle.addEventListener('click', toggleExternalMode);
 
+  showProgressIndicator(hasLoginHistory() ? ACCOUNT_CHECKING_MESSAGE : 'ログイン状態を確認しています...');
   const idToken = await getFreshIdToken();
-  if (idToken) handleSignupGoogleCredential({ credential: idToken });
+  if (idToken) {
+    showProgressIndicator(ACCOUNT_CHECKING_MESSAGE);
+    await handleSignupGoogleCredential({ credential: idToken });
+  } else {
+    hideProgressIndicator();
+  }
 });
 
 function initializeSignupGoogleLogin() {
@@ -23,12 +29,17 @@ function initializeSignupGoogleLogin() {
   button.textContent = 'Googleで認証';
   button.addEventListener('click', async () => {
     button.disabled = true;
+    button.textContent = '認証中...';
     try {
-      handleSignupGoogleCredential({ credential: await signInWithFirebaseGoogle() });
+      const credential = await signInWithFirebaseGoogle();
+      showProgressIndicator(ACCOUNT_CHECKING_MESSAGE);
+      await handleSignupGoogleCredential({ credential });
     } catch (error) {
+      hideProgressIndicator();
       showToast(getFirebaseLoginErrorMessage(error), 'error');
     } finally {
       button.disabled = false;
+      button.textContent = 'Googleで認証';
     }
   });
   buttonContainer.appendChild(button);
@@ -44,6 +55,7 @@ async function handleSignupGoogleCredential(response) {
   try {
     const result = await callGasApi('authenticateGoogle', { idToken: response.credential });
     if (result.status === 'authenticated') {
+      showProgressIndicator('登録済みのためホームへ移動しています...');
       setUserLogin(true);
       setUserRoles(result.user && Array.isArray(result.user.roles) ? result.user.roles : (result.user && result.user.role ? [result.user.role] : []));
       recordLoginHistory();
@@ -51,15 +63,18 @@ async function handleSignupGoogleCredential(response) {
       return;
     }
     if (result.status === 'unregistered') {
+      hideProgressIndicator();
       document.getElementById('signup-google-panel').classList.add('is-hidden');
       document.getElementById('signup-profile-form').classList.remove('is-hidden');
       return;
     }
     clearCurrentIdToken();
     signOutFirebase();
+    showProgressIndicator(ACCOUNT_CHECK_FAILED_MESSAGE, 'error');
     showToast(result.error || '登録を開始できません', 'error');
   } catch (error) {
     clearCurrentIdToken();
+    showProgressIndicator(ACCOUNT_CHECK_FAILED_MESSAGE, 'error');
     showToast('認証に失敗しました', 'error');
   }
 }

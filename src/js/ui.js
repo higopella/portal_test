@@ -3,6 +3,40 @@
   document.addEventListener(type, (event) => event.preventDefault(), { passive: false });
 });
 
+// 認証など画面が変わらない待ち時間に、処理中であることを画面上部に表示する（errorはスピナーなしで数秒後に消す）
+let progressIndicatorTimer = null;
+
+function showProgressIndicator(message, type = "") {
+  let indicator = document.getElementById("app-progress");
+  if (!indicator) {
+    indicator = document.createElement("div");
+    indicator.id = "app-progress";
+    indicator.className = "app-progress";
+    indicator.setAttribute("role", "status");
+    indicator.setAttribute("aria-live", "polite");
+    const spinner = document.createElement("span");
+    spinner.className = "app-progress-spinner";
+    spinner.setAttribute("aria-hidden", "true");
+    const text = document.createElement("span");
+    text.className = "app-progress-text";
+    indicator.append(spinner, text);
+    document.body.appendChild(indicator);
+  }
+  clearTimeout(progressIndicatorTimer);
+  const isError = type === "error";
+  indicator.classList.toggle("is-error", isError);
+  indicator.querySelector(".app-progress-spinner").hidden = isError;
+  indicator.querySelector(".app-progress-text").textContent = message;
+  indicator.hidden = false;
+  if (isError) progressIndicatorTimer = setTimeout(hideProgressIndicator, 5000);
+}
+
+function hideProgressIndicator() {
+  clearTimeout(progressIndicatorTimer);
+  const indicator = document.getElementById("app-progress");
+  if (indicator) indicator.hidden = true;
+}
+
 function toggleDrawerMenu(isOpen) {
   const drawer = document.getElementById("drawer-menu");
   const overlay = document.getElementById("drawer-overlay");
