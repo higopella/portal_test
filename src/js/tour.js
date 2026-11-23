@@ -11,8 +11,9 @@ const TOUR_STEPS = {
 		{ target: '#btn-site-refresh', title: '更新', text: '情報を最新の状態にします' }
 	],
 	booking: [
-		{ target: '[data-schedule-calendar]', title: 'カレンダー', text: '予定や部室の空き枠を確認できます' },
-		{ target: '.schedule-booking-link', title: 'カレンダーの＋ボタン', text: '予約フォームが開きます。予定をタップすると編集・譲渡・削除ができます' }
+		{ target: '[data-schedule-calendar]', title: 'カレンダー', text: '予定や部室の空き枠を確認できます。予定をタップすると詳細のポップアップが開きます' },
+		{ target: '.schedule-event', title: '予定の詳細', text: 'タップすると詳細のポップアップが開き、鉛筆マークで編集、「譲る」で時間の譲渡、「この予約を削除」で削除ができます', optional: true },
+		{ target: '.schedule-booking-link', title: 'カレンダーの＋ボタン', text: '予約フォームが開きます。タップすると予定追加ができます' }
 	],
 	searchYT: [
 		{ target: '#select-playlist', title: 'カテゴリ', text: '動画の種類で絞り込めます' },
