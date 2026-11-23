@@ -13,7 +13,8 @@ const TOUR_STEPS = {
 	booking: [
 		{ target: '[data-schedule-calendar]', title: 'カレンダー', text: '予定や部室の空き枠を確認できます。予定をタップすると詳細のポップアップが開きます' },
 		{ target: '.schedule-event', title: '予定の詳細', text: 'タップすると詳細のポップアップが開き、鉛筆マークで編集、「譲る」で時間の譲渡、「この予約を削除」で削除ができます', optional: true },
-		{ target: '.schedule-booking-link', title: 'カレンダーの＋ボタン', text: '予約フォームが開きます。タップすると予定追加ができます' }
+		{ target: '.schedule-toolbar > .schedule-booking-link', title: 'カレンダーの＋ボタン', text: '予約フォームが開きます。タップすると予定追加ができます', optional: true },
+		{ target: '.schedule-fab', title: '予約追加ボタン', text: '予約フォームが開きます。タップすると予定追加ができます', optional: true }
 	],
 	searchYT: [
 		{ target: '#select-playlist', title: 'カテゴリ', text: '動画の種類で絞り込めます' },
@@ -28,9 +29,6 @@ const TOUR_STEPS = {
 		{ target: '#live-basic-section', title: '基本情報（必須）', text: '必要な情報を入力してください' },
 		{ target: '#live-pa-section', title: 'PA表', text: '演者の順番・パート・要望やマイクの持ち込み情報を入力します' },
 		{ target: '#light-section', title: '照明表', text: 'イメージカラー・要望情報を入力します', optional: true }
-	],
-	role: [
-		{ target: '#role-select-buttons', title: '権限ページ選択', text: '持っている権限のページへここから移動します。ログイン中は次回から自動で移動します' }
 	],
 	'role-admin': [
 		{ target: '.admin-tabs', title: '管理メニュー', text: 'お知らせの追加・ユーザー管理など、担当の機能をタブで切り替えます' },

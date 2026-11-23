@@ -21,8 +21,8 @@ async function initScheduleCalendar({ host, loadEvents, createEventElement, defa
 
   const container = host.querySelector("[data-schedule-container]");
   const periodLabel = host.querySelector("[data-schedule-period]");
-  const bookingLink = host.querySelector(".schedule-booking-link");
-  if (bookingLink) bookingLink.href = getScheduleBookingUrl();
+  const bookingUrl = getScheduleBookingUrl();
+  host.querySelectorAll(".schedule-booking-link").forEach((link) => { link.href = bookingUrl; });
   watchScheduleStickyOffset(host, container);
 
   const state = { view: defaultView, anchorDate: new Date() };

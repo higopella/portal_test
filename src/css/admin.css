@@ -63,8 +63,8 @@
 		.booking-log-table th:nth-child(6), .booking-log-table td:nth-child(6) { width: 56px; }
 		.booking-log-table th:nth-child(7), .booking-log-table td:nth-child(7) { width: 72px; }
 		.log-scroll thead th { position: sticky; top: 0; z-index: 1; }
-		.admin-tabs { display: flex; flex-wrap: nowrap; gap: 6px; overflow-x: auto; max-width: 100%; min-width: 0; padding-right: 8px; -webkit-overflow-scrolling: touch; }
-		.admin-tab { flex: 0 0 auto; padding: 10px 4px; border: 1px solid var(--border); border-radius: var(--radius); background-color: var(--card); color: var(--text-sub); font-size: 0.8rem; font-weight: bold; cursor: pointer; white-space: nowrap; text-align: center; }
+		.admin-tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 6px; max-width: 100%; min-width: 0; }
+		.admin-tab { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 4px; border: 1px solid var(--border); border-radius: var(--radius); background-color: var(--card); color: var(--text-sub); font-size: 0.8rem; font-weight: bold; cursor: pointer; white-space: nowrap; text-align: center; }
 		.admin-tab.active { background-color: var(--primary); color: #fff; border-color: var(--primary); }
 		@media (max-width: 360px) {
 			.admin-tab { font-size: 0.7rem; padding: 8px 2px; }
@@ -128,9 +128,12 @@
 		.admin-login-description { font-size: 0.9rem; color: var(--text-sub); margin-bottom: 16px; }
 		.admin-login-username { margin-bottom: 12px; }
 		.admin-login-password { margin-bottom: 16px; }
-		.dashboard-summary { display: flex; justify-content: space-between; align-items: center; }
+		.dashboard-summary { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 		.access-label { font-size: 0.9rem; color: var(--text-sub); }
 		.access-count { font-size: 1.6rem; font-weight: bold; color: var(--primary-dark); }
+		.operation-stats { display: flex; flex-direction: column; gap: 2px; }
+		.operation-stat-row { font-size: 0.95rem; color: var(--text); }
+		.operation-breakdown { margin: 6px 0 0; font-size: 0.78rem; color: var(--text-sub); }
 		.notice-form { margin-bottom: 20px; }
 		.highlight-control { margin-bottom: 8px; }
 		.highlight-button { padding: 4px 10px; font-size: 0.8rem; }

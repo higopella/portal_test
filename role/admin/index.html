@@ -33,7 +33,7 @@
     <nav class="admin-tabs" aria-label="管理メニュー">
       <button type="button" class="admin-tab active" data-tab="notice">お知らせ追加</button>
       <button type="button" class="admin-tab" data-tab="users">ユーザー管理</button>
-      <button type="button" class="admin-tab" data-tab="access">閲覧数</button>
+      <button type="button" class="admin-tab" data-tab="access">操作回数</button>
     </nav>
 
     <div class="admin-tab-panel" id="tab-notice">
@@ -77,11 +77,14 @@
     </div>
 
     <div class="admin-tab-panel is-hidden" id="tab-access">
-    <!-- 概要・アクセス数 -->
+    <!-- 操作回数（操作ログから集計） -->
     <section class="card dashboard-summary">
-      <div>
-        <span class="access-label">累計アクセス数</span>
-        <div id="stat-access-count" class="access-count">--</div>
+      <div class="operation-stats">
+        <span class="access-label">操作回数（予約・変更・削除など）</span>
+        <div class="operation-stat-row">今日 <span id="stat-op-today" class="access-count">--</span> 回</div>
+        <div class="operation-stat-row">7日 <span id="stat-op-7d" class="access-count">--</span> 回</div>
+        <div class="operation-stat-row">30日 <span id="stat-op-30d" class="access-count">--</span> 回</div>
+        <p id="stat-op-breakdown" class="operation-breakdown"></p>
       </div>
       <button type="button" class="btn btn-primary" id="btn-refresh-all">更新</button>
     </section>

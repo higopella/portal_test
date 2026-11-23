@@ -388,10 +388,22 @@
   border-top: 0;
 }
 
-.schedule-view-tabs {
+.schedule-bottom-bar {
   position: sticky;
   bottom: calc(12px + env(safe-area-inset-bottom));
   z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.schedule-bottom-bar > * {
+  pointer-events: auto;
+}
+
+.schedule-view-tabs {
   display: inline-flex;
   align-items: center;
   gap: 2px;
@@ -497,6 +509,19 @@
   background: var(--primary-dark);
 }
 
+.schedule-bottom-bar > .schedule-fab {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+  min-height: 0;
+  margin-left: auto;
+  border: 0;
+  border-radius: 18px;
+  font-size: 2rem;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.28);
+}
+
 .schedule-nav-btn {
   padding: 4px 10px;
 }
@@ -537,7 +562,7 @@
   }
 
   .schedule-toolbar > .schedule-booking-link {
-    flex-shrink: 0;
+    display: none;
   }
 
   .schedule-view-controls {
@@ -549,18 +574,14 @@
     padding-bottom: 8px;
   }
 
-  .schedule-view-tabs {
-    margin-left: 8px;
-  }
-
   .schedule-view-tab {
-    min-width: 64px;
-    min-height: 52px;
+    min-width: 54px;
+    min-height: 48px;
   }
 }
 
 @media (min-width: 761px) {
-  .schedule-view-tabs {
+  .schedule-bottom-bar {
     display: none;
   }
 }

@@ -66,16 +66,9 @@ function renderRoleSwitcher() {
 		link.className = 'role-switch-link' + (page.role === REQUIRED_ROLE ? ' current' : '');
 		link.href = page.href;
 		link.textContent = page.label;
+		link.addEventListener('click', () => sessionStorage.setItem('higopella_role_page', page.role));
 		container.appendChild(link);
 	});
-	const selectLink = document.createElement('a');
-	selectLink.className = 'role-switch-link';
-	selectLink.href = '../';
-	selectLink.textContent = '選択画面へ';
-	selectLink.addEventListener('click', () => {
-		sessionStorage.removeItem('higopella_role_page');
-	});
-	container.appendChild(selectLink);
 	container.classList.remove('is-hidden');
 }
 
@@ -111,7 +104,7 @@ function showAccessDenied() {
 async function loadDashboardData() {
 	const refreshBtn = document.getElementById('btn-refresh-all');
 	const tasks = [];
-	if (document.getElementById('stat-access-count')) tasks.push(fetchAccessCount());
+	if (document.getElementById('stat-op-today')) tasks.push(fetchOperationStats());
 	if (document.getElementById('admin-notice-list')) tasks.push(fetchAdminNotices());
 	if (document.getElementById('log-table-body')) tasks.push(fetchLogs());
 	if (document.getElementById('kanbu-user-list')) tasks.push(fetchUsers());
@@ -127,12 +120,18 @@ async function loadDashboardData() {
 	}
 }
 
-async function fetchAccessCount() {
+async function fetchOperationStats() {
 	try {
-		const res = await callGasApi('getAccessCount');
-		if (res.success) {
-			document.getElementById('stat-access-count').textContent = Number(res.count).toLocaleString();
-		}
+		const res = await callGasApi('getOperationStats');
+		if (!res.success) return;
+		document.getElementById('stat-op-today').textContent = Number(res.today).toLocaleString();
+		document.getElementById('stat-op-7d').textContent = Number(res.days7).toLocaleString();
+		document.getElementById('stat-op-30d').textContent = Number(res.days30).toLocaleString();
+		const breakdown = Object.entries(res.breakdown30 || {})
+			.sort((a, b) => b[1] - a[1])
+			.map(([type, count]) => `${type} ${count}`)
+			.join('・');
+		document.getElementById('stat-op-breakdown').textContent = breakdown ? `内訳（30日）：${breakdown}` : '';
 	} catch(e) {}
 }
 

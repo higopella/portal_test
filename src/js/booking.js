@@ -79,10 +79,10 @@ async function initializeBookingScheduleCalendar(authenticationReady) {
 		},
 		createEventElement: createScheduleEventElement
 	});
-	host.querySelector('.schedule-booking-link')?.addEventListener('click', (event) => {
+	host.querySelectorAll('.schedule-booking-link').forEach((link) => link.addEventListener('click', (event) => {
 		event.preventDefault();
 		openBookingForm();
-	});
+	}));
 }
 
 function openBookingForm() {
