@@ -63,8 +63,9 @@
 		.booking-log-table th:nth-child(6), .booking-log-table td:nth-child(6) { width: 56px; }
 		.booking-log-table th:nth-child(7), .booking-log-table td:nth-child(7) { width: 72px; }
 		.log-scroll thead th { position: sticky; top: 0; z-index: 1; }
-		.admin-tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 6px; max-width: 100%; min-width: 0; }
-		.admin-tab { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 4px; border: 1px solid var(--border); border-radius: var(--radius); background-color: var(--card); color: var(--text-sub); font-size: 0.8rem; font-weight: bold; cursor: pointer; white-space: nowrap; text-align: center; }
+		/* 全タブを「お知らせ追加」より少し広い同じ幅にし、収まらない分は横スクロール */
+		.admin-tabs { display: flex; flex-wrap: nowrap; gap: 6px; overflow-x: auto; max-width: 100%; min-width: 0; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
+		.admin-tab { display: flex; flex: 0 0 auto; align-items: center; justify-content: center; width: 7.5em; min-height: 44px; padding: 8px 4px; border: 1px solid var(--border); border-radius: var(--radius); background-color: var(--card); color: var(--text-sub); font-size: 0.8rem; font-weight: bold; cursor: pointer; white-space: nowrap; text-align: center; box-sizing: border-box; }
 		.admin-tab.active { background-color: var(--primary); color: #fff; border-color: var(--primary); }
 		@media (max-width: 360px) {
 			.admin-tab { font-size: 0.7rem; padding: 8px 2px; }
